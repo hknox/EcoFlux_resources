@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load django_bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    {# This can be overridden: #}
+    <title>{% block title %}EcoFlux inventory{% endblock %}</title>
+</head>
+
+<body>
+    <!-- Fixed Banner -->
+    <header class="bg-primary text-white fixed-top py-1 shadow-sm" >
+        <div class="container d-flex justify-content-between align-items-center">
+            <!-- Logo -->
+            <a href="{% url 'home' %}" class="d-flex align-items-center text-white text-decoration-none">
+                <img src="{% static 'images/EcoFlux_logo_smaller.png' %}" alt="Logo" width="60" height="auto" class="me-2">
+                <span class="fs-2">EcoFlux Inventory</span>
+            </a>
+            <!-- Conditional Links -->
+            <nav>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'home' %}" class="text-white me-3">Dashboard</a>
+                    <a href="{% url 'home' %}" class="text-white me-3">Profile</a>
+                    <form id="logout-form" method="post"
+                          action="{% url 'logout' %}" style="display: inline;">
+                      {% csrf_token %}
+                      <input type="submit" value="Logout"
+                      sytle="background: none; border: none; cursor:
+                      pointer; padding: 0; text-decoration:
+                      underline;" > {# class="btn-link"/> #}
+                    </form>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mt-5 pt-5">
+      {% block content %}
+      {{ content }}
+      {% endblock %}
+    </main>
+
+    {% comment %}
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-3 mt-5 fixed-bottom">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2025 My Django App. All rights reserved.</p>
+        </div>
+    </footer>
+    {% endcomment %}
+</body>
+</html>
