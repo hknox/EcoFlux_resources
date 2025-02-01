@@ -1,6 +1,12 @@
 # from django.shortcuts import render
-from django.http import HttpResponse
+from django.shortcuts import render, get_object_or_404, Http404, redirect
+from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
 
 
+@login_required
 def home(request):
-    return HttpResponse(content=b"Home Page stub")
+    data = {
+        "content": "Home Page stub",
+    }
+    return render(request, "inventory/site-base.html", data)

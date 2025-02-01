@@ -1,0 +1,23 @@
+<!-- EcoFlux/templates/registration/login.html -->
+<!-- (Adapted from RiffMates tutorial -->
+{% extends "inventory/site-base.html" %}
+
+<head>
+  <title>{% block title%}EcoFlux Site Inventory Login{% endblock %}</title>
+</head>
+
+{% block content %}
+<div class="container d-flex justify-content-center" ;>
+    <div class="bg-white p-4 rounded shadow text-center" style="max-width: 600px;">
+      <form method="post">
+        {% csrf_token %}
+        {{form.as_p}}
+        <button class="btn btn-dark" type="submit">Login</button>
+      </form>
+      <br>
+      <p>
+        <a href="{% url 'password_reset' %}">Forgot your password?</a>
+      </p>
+    </div>
+
+{% endblock content %}
