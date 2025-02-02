@@ -9,4 +9,4 @@ def home(request):
     data = {
         "content": "Home Page stub",
     }
-    return render(request, "inventory/site-base.html", data)
+    return render(request, "inventory/home.html", data)
