@@ -1,0 +1,17 @@
+<!-- EcoFlux/templates/edit_location.html -->
+{% extends "inventory/site-base.html" %}
+
+<head>
+  <title>{% block title%}EcoFlux Site - Location{% endblock %}</title>
+</head>
+
+{% block content %}
+<h1>Location Details</h1>
+
+<form enctype="multipart/form-data" method="post">
+  {% csrf_token %}
+  {{form.as_p}}
+  <button class="btn btn-dark" type="submit">Save</button>
+</form>
+
+{% endblock content %}

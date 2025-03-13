@@ -19,14 +19,14 @@
             <a href="{% url 'home' %}" class="d-flex align-items-center text-white text-decoration-none">
                 <img src="{% static 'images/EcoFlux_logo_smaller.png' %}"
                      alt="Logo" width="60" height="auto" class="me-2 py-2">
-                <span class="fs-2">EcoFlux Inventory</span>
+                <span class="fs-2">EcoFlux - Equipment Inventory</span>
             </a>
             <!-- Conditional Links -->
             <nav>
                 {% if user.is_authenticated %}
                     Hello, {{user.username}}! &nbsp;
+                    <a href="{% url 'view_locations' %}" class="text-white me-3">Locations</a>
                     {% comment %}
-                    <a href="{% url 'home' %}" class="text-white me-3">Dashboard</a>
                     <a href="{% url 'home' %}" class="text-white
                                                       me-3">Profile</a>
                     {% endcomment %}

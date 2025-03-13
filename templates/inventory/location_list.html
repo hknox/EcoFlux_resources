@@ -1,0 +1,46 @@
+{% extends "inventory/site-base.html" %}
+
+{% block content %}
+  <div class="center">
+    <h1>Locations</h1>
+  </div>
+  <table class="table table-striped">
+    <thead>
+      <th scope="col">Description</th>
+      <th scope="col">Adress</th>
+      <th scope="col">GPS coordinates</th>
+    </thead>
+    <tbody>
+      {% for location in location_list %}
+        <tr>
+          <td><a href="{% url 'edit_location' location.id %}"> {{ location.description }}</a></td>
+          <td>{{ location.address }}</td>
+          <td>{{ location.gps_coordinates  }}</td>
+        </tr>
+      {% empty %}
+        <li>No locations yet.</li>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if page_obj.paginator.num_pages > 1 %}
+    <div class="pagination">
+      <span class="step-links">
+        {% if page_obj.has_previous %}
+          <a href="?page=1">&laquo; first</a>
+          <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+        {% endif %}
+
+        <span class="current">
+          Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}">next</a>
+          <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+      </span>
+    </div>
+
+  {% endif %}
+{% endblock content %}
