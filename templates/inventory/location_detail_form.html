@@ -11,7 +11,11 @@
 <form enctype="multipart/form-data" method="post">
   {% csrf_token %}
   {{form.as_p}}
-  <button class="btn btn-dark" type="submit">Save</button>
+  <button class="btn btn-success" type="submit">Save</button>
+  <a href="{% url 'view_locations' %}"
+     class="btn btn-secondary btn-small"
+     role="button">Cancel
+  </a>
 </form>
 
 {% endblock content %}
