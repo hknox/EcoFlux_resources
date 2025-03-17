@@ -1,4 +1,5 @@
 from django.views.generic.list import ListView
+from django.views.generic.edit import UpdateView
 from django.views.generic.detail import DetailView
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
@@ -17,23 +18,25 @@ class LocationDetailView(LoginRequiredMixin, DetailView):
         return super().get_context_data(**kwargs)
 
     def get_location_object(self, location_id):
-        if location_id == 0:
-            # New location
-            location = Location.objects.create()
-        else:
-            # Existing location
-            location = get_object_or_404(Location, id=location_id)
+        location = get_object_or_404(Location, id=location_id)
 
         return location
 
     def post(self, request, *args, **kwargs):
+        print(type(self.get_object()))
+        print(self.get_object())
         id = kwargs["pk"]
-        location = self.get_location_object(id)
-        form = LocationForm(request.POST, request.FILES, instance=location)
+        print("post", id)
+        form = LocationForm(request.POST, request.FILES)
+        # form = LocationForm(request.POST, request.FILES, instance=location)
         if form.is_valid():
+            print(dir(form.instance))
+            print(form.instance.id)
+            print(dir(form))
             location = form.save()
             return redirect("view_locations")
         else:
+            form = LocationForm(request.POST, request.FILES, instance=location)
             data = {
                 "form": form,
             }
@@ -41,19 +44,19 @@ class LocationDetailView(LoginRequiredMixin, DetailView):
 
     def get(self, request, *args, **kwargs):
         id = kwargs["pk"]
-        location = self.get_location_object(id)
+        print("get", id)
         if id == 0:
+            location = Location.objects.create()
             form = LocationForm()
         else:
+            location = self.get_location_object(id)
             form = LocationForm(instance=location)
-
         data = {
             "form": form,
         }
         return render(request, "inventory/edit_location.html", data)
 
 
-# @method_decorator(login_required, "dispatch")
 class LocationListView(LoginRequiredMixin, ListView):
     model = Location
     paginate_by = 25

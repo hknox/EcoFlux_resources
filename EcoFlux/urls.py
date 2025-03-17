@@ -21,9 +21,9 @@ from django.conf.urls.static import static
 from django.conf import settings
 
 urlpatterns = [
-    path("accounts/", include("django.contrib.auth.urls")),  # for account mgt.
+    path("accounts/", include("django.contrib.auth.urls")),  # for authentication
     path("admin/", admin.site.urls),
-    path("inventory/", include("inventory.urls"), name="root"),
+    path("inventory/", include("inventory.urls")),
 ]
 
 if settings.DEBUG:
