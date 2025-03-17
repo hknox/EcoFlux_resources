@@ -25,11 +25,9 @@
             <nav>
                 {% if user.is_authenticated %}
                     Hello, {{user.username}}! &nbsp;
-                    <a href="{% url 'view_locations' %}" class="text-white me-3">Locations</a>
-                    {% comment %}
                     <a href="{% url 'home' %}" class="text-white
-                                                      me-3">Profile</a>
-                    {% endcomment %}
+                                                      me-3">Inventory</a>
+                    <a href="{% url 'view_locations' %}" class="text-white me-3">Locations</a>
                     {% if user.is_superuser %}
                       <a href="/admin/" class="text-white me-3">Admin dashboard</a>
                     {% endif %}
@@ -54,13 +52,11 @@
       {% endblock %}
     </main>
 
-    {% comment %}
-    <!-- Footer -->
-    <footer class="bg-dark text-white py-3 mt-5 fixed-bottom">
-        <div class="container text-center">
-            <p class="mb-0">&copy; 2025 My Django App. All rights reserved.</p>
-        </div>
-    </footer>
-    {% endcomment %}
+    <!-- <\!-- Footer -\-> -->
+    <!-- <footer class="bg-primary text-white py-3 mt-5 fixed-bottom"> -->
+    <!--     <div class="container text-center"> -->
+    <!--         <p class="mb-0">&copy; 2025 My Django App. All rights reserved.</p> -->
+    <!--     </div> -->
+    <!-- </footer> -->
 </body>
 </html>
