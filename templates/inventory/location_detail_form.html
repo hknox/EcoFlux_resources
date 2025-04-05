@@ -1,5 +1,5 @@
 <!-- EcoFlux/templates/edit_location.html -->
-{% extends "inventory/site-base.html" %}
+{% extends "inventory/site_base.html" %}
 
 <head>
   <title>{% block title%}EcoFlux Site - Location{% endblock %}</title>
@@ -13,9 +13,15 @@
   {{form.as_p}}
   <button class="btn btn-success" type="submit">Save</button>
   <a href="{% url 'view_locations' %}"
-     class="btn btn-secondary btn-small"
-     role="button">Cancel
-  </a>
+     class="btn btn-secondary"
+    onclick="return confirmCancel();">Cancel</a>
+  <!-- location.id is None on Location creation. -->
+  <!-- Only offer a delete button when editing an EXISTING location. -->
+  {% if location.id %}
+    <a href="{% url 'view_locations'  %}"
+       class ="btn btn-warning btn-small"
+       onclick="return confirmDelete();">Delete</a>
+  {% endif %}
 </form>
 
 {% endblock content %}

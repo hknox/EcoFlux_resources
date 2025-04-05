@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load django_bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    {% block extra_css %}
+    {% endblock %}
+
+    {# This can be overridden: #}
+    <title>{% block title %}EcoFlux inventory{% endblock %}</title>
+</head>
+
+<body>
+    <!-- Fixed Banner -->
+    <header class="bg-primary sticky-top text-white py-2 shadow-sm" >
+        <!-- or simply, "container"? -->
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <!-- Logo -->
+            <a href="{% url 'home' %}" class="d-flex align-items-center text-white text-decoration-none">
+                <img src="{% static 'images/EcoFlux_logo_smaller.png' %}"
+                     alt="EcoFlux Logo" class="me-2 py-2 img-fluid"
+                     style="width: 60px">
+                <span class="fs-2 fw-bold">EcoFlux - Equipment Inventory</span>
+            </a>
+            <!-- Conditional Links (Collapsible for Mobile)-->
+            <nav class="d-flex align-items-center">
+                {% if user.is_authenticated %}
+                <span class="me-3">Hello, <strong>{{user.username}}</strong>!</span>
+                    <a href="{% url 'home' %}" class="text-white me-3">Inventory</a>
+                    <a href="{% url 'view_locations' %}" class="text-white me-3">Locations</a>
+                    {% if user.is_superuser %}
+                      <a href="{% url 'admin:index' %}"
+                         class="text-white me-3">Admin Dashboard</a>
+                    {% endif %}
+                    <!-- Logout Form Styled as a Button -->
+                    <form id="logout-form"
+                          method="post"
+                          action="{% url 'logout' %}"
+                          class="d-inline;">
+                      {% csrf_token %}
+                      <button type="submit"
+                              class="btn btn-light btn-sm text-primary
+                          fw-bold mb-1">
+                        Logout</button>
+                    </form>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container flex-grow-1  py-2">
+      <div class="row justify-content-center">
+        <!-- <div class="col-lg-10 col-md-12"> -->
+        {% block content %}
+        {% endblock %}
+        <!-- </div> -->
+      </div>
+    </main>
+
+    <script>
+      function confirmCancel() {
+          return confirm("Are you sure you want to cancel? Unsaved changes will be lost.");
+      }
+      function confirmDelete() {
+          return confirm("Are you sure you want to delete this entry? This action can't be undone.");
+      }
+    </script>
+
+    <!-- <\!-- Footer -\-> -->
+    <!-- <footer class="bg-primary text-white py-3 mt-5 fixed-bottom"> -->
+    <!--     <div class="container text-center"> -->
+    <!--         <p class="mb-0">&copy; 2025 My Django App. All rights reserved.</p> -->
+    <!--     </div> -->
+    <!-- </footer> -->
+
+    {% block extra_js %}
+    {% endblock %}
+</body>
+</html>
