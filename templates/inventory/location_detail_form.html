@@ -2,26 +2,56 @@
 {% extends "inventory/site_base.html" %}
 
 <head>
+  {% load django_bootstrap5 %}
   <title>{% block title%}EcoFlux Site - Location{% endblock %}</title>
 </head>
 
 {% block content %}
-<h1>Location Details</h1>
 
-<form enctype="multipart/form-data" method="post">
-  {% csrf_token %}
-  {{form.as_p}}
-  <button class="btn btn-success" type="submit">Save</button>
-  <a href="{% url 'view_locations' %}"
-     class="btn btn-secondary"
-    onclick="return confirmCancel();">Cancel</a>
-  <!-- location.id is None on Location creation. -->
-  <!-- Only offer a delete button when editing an EXISTING location. -->
+  <h1>Location Details</h1>
+
+  <!-- Update form (Save + Cancel) -->
+  <form method="post" enctype="multipart/form-data" class="d-inline track-unsaved">
+    {% csrf_token %}
+    {% bootstrap_form form %}
+
+    <div class="d-flex gap-2 mt-3 align-items-start flex-wrap">
+      <!-- Save -->
+      <button type="submit" class="btn btn-success">
+        <i class="bi bi-check-circle"></i> Save
+      </button>
+
+      <!-- Cancel -->
+      <a href="{% url 'view_locations' %}"
+         class="btn btn-secondary"
+         onclick="return confirmCancel(event);"
+         data-skip-unsaved-check>
+        <i class="bi bi-x-circle"></i>Cancel</a>
+  </form>
+
   {% if location.id %}
-    <a href="{% url 'view_locations'  %}"
-       class ="btn btn-warning btn-small"
-       onclick="return confirmDelete();">Delete</a>
+    <!-- Delete form inside same flex row, separate form -->
+    <form method="post"
+          action="{% url 'delete_location' location.id %}"
+          onsubmit="return confirmDelete();"
+          class="d-inline">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">
+        <i class="bi bi-trash"></i>Delete</button>
+    </form>
   {% endif %}
-</form>
+  </div>
+
+  {% if items %}
+    <h4 class="mt-4">Inventory items at this location:</h4>
+    <ul class="list-group">
+      {% for item in items %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          {{ item.description }}
+          <span class="badge bg-secondary">{{ item.status }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
 
 {% endblock content %}

@@ -22,13 +22,13 @@ urlpatterns = [
         name="edit_location",
     ),
     path(
-        "locations/add/",
-        views.LocationCreateView.as_view(),
-        name="add_location",
-    ),
-    path(
         "locations/delete/<int:pk>/",
         views.LocationDeleteView.as_view(),
         name="delete_location",
+    ),
+    path(
+        "locations/add/",
+        views.LocationCreateView.as_view(),
+        name="add_location",
     ),
 ]

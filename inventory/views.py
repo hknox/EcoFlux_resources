@@ -8,10 +8,11 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy
 
+# from django.template import context
 # from django.contrib.auth.decorators import login_required
 
 from inventory.models import Location, InventoryItem
-from .forms import InventoryItemForm, MaintenanceRecordFormSet
+from .forms import InventoryItemForm, LocationForm, MaintenanceRecordFormSet
 
 
 class InventoryListView(LoginRequiredMixin, ListView):
@@ -67,14 +68,14 @@ class InventoryItemUpdateView(UpdateView):
     success_url = reverse_lazy("home")
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+        context_data = super().get_context_data(**kwargs)
         if self.request.POST:
-            context["formset"] = MaintenanceRecordFormSet(
+            context_data["formset"] = MaintenanceRecordFormSet(
                 self.request.POST, instance=self.object
             )
         else:
-            context["formset"] = MaintenanceRecordFormSet(instance=self.object)
-        return context
+            context_data["formset"] = MaintenanceRecordFormSet(instance=self.object)
+        return context_data
 
     def form_valid(self, form):
         context = self.get_context_data()
@@ -95,10 +96,25 @@ class InventoryItemUpdateView(UpdateView):
 
 class LocationDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
     model = Location
-    fields = ["description", "address", "gps_coordinates"]
-    template_name_suffix = "_delete_form"
     success_url = reverse_lazy("view_locations")
     success_message = "Location %(description)s was deleted successfully!"
+
+    # Can use this to protect agains deleting a location holding
+    # inventory items:
+    # def post(self, request, *args, **kwargs):
+    #     location = self.get_object()
+    #     if location.inventory_items.exists():
+    #         messages.error(
+    #             request, "Cannot delete this location — it still has inventory items."
+    #         )
+    #         return HttpResponseRedirect(
+    #             location.get_absolute_url()
+    #         )  # Or wherever your edit page is
+    #     return super().post(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, "Location was successfully deleted.")
+        return super().delete(request, *args, **kwargs)
 
     def get_success_message(self, cleaned_data):
         return self.success_message % dict(
@@ -116,9 +132,25 @@ class LocationCreateView(LoginRequiredMixin, CreateView):
 
 class LocationUpdateView(LoginRequiredMixin, UpdateView):
     model = Location
-    fields = ["description", "address", "gps_coordinates"]
+    form_class = LocationForm
+    # fields = ["description", "address", "gps_coordinates"]
     template_name_suffix = "_detail_form"
     success_url = reverse_lazy("view_locations")
+
+    def get_context_data(self, **kwargs):
+        """Returns a dict with keys, 'object', 'location', 'form', 'view'.
+
+        Each of those items is available under that name in template."""
+        context_data = super().get_context_data(**kwargs)
+        context_data["items"] = self.object.inventory_items.all()
+        return context_data
+
+    # def get_object(self, queryset=None):
+    #     """Gets the object being updated.
+
+    #     Not sure how it knows which object to get, though!"""
+    #     object = super().get_object(queryset)
+    #     return object
 
 
 def logout_view(request):
