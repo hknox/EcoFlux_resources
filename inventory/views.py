@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 
 # from django.template import context
 # from django.contrib.auth.decorators import login_required
@@ -134,23 +134,17 @@ class LocationUpdateView(LoginRequiredMixin, UpdateView):
     model = Location
     form_class = LocationForm
     # fields = ["description", "address", "gps_coordinates"]
-    template_name_suffix = "_detail_form"
+    template_name = "inventory/location_detail_form.html"
     success_url = reverse_lazy("view_locations")
 
     def get_context_data(self, **kwargs):
         """Returns a dict with keys, 'object', 'location', 'form', 'view'.
 
         Each of those items is available under that name in template."""
+        location = self.get_object()
         context_data = super().get_context_data(**kwargs)
         context_data["items"] = self.object.inventory_items.all()
         return context_data
-
-    # def get_object(self, queryset=None):
-    #     """Gets the object being updated.
-
-    #     Not sure how it knows which object to get, though!"""
-    #     object = super().get_object(queryset)
-    #     return object
 
 
 def logout_view(request):

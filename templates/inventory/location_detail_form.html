@@ -1,22 +1,21 @@
-<!-- EcoFlux/templates/edit_location.html -->
+<!-- EcoFlux/templates/location_detail_form.html -->
 {% extends "inventory/site_base.html" %}
+{% load django_bootstrap5 %}
 
-<head>
-  {% load django_bootstrap5 %}
-  <title>{% block title%}EcoFlux Site - Location{% endblock %}</title>
-</head>
+
+{% block title %}EcoFlux Site - Location{% endblock %}
 
 {% block content %}
-
   <h1>Location Details</h1>
 
-  <!-- Update form (Save + Cancel) -->
+  <!-- Location Update Form -->
   <form method="post" enctype="multipart/form-data" class="d-inline track-unsaved">
     {% csrf_token %}
     {% bootstrap_form form %}
 
+    <!-- Button group wrapper -->
     <div class="d-flex gap-2 mt-3 align-items-start flex-wrap">
-      <!-- Save -->
+      <!-- Save button  -->
       <button type="submit" class="btn btn-success">
         <i class="bi bi-check-circle"></i> Save
       </button>
@@ -26,18 +25,19 @@
          class="btn btn-secondary"
          onclick="return confirmCancel(event);"
          data-skip-unsaved-check>
-        <i class="bi bi-x-circle"></i>Cancel</a>
-  </form>
-
+        <i class="bi bi-x-circle"></i> Cancel
+      </a>
+  </form>  {# <-- CLOSES update form properly before starting the next #}
   {% if location.id %}
-    <!-- Delete form inside same flex row, separate form -->
+    <!-- Separate Delete form, styled inline -->
     <form method="post"
           action="{% url 'delete_location' location.id %}"
           onsubmit="return confirmDelete();"
           class="d-inline">
       {% csrf_token %}
       <button type="submit" class="btn btn-danger">
-        <i class="bi bi-trash"></i>Delete</button>
+        <i class="bi bi-trash"></i> Delete
+      </button>
     </form>
   {% endif %}
   </div>
