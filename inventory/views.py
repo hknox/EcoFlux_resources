@@ -8,9 +8,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy, reverse
 
-# from django.template import context
-# from django.contrib.auth.decorators import login_required
-
 from inventory.models import Location, InventoryItem
 from .forms import InventoryItemForm, LocationForm, MaintenanceRecordFormSet
 
@@ -125,9 +122,18 @@ class LocationDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
 
 class LocationCreateView(LoginRequiredMixin, CreateView):
     model = Location
-    fields = ["description", "address", "gps_coordinates"]
-    template_name_suffix = "_detail_form"
+    form_class = LocationForm
+    # fields = ["description", "address", "gps_coordinates"]
+    template_name = "inventory/location_detail_form.html"
     success_url = reverse_lazy("view_locations")
+
+    def get_context_data(self, **kwargs):
+        """Returns a dict with keys, 'object', 'location', 'form', 'view'.
+
+        Each of those items is available under that name in template."""
+        context_data = super().get_context_data(**kwargs)
+        context_data["cancel_url"] = reverse("view_locations")
+        return context_data
 
 
 class LocationUpdateView(LoginRequiredMixin, UpdateView):
@@ -141,8 +147,14 @@ class LocationUpdateView(LoginRequiredMixin, UpdateView):
         """Returns a dict with keys, 'object', 'location', 'form', 'view'.
 
         Each of those items is available under that name in template."""
-        location = self.get_object()
         context_data = super().get_context_data(**kwargs)
+        context_data["cancel_url"] = reverse("view_locations")
+        context_data["delete_url"] = reverse(
+            "delete_location",
+            args=[
+                self.object.id,
+            ],
+        )
         context_data["items"] = self.object.inventory_items.all()
         return context_data
 
