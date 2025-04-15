@@ -1,55 +1,40 @@
 {% extends "inventory/list_base.html" %}
 
 {% block list_content %}
-   <div class="d-flex justify-content-between align-items-center mb-3">
-     <h1 class="mb-0">Locations</h1>
-     <a href="{% url 'add_location' %}" class="btn btn-primary">Add Location</a>
-   </div>
-{% with sort=request.GET.sort %}
-  <table class="table-hover table">
-    <thead>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="mb-0">Locations</h1>
+  <a href="{% url 'add_location' %}" class="btn btn-primary">Add Location</a>
+</div>
+
+<table class="table table-hover">
+  <thead>
+    <tr>
+      {% for field, label in sortable_columns %}
+        <th>
+          <a href="?sort={% if sort == field %}-{{ field }}{% else %}{{ field }}{% endif %}{% if page_obj.has_other_pages %}&page={{ page_obj.number }}{% endif %}">
+            {{ label }}
+            {% if sort == field %}
+              <i class="fa fa-sort-up"></i>
+            {% elif sort == "-"|add:field %}
+              <i class="fa fa-sort-down"></i>
+            {% else %}
+              <i class="fa fa-sort text-muted"></i>
+            {% endif %}
+          </a>
+        </th>
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for location in location_list %}
       <tr>
-        <th>
-          <a href="?sort={% if sort == 'description' %}-description{% else %}description{% endif %}">
-            Name
-            {% if sort == 'description' %}↑{% elif sort == '-description' %}↓{% endif %}
-          </a>
-        </th>
-        <th>
-          <a href="?sort={% if sort == 'address' %}-address{% else %}address{% endif %}">
-            Address
-            {% if sort == 'address' %}↑{% elif sort == '-address' %}↓{% endif %}
-          </a>
-        </th>
-        <th>
-          <a href="?sort={% if sort == 'gps_coordinates' %}-gps_coordinates{% else %}gps_coordinates{% endif %}">
-            GPS
-            {% if sort == 'gps_coordinates' %}↑{% elif sort == '-gps_coordinates' %}↓{% endif %}
-          </a>
-        </th>
-        <th>
-          <a href="?sort={% if sort == 'item_count' %}-item_count{% else %}item_count{% endif %}">
-            Item Count
-            {% if sort == 'item_count' %}↑{% elif sort == '-item_count' %}↓{% endif %}
-          </a>
-        </th>
+        <td><a href="{% url 'edit_location' location.id %}">{{ location.description }}</a></td>
+        <td>{{ location.address }}</td>
+        <td>{{ location.gps_coordinates }}</td>
+        <td>{{ location.item_count }}</td>
       </tr>
-    </thead>
-    <tbody>
-       {% for location in location_list %}
-       <tr>
-         <td><a href="{% url 'edit_location' location.id %}">
-             {{ location.description }}</a></td>
-         <td>{{ location.address }}</td>
-         <td>{{ location.gps_coordinates  }}</td>
-         <td>{{ location.item_count }}</td>
-         <!-- <td><a href="{% url 'delete_location' location.id %}" -->
-         <!--        class="btn btn-warning btn-small" role="button">Delete</a></td> -->
-       </tr>
-       {% endfor %}
-    </tbody>
-  </table>
-{% endwith %}
+    {% endfor %}
+  </tbody>
+</table>
 
-
-{% endblock list_content %}
+{% endblock %}

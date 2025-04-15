@@ -7,6 +7,7 @@ from django.contrib.auth import logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models.functions import Lower
+from urllib.parse import urlencode
 from django.urls import reverse_lazy, reverse
 
 from inventory.models import Location, InventoryItem
@@ -43,7 +44,6 @@ class LocationListView(LoginRequiredMixin, ListView):
             messages.info(self.request, "No locations entered.")
             return qs
         sort = self.request.GET.get("sort", "description")
-        print(sort)
         if sort.lstrip("-") in [
             "description",
             "address",
@@ -57,6 +57,17 @@ class LocationListView(LoginRequiredMixin, ListView):
                 qs = qs.order_by(Lower(sort))
 
         return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["sort"] = self.request.GET.get("sort", "description")
+        context["sortable_columns"] = [
+            ("description", "Name"),
+            ("address", "Address"),
+            ("gps_coordinates", "GPS"),
+            ("item_count", "Item Count"),
+        ]
+        return context
 
 
 class InventoryItemCreateView(CreateView):
