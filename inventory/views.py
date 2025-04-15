@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
+from django.db.models.functions import Lower
 from django.urls import reverse_lazy, reverse
 
 from inventory.models import Location, InventoryItem
@@ -36,15 +37,26 @@ class LocationListView(LoginRequiredMixin, ListView):
     template_name = "inventory/location_list.html"
 
     def get_queryset(self):
-        qs = Location.objects
-        if len(qs.all()) == 0:
+        """Enable sorting on a given column, including annotated item_count"""
+        qs = super().get_queryset().annotate(item_count=Count("inventory_items"))
+        if not qs.exists():
             messages.info(self.request, "No locations entered.")
-        return qs.annotate(item_count=Count("inventory_items")).order_by("pk")
+            return qs
+        sort = self.request.GET.get("sort", "description")
+        print(sort)
+        if sort.lstrip("-") in [
+            "description",
+            "address",
+            "gps_coordinates",
+            "id",
+            "item_count",
+        ]:
+            if sort.startswith("-"):
+                qs = qs.order_by(Lower(sort[1:]).desc())
+            else:
+                qs = qs.order_by(Lower(sort))
 
-    # def get_context_data(self, **kwargs):
-    #     context = super().get_context_data(**kwargs)
-    #     # add to context as needed...
-    #     return context
+        return qs
 
 
 class InventoryItemCreateView(CreateView):

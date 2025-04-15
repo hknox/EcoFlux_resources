@@ -5,15 +5,37 @@
      <h1 class="mb-0">Locations</h1>
      <a href="{% url 'add_location' %}" class="btn btn-primary">Add Location</a>
    </div>
-   <table class="table table-hover">
-     <thead>
-       <th scope="col">Description</th>
-       <th scope="col">Address</th>
-       <th scope="col">GPS coordinates</th>
-       <th scope="col">Item count</th>
-       <!-- <th scope="col">Action</th> -->
-     </thead>
-     <tbody>
+{% with sort=request.GET.sort %}
+  <table class="table-hover table">
+    <thead>
+      <tr>
+        <th>
+          <a href="?sort={% if sort == 'description' %}-description{% else %}description{% endif %}">
+            Name
+            {% if sort == 'description' %}↑{% elif sort == '-description' %}↓{% endif %}
+          </a>
+        </th>
+        <th>
+          <a href="?sort={% if sort == 'address' %}-address{% else %}address{% endif %}">
+            Address
+            {% if sort == 'address' %}↑{% elif sort == '-address' %}↓{% endif %}
+          </a>
+        </th>
+        <th>
+          <a href="?sort={% if sort == 'gps_coordinates' %}-gps_coordinates{% else %}gps_coordinates{% endif %}">
+            GPS
+            {% if sort == 'gps_coordinates' %}↑{% elif sort == '-gps_coordinates' %}↓{% endif %}
+          </a>
+        </th>
+        <th>
+          <a href="?sort={% if sort == 'item_count' %}-item_count{% else %}item_count{% endif %}">
+            Item Count
+            {% if sort == 'item_count' %}↑{% elif sort == '-item_count' %}↓{% endif %}
+          </a>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
        {% for location in location_list %}
        <tr>
          <td><a href="{% url 'edit_location' location.id %}">
@@ -25,7 +47,9 @@
          <!--        class="btn btn-warning btn-small" role="button">Delete</a></td> -->
        </tr>
        {% endfor %}
-     </tbody>
-   </table>
+    </tbody>
+  </table>
+{% endwith %}
+
 
 {% endblock list_content %}
