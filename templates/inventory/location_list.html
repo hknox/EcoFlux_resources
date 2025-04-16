@@ -6,35 +6,67 @@
   <a href="{% url 'add_location' %}" class="btn btn-primary">Add Location</a>
 </div>
 
-<table class="table table-hover">
-  <thead>
-    <tr>
-      {% for field, label in sortable_columns %}
+  <form method="get" class="mb-3">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-4">
+        <label for="description" class="form-label">Description</label>
+        <input type="text" name="description" id="description" value="{{ request.GET.description }}" class="form-control">
+      </div>
+      <div class="col-md-4">
+        <label for="address" class="form-label">Address</label>
+        <input type="text" name="address" id="address" value="{{ request.GET.address }}" class="form-control">
+      </div>
+      <div class="col-md-4">
+        <label for="item_count" class="form-label">Item Count</label>
+        <input type="number" name="item_count" id="item_count" value="{{ request.GET.item_count }}" class="form-control">
+      </div>
+      <input type="hidden" name="sort" value="{{ request.GET.sort }}">
+      <div class="col-auto">
+        <button type="submit" class="btn btn-primary">Filter</button>
+        <a href="{% url 'view_locations' %}" class="btn btn-secondary">Reset</a>
+      </div>
+    </div>
+  </form>
+
+  <table class="table-hover table">
+    <thead>
+      <tr>
         <th>
-          <a href="?sort={% if sort == field %}-{{ field }}{% else %}{{ field }}{% endif %}{% if page_obj.has_other_pages %}&page={{ page_obj.number }}{% endif %}">
-            {{ label }}
-            {% if sort == field %}
-              <i class="fa fa-sort-up"></i>
-            {% elif sort == "-"|add:field %}
-              <i class="fa fa-sort-down"></i>
-            {% else %}
-              <i class="fa fa-sort text-muted"></i>
-            {% endif %}
+          <a href="?sort={% if sort == 'description' %}-description{% else %}description{% endif %}&description={{ request.GET.description }}&address={{ request.GET.address }}">
+            Name
+            {% if sort == 'description' %}↑{% elif sort == '-description' %}↓{% endif %}
           </a>
         </th>
-      {% endfor %}
-    </tr>
-  </thead>
-  <tbody>
-    {% for location in location_list %}
-      <tr>
-        <td><a href="{% url 'edit_location' location.id %}">{{ location.description }}</a></td>
-        <td>{{ location.address }}</td>
-        <td>{{ location.gps_coordinates }}</td>
-        <td>{{ location.item_count }}</td>
+        <th>
+          <a href="?sort={% if sort == 'address' %}-address{% else %}address{% endif %}&description={{ request.GET.description }}&address={{ request.GET.address }}">
+            Address
+            {% if sort == 'address' %}↑{% elif sort == '-address' %}↓{% endif %}
+          </a>
+        </th>
+        <th>
+          <a href="?sort={% if sort == 'gps_coordinates' %}-gps_coordinates{% else %}gps_coordinates{% endif %}&description={{ request.GET.description }}&address={{ request.GET.address }}">
+            GPS
+            {% if sort == 'gps_coordinates' %}↑{% elif sort == '-gps_coordinates' %}↓{% endif %}
+          </a>
+        </th>
+        <th>
+          <a href="?sort={% if sort == 'item_count' %}-item_count{% else %}item_count{% endif %}&description={{ request.GET.description }}&address={{ request.GET.address }}">
+            Item Count
+            {% if sort == 'item_count' %}↑{% elif sort == '-item_count' %}↓{% endif %}
+          </a>
+        </th>
       </tr>
-    {% endfor %}
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      {% for location in location_list %}
+        <tr>
+          <td><a href="{% url 'edit_location' location.id %}">{{ location.description }}</a></td>
+          <td>{{ location.address }}</td>
+          <td>{{ location.gps_coordinates }}</td>
+          <td>{{ location.item_count }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
 
 {% endblock %}

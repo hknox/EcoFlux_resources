@@ -34,7 +34,7 @@ class InventoryListView(LoginRequiredMixin, ListView):
 
 class LocationListView(LoginRequiredMixin, ListView):
     model = Location
-    paginate_by = 14
+    paginate_by = 15
     template_name = "inventory/location_list.html"
 
     def get_queryset(self):
@@ -57,6 +57,44 @@ class LocationListView(LoginRequiredMixin, ListView):
                 qs = qs.order_by(Lower(sort))
 
         return qs
+
+    def get_queryset(self):
+        qs = super().get_queryset().annotate(item_count=Count("inventory_items"))
+
+        # Get sort and filter parameters
+        description_filter = self.request.GET.get("description", "")
+        address_filter = self.request.GET.get("address", "")
+        gps_coordinates_filter = self.request.GET.get("gps_coordinates", "")
+        item_count_filter = self.request.GET.get("item_count")
+
+        # Apply filters to queryset
+        if description_filter:
+            qs = qs.filter(description__icontains=description_filter)
+        if address_filter:
+            qs = qs.filter(address__icontains=address_filter)
+        if gps_coordinates_filter:
+            qs = qs.filter(gps_coordinates__icontains=gps_coordinates_filter)
+        if item_count_filter:
+            try:
+                qs = qs.filter(item_count=int(item_count_filter))
+            except ValueError:
+                pass  # Ignore invalid input
+
+        # Apply sorting
+        sort = self.request.GET.get("sort", "description")
+        if sort.lstrip("-") in [
+            "description",
+            "address",
+            "gps_coordinates",
+            "id",
+            "item_count",
+        ]:
+            if sort.startswith("-"):
+                qs = qs.order_by(Lower(sort[1:]).desc())
+            else:
+                qs = qs.order_by(Lower(sort))
+
+        return qs.annotate(item_count=Count("inventory_items"))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
