@@ -1,0 +1,28 @@
+<!-- templates/inventory/include/filters.html -->
+{% load custom_filters %}
+
+<form method="get" class="mb-3">
+  <div class="row g-2 align-items-end">
+    {% for field in filter_fields %}
+    <div class="col-md">
+      <label for="{{ field.name }}" class="form-label mb-1">{{ field.label }}</label>
+      <input type="{{ field.type }}" name="{{ field.name }}" id="{{ field.name }}" value="{{ request.GET|get_item:field.name }}" class="form-control form-control-sm">
+    </div>
+    {% endfor %}
+
+    {% if sort_param %}
+      <input type="hidden" name="sort" value="{{ request.GET.sort }}">
+    {% endif %}
+
+    <div class="col-auto d-flex gap-2 align-items-end">
+      <button type="submit" class="btn btn-sm btn-primary">Filter</button>
+      <a href="{{ reset_url }}" class="btn btn-sm btn-secondary">Reset</a>
+    </div>
+
+    {% if add_url %}
+    <div class="col-auto">
+      <a href="{{ add_url }}" class="btn btn-sm btn-success">Add {{ add_label }}</a>
+    </div>
+    {% endif %}
+  </div>
+</form>

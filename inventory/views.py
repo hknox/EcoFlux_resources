@@ -36,27 +36,7 @@ class LocationListView(LoginRequiredMixin, ListView):
     model = Location
     paginate_by = 15
     template_name = "inventory/location_list.html"
-
-    def get_queryset(self):
-        """Enable sorting on a given column, including annotated item_count"""
-        qs = super().get_queryset().annotate(item_count=Count("inventory_items"))
-        if not qs.exists():
-            messages.info(self.request, "No locations entered.")
-            return qs
-        sort = self.request.GET.get("sort", "description")
-        if sort.lstrip("-") in [
-            "description",
-            "address",
-            "gps_coordinates",
-            "id",
-            "item_count",
-        ]:
-            if sort.startswith("-"):
-                qs = qs.order_by(Lower(sort[1:]).desc())
-            else:
-                qs = qs.order_by(Lower(sort))
-
-        return qs
+    context_object_name = "location_list"
 
     def get_queryset(self):
         qs = super().get_queryset().annotate(item_count=Count("inventory_items"))
@@ -98,13 +78,24 @@ class LocationListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
         context["sort"] = self.request.GET.get("sort", "description")
-        context["sortable_columns"] = [
-            ("description", "Name"),
-            ("address", "Address"),
-            ("gps_coordinates", "GPS"),
-            ("item_count", "Item Count"),
+        context["filter_fields"] = [
+            {"name": "description", "label": "Description", "type": "text"},
+            {"name": "address", "label": "Address", "type": "text"},
+            {"name": "item_count", "label": "Item Count", "type": "number"},
         ]
+
+        context["table_fields"] = [
+            {"name": "description", "label": "Name"},
+            {"name": "address", "label": "Address"},
+            {"name": "gps_coordinates", "label": "GPS"},
+            {"name": "item_count", "label": "Items"},
+        ]
+
+        context["reset_url"] = reverse("view_locations")
+        context["add_url"] = reverse("add_location")
+
         return context
 
 

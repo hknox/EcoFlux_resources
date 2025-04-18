@@ -1,0 +1,45 @@
+<!-- templates/inventory/include/sortable_table.html -->
+<!-- provide sortable links at top of table columns -->
+{% load querystring custom_filters %}
+
+<table class="table-hover table">
+  <thead>
+    <tr>
+      {% with current_sort=request.GET.sort %}
+      {% for field in table_fields %}
+      <th>
+        {% if current_sort == field.name %}
+        <a href="?{% querystring_without_sort %}&sort=-{{ field.name }}">
+          {{ field.label }} <i class="fas fa-sort-down"></i>
+        </a>
+        {% elif current_sort == "-"|add:field.name %}
+        <a href="?{% querystring_without_sort %}&sort={{ field.name }}">
+          {{ field.label }} <i class="fas fa-sort-up"></i>
+        </a>
+        {% else %}
+        <a href="?{% querystring_without_sort %}&sort={{ field.name }}">
+          {{ field.label }} <i class="fas fa-sort text-muted"></i>
+        </a>
+        {% endif %}
+      </th>
+      {% endfor %}
+      {% endwith %}
+    </tr>
+  </thead>
+
+  <tbody>
+    {% for item in table_items %}
+    <tr>
+      {% for field in table_fields %}
+        <td>
+          {% if forloop.first and item.id %}
+            <a href="{% url edit_url_name item.id %}">{{ item|get_field_display:field.name }}</a>
+          {% else %}
+            {{ item|get_field_display:field.name }}
+          {% endif %}
+        </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
