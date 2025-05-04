@@ -1,7 +1,8 @@
+from django.contrib.auth.forms import password_validation
 from django.db.models import Count
 from django.views.generic.list import ListView
 from django.views.generic.edit import UpdateView, CreateView, DeleteView
-from django.shortcuts import redirect  # render, get_object_or_404, redirect
+from django.shortcuts import redirect, render  # , get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -12,6 +13,17 @@ from django.urls import reverse_lazy, reverse
 
 from inventory.models import Location, InventoryItem
 from .forms import InventoryItemForm, LocationForm, MaintenanceRecordFormSet
+
+
+def test_html(request):
+    class User:
+        def __init__(self):
+            self.is_authenticated = True
+            self.username = "HTML Tester"
+
+    print("well well, test_html")
+    context = {"user": User()}
+    return render(request, "inventory/site_base.html", context)
 
 
 class InventoryListView(LoginRequiredMixin, ListView):
