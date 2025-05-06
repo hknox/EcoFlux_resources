@@ -20,6 +20,7 @@ def test_html(request):
         def __init__(self):
             self.is_authenticated = True
             self.username = "HTML Tester"
+            self.is_superuser = True
 
     print("well well, test_html")
     context = {"user": User()}

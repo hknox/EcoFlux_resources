@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {% load django_bootstrap5 %}
     {% bootstrap_css %}
-    {% bootstrap_javascript %}
     <!-- Bootstrap Icons CDN -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <!-- Font Awesome CDN -->
@@ -25,8 +24,7 @@
 
   <body>
     <!-- Fixed Banner -->
-    <header class="bg-primary sticky-top text-white py-2 shadow-sm" >
-      <!-- or simply, "container"? -->
+    <header class="fixed-top text-bg-primary text-white py-2 shadow-sm" >
       <div class="container-fluid d-flex justify-content-between align-items-center">
         <!-- Logo -->
         <a href="{% url 'home' %}" class="d-flex align-items-center text-white text-decoration-none">
@@ -43,7 +41,7 @@
           <a href="{% url 'view_locations' %}" class="text-white me-3">Locations</a>
           {% if user.is_superuser %}
           <a href="{% url 'admin:index' %}"
-             class="text-white me-3">Admin Dashboard</a>
+             class="text-white me-3">User Admin</a>
           {% endif %}
           <!-- Logout Form Styled as a Button -->
           <form id="logout-form"
@@ -53,8 +51,8 @@
             {% csrf_token %}
             <button type="submit"
                     class="btn btn-light btn-sm text-primary
-                           fw-bold mb-1">
-              Logout</button>
+                           fw-bold mb-1">Logout
+            </button>
           </form>
           {% endif %}
         </nav>
@@ -62,7 +60,7 @@
     </header>
 
     <!-- Main Content -->
-    <main class="container flex-grow-1  py-2">
+    <main class="container-fuild flex-grow-1 pt-5 mt-5 mx-4 py-2">
       <div class="row justify-content-center">
         {% block content %}
         {% endblock %}
@@ -70,16 +68,17 @@
     </main>
 
     <!-- <\!-- Footer -\-> -->
-      <!-- <footer class="bg-primary text-white py-3 mt-5 fixed-bottom"> -->
-        <!--     <div class="container text-center"> -->
-          <!--         <p class="mb-0">&copy; 2025 My Django App. All rights reserved.</p> -->
-          <!--     </div> -->
-        <!-- </footer> -->
+    <!-- <footer class="bg-primary text-white py-3 mt-5 fixed-bottom"> -->
+    <!--   <div class="container text-center"> -->
+    <!--     <p class="mb-0">&copy; 2025 Hank Knox. All rights reserved.</p> -->
+    <!--   </div> -->
+    <!-- </footer> -->
 
-      <!-- Project JavaScript -->
-      <script src="{% static 'js/form_protect.js' %}"></script>
+    <!-- Project JavaScript -->
+    <script src="{% static 'js/form_protect.js' %}"></script>
 
-      {% block extra_js %}
-      {% endblock %}
+    {% bootstrap_javascript %}
+    {% block extra_js %}
+    {% endblock %}
   </body>
 </html>
