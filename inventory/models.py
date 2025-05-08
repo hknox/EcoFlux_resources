@@ -1,13 +1,17 @@
 # Can add 'help_text' to each field, see
-# https://docs.djangoproject.com/en/5.1/topics/db/models/, look for
+# https://docs.djangoproject.com/en/5.2/topics/db/models/, look for
 # help_text
 
 from django.db import models
+from django.forms import fields
 
 
-class Location(models.Model):
+class Site(models.Model):
     description = models.CharField(max_length=100)
+    code = models.CharField(max_length=10)
     address = models.TextField()
+    date_activated = models.DateField()
+    date_deactivated = models.DateField(blank=True, null=True)
     gps_coordinates = models.CharField(max_length=50, blank=True)
 
     def __str__(self):
@@ -23,7 +27,7 @@ class InventoryItem(models.Model):
     # "a_location.inventory_items.all()"
     # to get all inventory items at that location.
     location = models.ForeignKey(
-        Location, on_delete=models.SET_NULL, null=True, related_name="inventory_items"
+        Site, on_delete=models.SET_NULL, null=True, related_name="inventory_items"
     )
 
     class Meta:

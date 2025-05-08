@@ -1,0 +1,77 @@
+<!-- templates/inventory/site_detail.html -->
+{% extends "inventory/layout_base.html" %}
+
+<head>
+  {% load django_bootstrap5 %}
+  {% block title %}EcoFlux Site{% endblock %}
+</head>
+
+{% block extra_css %}
+    <!-- Bootstrap Datepicker CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-datepicker@1.10.0/dist/css/bootstrap-datepicker3.min.css">
+    <style>
+      .form-floating.custom-height textarea,
+      .custom-height .form-control {
+          height: 120px !important;
+      }
+    </style>
+
+{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">{{action}}Site</h1>
+
+    <!-- This <form> will be closed by detail_buttons.html -->
+      <form method="post" enctype="multipart/form-data" class="track-unsaved">
+        {% csrf_token %}
+        <div class="row">
+          <div class="col-md-8">
+            {% bootstrap_field form.description layout="floating" %}
+          </div>
+          <div class="col-md-4">
+            {% bootstrap_field form.code layout="floating" %}
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-8">
+            {% bootstrap_field form.address layout="floating" wrapper_class="custom-height" %}
+          </div>
+          <div class="col-md-4">
+            {% bootstrap_field form.gps_coordinates layout="floating" %}
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            {% bootstrap_field form.date_activated layout="floating" %}
+          </div>
+        </div>
+
+        {% include "inventory/include/detail_buttons.html" with object=site cancel_url=cancel_url %}
+
+        {% comment %}
+        {% if items %}
+        <!-- Section: Inventory at this location -->
+        <h5 class="text-primary fw-bold mt-5">Inventory Items at This Site</h5>
+
+        <table class="table table-hover mt-3">
+          <thead>
+            <tr>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+            <tr>
+              <td>{{ item.description }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% endif %}
+        {% endcomment %}
+
+{% endblock content %}
+
+{% block extra_js %}
+        {% include "inventory/include/datepicker.html" %}
+{% endblock extra_js %}

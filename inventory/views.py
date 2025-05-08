@@ -11,8 +11,8 @@ from django.db.models.functions import Lower
 from urllib.parse import urlencode
 from django.urls import reverse_lazy, reverse
 
-from inventory.models import Location, InventoryItem
-from .forms import InventoryItemForm, LocationForm, MaintenanceRecordFormSet
+from inventory.models import Site, InventoryItem
+from .forms import InventoryItemForm, SiteForm, MaintenanceRecordFormSet
 
 
 def test_html(request):
@@ -45,14 +45,17 @@ class InventoryListView(LoginRequiredMixin, ListView):
         )
 
 
-class LocationListView(LoginRequiredMixin, ListView):
-    model = Location
+class SiteListView(LoginRequiredMixin, ListView):
+    model = Site
     paginate_by = 15
-    template_name = "inventory/location_list.html"
-    context_object_name = "location_list"
+    template_name = "inventory/sites_list.html"
+    context_object_name = "sites_list"
 
     def get_queryset(self):
         qs = super().get_queryset().annotate(item_count=Count("inventory_items"))
+
+        if len(qs.all()) == 0:
+            messages.info(self.request, "No sites are currently defined.")
 
         # Get sort and filter parameters
         description_filter = self.request.GET.get("description", "")

@@ -1,16 +1,24 @@
 from django import forms
 from django.forms import inlineformset_factory
-from .models import Location, InventoryItem, MaintenanceRecord
+
+from .models import Site, InventoryItem, MaintenanceRecord
 
 
-from django import forms
-from .models import InventoryItem
-
-
-class LocationForm(forms.ModelForm):
+class SiteForm(forms.ModelForm):
     class Meta:
-        model = Location
-        fields = ["description", "address", "gps_coordinates"]
+        model = Site
+        fields = [
+            "description",
+            "code",
+            "date_activated",
+            "address",
+            "gps_coordinates",
+        ]
+        widgets = {
+            "date_activated": forms.TextInput(
+                attrs={"class": "form-control datepicker"}
+            ),
+        }  # Use existing datepicker
 
 
 class InventoryItemForm(forms.ModelForm):
@@ -33,7 +41,7 @@ class InventoryItemForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Populate the location dropdown dynamically
-        self.fields["location"].queryset = Location.objects.all()
+        self.fields["location"].queryset = Site.objects.all()
         self.fields["location"].empty_label = "Select a Location"  # Placeholder option
 
 

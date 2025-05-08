@@ -1,0 +1,16 @@
+{% extends "inventory/list_base.html" %}
+{% load querystring custom_filters %}
+
+{% block list_content %}
+
+<div class="mb-2">
+  <h1 class="display-5 fw-bold mb-0">Sites</h1>
+</div>
+
+{% include "inventory/include/filters.html" with filter_fields=filter_fields reset_url=reset_url add_url=add_url add_label="Site" sort_param=True %}
+
+{% comment %} {% endcomment  %}
+
+  {% include "inventory/include/sortable_table.html" with table_fields=table_fields table_items=sites_list edit_url_name="edit_site" %}
+
+{% endblock list_content %}
