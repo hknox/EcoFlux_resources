@@ -16,7 +16,7 @@ urlpatterns = [
         views.InventoryItemUpdateView.as_view(),
         name="inventory_edit",
     ),
-    path("locations/", views.LocationListView.as_view(), name="view_locations"),
+    path("sites/", views.SiteListView.as_view(), name="view_sites"),
     path(
         "locations/edit/<int:pk>/",
         views.LocationUpdateView.as_view(),
@@ -28,8 +28,8 @@ urlpatterns = [
         name="delete_location",
     ),
     path(
-        "locations/add/",
-        views.LocationCreateView.as_view(),
-        name="add_location",
+        "sites/add/",
+        views.SiteCreateView.as_view(),
+        name="add_site",
     ),
 ]

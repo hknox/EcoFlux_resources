@@ -38,7 +38,7 @@
           {% if user.is_authenticated %}
           <span class="me-3">Hello, <strong>{{user.username}}</strong>!</span>
           <a href="{% url 'home' %}" class="text-white me-3">Inventory</a>
-          <a href="{% url 'view_locations' %}" class="text-white me-3">Locations</a>
+          <a href="{% url 'view_sites' %}" class="text-white me-3">Sites</a>
           {% if user.is_superuser %}
           <a href="{% url 'admin:index' %}"
              class="text-white me-3">User Admin</a>
