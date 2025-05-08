@@ -3,11 +3,14 @@
 
 {% block list_content %}
 
-<div class="mb-2">
-  <h1 class="display-5 fw-bold mb-0">Sites</h1>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1>Sites</h1>
+  <a href="{% url 'add_site' %}" class="btn btn-success">
+       Add Site</a>
+   </div>
 </div>
 
-{% include "inventory/include/filters.html" with filter_fields=filter_fields reset_url=reset_url add_url=add_url add_label="Site" sort_param=True %}
+{% include "inventory/include/filters.html" with filter_fields=filter_fields reset_url=reset_url sort_param=True %}
 
 {% comment %} {% endcomment  %}
 

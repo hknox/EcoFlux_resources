@@ -109,8 +109,8 @@ class SiteListView(LoginRequiredMixin, ListView):
             {"name": "item_count", "label": "Items"},
         ]
 
-        context["reset_url"] = reverse("view_locations")
-        context["add_url"] = reverse("add_location")
+        context["reset_url"] = reverse("view_sites")
+        context["add_url"] = reverse("add_site")
 
         return context
 
@@ -188,37 +188,35 @@ class LocationDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
         )
 
 
-class LocationCreateView(LoginRequiredMixin, CreateView):
-    model = Location
-    form_class = LocationForm
-    # fields = ["description", "address", "gps_coordinates"]
-    template_name = "inventory/location_detail_form.html"
-    success_url = reverse_lazy("view_locations")
+class SiteCreateView(LoginRequiredMixin, CreateView):
+    model = Site
+    form_class = SiteForm
+    template_name = "inventory/site_detail.html"
+    success_url = reverse_lazy("view_sites")
 
     def get_context_data(self, **kwargs):
-        """Returns a dict with keys, 'object', 'location', 'form', 'view'.
+        """Returns a dict with keys, 'object', 'site', 'form', 'view'.
 
         Each of those items is available under that name in template."""
         context_data = super().get_context_data(**kwargs)
-        context_data["cancel_url"] = reverse("view_locations")
+        context_data["cancel_url"] = reverse("view_sites")
+        context_data["action"] = "New"
+
+        # ADD PHOTOS here
         return context_data
 
 
-class LocationUpdateView(LoginRequiredMixin, UpdateView):
-    model = Location
-    form_class = LocationForm
-    # fields = ["description", "address", "gps_coordinates"]
-    template_name = "inventory/location_detail_form.html"
-    success_url = reverse_lazy("view_locations")
+class SiteUpdateView(LoginRequiredMixin, UpdateView):
+    model = Site
+    form_class = SiteForm
+    template_name = "inventory/site_detail.html"
+    success_url = reverse_lazy("view_sites")
 
     def get_context_data(self, **kwargs):
-        """Returns a dict with keys, 'object', 'location', 'form', 'view'.
-
-        Each of those items is available under that name in template."""
         context_data = super().get_context_data(**kwargs)
-        context_data["cancel_url"] = reverse("view_locations")
+        context_data["cancel_url"] = reverse("view_sites")
         context_data["delete_url"] = reverse(
-            "delete_location",
+            "delete_site",
             args=[
                 self.object.id,
             ],

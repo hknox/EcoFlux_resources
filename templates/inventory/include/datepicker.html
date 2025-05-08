@@ -1,0 +1,67 @@
+{% comment %}
+<!-- Bootstrap Datepicker JS (include this in {% block extra_js %}
+at the bottom for better performance) -->
+{% endcomment %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-datepicker@1.10.0/dist/js/bootstrap-datepicker.min.js">
+</script>
+
+<script>
+  $(document).ready(function () {
+      $('.datepicker').datepicker({
+          format: 'yyyy-mm-dd',
+          autoclose: true,
+          todayHighlight: true,
+          container: 'body'  // Ensure the dropdown is appended to the body
+      }).on('show', function () {
+          adjustDatepickerPosition();
+      }).on('changeMonth', function () {
+          adjustDatepickerPosition();
+      });
+
+      function adjustDatepickerPosition() {
+          var datepickerDropdown = $('.datepicker-dropdown');
+          var inputOffset = $('.datepicker').offset();  // Position of the input
+          var navbarHeight = $('.navbar').outerHeight();  // Height of the navbar
+          var dropdownHeight = datepickerDropdown.outerHeight();  // Height of the dropdown
+
+          // Position the dropdown just below the input field
+          var dropdownTop = inputOffset.top + $('.datepicker').outerHeight() + 5;  // Adding a little space
+
+          // Ensure the dropdown doesn't get cut off by the bottom of the screen
+          var windowHeight = $(window).height();
+          if (dropdownTop + dropdownHeight > windowHeight) {
+              dropdownTop = inputOffset.top - dropdownHeight - 5;  // If not enough space, show it above the input
+          }
+
+          // Set the final position
+          datepickerDropdown.css({
+              'top': dropdownTop + 'px',
+              'left': inputOffset.left + 'px'  // Align it with the input field
+          });
+      }
+  });
+</script>
+
+<script>
+  $(document).ready(function() {
+      var formsetContainer = $('.row');  // Container holding the formset
+      var totalForms = $('#id_maintenance_records-TOTAL_FORMS');  // Hidden input tracking total forms
+
+      // Add new form
+      $('#add-record').click(function() {
+          var formNum = parseInt(totalForms.val());
+          var newForm = '{{ formset.empty_form.as_p|escapejs }}'.replace(/__prefix__/g, formNum);
+          formsetContainer.append(newForm);
+          totalForms.val(formNum + 1);  // Update total forms count
+      });
+
+      // Remove form
+      $(document).on('click', '.remove-record', function() {
+          $(this).closest('.col-md-6').remove();
+          // Update total forms count
+          var count = $('.col-md-6').length;
+          totalForms.val(count);
+      });
+  });
+</script>
