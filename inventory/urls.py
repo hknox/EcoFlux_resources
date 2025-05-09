@@ -18,14 +18,14 @@ urlpatterns = [
     ),
     path("sites/", views.SiteListView.as_view(), name="view_sites"),
     path(
-        "locations/edit/<int:pk>/",
-        views.LocationUpdateView.as_view(),
-        name="edit_location",
+        "sites/edit/<int:pk>/",
+        views.SiteUpdateView.as_view(),
+        name="edit_site",
     ),
     path(
-        "locations/delete/<int:pk>/",
-        views.LocationDeleteView.as_view(),
-        name="delete_location",
+        "sites/delete/<int:pk>/",
+        views.SiteDeleteView.as_view(),
+        name="delete_site",
     ),
     path(
         "sites/add/",

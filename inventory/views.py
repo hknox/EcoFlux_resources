@@ -159,10 +159,10 @@ class InventoryItemUpdateView(UpdateView):
         return self.render_to_response(self.get_context_data(form=form))
 
 
-class LocationDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
-    model = Location
-    success_url = reverse_lazy("view_locations")
-    success_message = "Location %(description)s was deleted successfully!"
+class SiteDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
+    model = Site
+    success_url = reverse_lazy("view_sites")
+    success_message = "Site %(description)s was deleted successfully!"
 
     # Can use this to protect agains deleting a location holding
     # inventory items:
