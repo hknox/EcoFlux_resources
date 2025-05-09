@@ -2,10 +2,10 @@
 <!-- provide sortable links at top of table columns -->
 {% load querystring custom_filters %}
 
-<table class="table-hover table">
+<table class="table table-striped table-hover">
   <thead>
     <tr>
-      {% with current_sort=request.GET.sort %}
+      {% with current_sort=sort %}  <!--was: request.GET.sort %}  -->
       {% for field in table_fields %}
       <th>
         {% if current_sort == field.name %}

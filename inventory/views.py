@@ -50,6 +50,8 @@ class SiteListView(LoginRequiredMixin, ListView):
     paginate_by = 15
     template_name = "inventory/sites_list.html"
     context_object_name = "sites_list"
+    # Default sort order
+    _sort_key = "description"
 
     def get_queryset(self):
         qs = super().get_queryset().annotate(item_count=Count("inventory_items"))
@@ -77,7 +79,9 @@ class SiteListView(LoginRequiredMixin, ListView):
                 pass  # Ignore invalid input
 
         # Apply sorting
-        sort = self.request.GET.get("sort", "description")
+        sort = self.request.GET.get("sort", SiteListView._sort_key)
+        SiteListView._sort_key = sort
+
         if sort.lstrip("-") in [
             "description",
             "address",
@@ -95,20 +99,18 @@ class SiteListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context["sort"] = self.request.GET.get("sort", "description")
+        context["sort"] = SiteListView._sort_key
         context["filter_fields"] = [
             {"name": "description", "label": "Description", "type": "text"},
             {"name": "address", "label": "Address", "type": "text"},
             {"name": "item_count", "label": "Item Count", "type": "number"},
         ]
-
         context["table_fields"] = [
             {"name": "description", "label": "Name"},
             {"name": "address", "label": "Address"},
             {"name": "gps_coordinates", "label": "GPS"},
             {"name": "item_count", "label": "Items"},
         ]
-
         context["reset_url"] = reverse("view_sites")
         context["add_url"] = reverse("add_site")
 
