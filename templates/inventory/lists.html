@@ -1,0 +1,26 @@
+{% extends "inventory/layout_base.html" %}
+{% load querystring custom_filters %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center">
+  <h2>{{heading}}</h2>
+  <a href={{ add_url }} class="btn btn-success">
+    {{add_button}}</a>
+</div>
+
+<div class="row">
+  <div class="col-md-10 mt-2">
+    {% include "inventory/include/sortable_table.html" with table_fields=table_fields table_items=table_items edit_url_name=edit_url %}
+
+    <!-- Show Django messages -->
+    {% include "inventory/include/messages.html" %}
+  </div>
+
+  <div class="col-md-2">
+    <h4>Filters</h4>
+    {% include "inventory/include/filters.html" with filter_fields=filter_fields reset_url=reset_url sort_param=True %}
+  </div>
+</div>
+
+{% endblock content %}

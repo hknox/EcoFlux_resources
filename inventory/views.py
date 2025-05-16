@@ -30,33 +30,68 @@ def test_html(request):
 class InventoryListView(LoginRequiredMixin, ListView):
     model = InventoryItem
     fields = ["description", "serial_number", "location"]
-    template_name = "inventory/inventory_list.html"
+    template_name = "inventory/lists.html"
     paginate_by = 14
-    context_object_name = "inventory_list"
+    context_object_name = "table_items"
+    _sort_key = "description"
 
     def get_queryset(self):
-        qs = InventoryItem.objects
-        if len(qs.all()) == 0:
-            messages.info(self.request, "No inventory items entered.")
+        base_qs = InventoryItem.objects.all()
+        qs = base_qs
+
+        if not qs.exists():
+            messages.info(self.request, "No items are currently in the inventory.")
+
         # Done this way to ensure the ordering matches the desired
-        # order defined in the model Meta class:
+        # order defined in the model Meta class: CHANGE THIS!
         return qs.annotate(maintenance_count=Count("maintenance_records")).order_by(
             *self.model._meta.ordering
         )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["sort"] = SiteListView._sort_key
+        context["filter_fields"] = [
+            {"name": "description", "label": "Description", "type": "text"},
+            {"name": "serial_number", "label": "Serial number", "type": "text"},
+            {"name": "site", "label": "Site", "type": "text"},
+            {"name": "notes", "label": "Notes", "type": "text"},
+        ]
+        context["table_fields"] = [
+            {"name": "description", "label": "Description"},
+            {"name": "location", "label": "Site"},
+            {"name": "serial_number", "label": "Serial number"},
+            {"name": "notes", "label": "Notes"},
+        ]
+        context["reset_url"] = reverse("home")
+        context["add_url"] = reverse("inventory_add")
+        context["heading"] = "Inventory"
+        context["add_button"] = "Add New Inventory Item"
+        context["edit_url"] = "inventory_edit"
+
+        return context
 
 
 class SiteListView(LoginRequiredMixin, ListView):
     model = Site
     paginate_by = 15
-    template_name = "inventory/sites_list.html"
-    context_object_name = "sites_list"
+    template_name = "inventory/lists.html"
+    context_object_name = "table_items"
     # Default sort order
     _sort_key = "description"
 
-    def get_queryset(self):
-        qs = super().get_queryset().annotate(item_count=Count("inventory_items"))
+    def _temp(self):
+        return super().get_queryset()
 
-        if len(qs.all()) == 0:
+    def get_queryset(self):
+        # This line results in warnings about unreachable code:
+        # qs = super().get_queryset().annotate(item_count=Count("inventory_items"))
+        # Doing it this way avoids the warning:
+        base_qs = Site.objects.all()
+        qs = base_qs.annotate(item_count=Count("inventory_items"))
+
+        if not qs.exists():
             messages.info(self.request, "No sites are currently defined.")
 
         # Get sort and filter parameters
@@ -101,9 +136,8 @@ class SiteListView(LoginRequiredMixin, ListView):
 
         context["sort"] = SiteListView._sort_key
         context["filter_fields"] = [
-            {"name": "description", "label": "Description", "type": "text"},
+            {"name": "description", "label": "Name", "type": "text"},
             {"name": "address", "label": "Address", "type": "text"},
-            {"name": "item_count", "label": "Item Count", "type": "number"},
         ]
         context["table_fields"] = [
             {"name": "description", "label": "Name"},
@@ -113,6 +147,9 @@ class SiteListView(LoginRequiredMixin, ListView):
         ]
         context["reset_url"] = reverse("view_sites")
         context["add_url"] = reverse("add_site")
+        context["heading"] = "Sites"
+        context["add_button"] = "Add New Site"
+        context["edit_url"] = "edit_site"
 
         return context
 

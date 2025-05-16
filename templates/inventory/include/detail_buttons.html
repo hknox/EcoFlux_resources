@@ -1,32 +1,29 @@
 <!-- templates/inventory/include/detail_buttons.html-->
 <!-- NOTE the closing </form> tag after the Cancel button: it assumes --
   -- the enclosing template opens a form but doesn't close it -->
-    <div class="d-flex gap-2 mt-4 flex-wrap align-items-center">
-      <!-- Save -->
-      <button type="submit" class="btn btn-success">
-        <i class="bi bi-check-circle"></i> Save
-      </button>
+<div class="d-flex gap-2 mt-4 flex-wrap align-items-center">
+  <!-- Save -->
+  <button type="submit" class="btn btn-success">
+    <i class="bi bi-check-circle"></i> Save
+  </button>
+</form>
 
-      <!-- Cancel -->
-      <a href="{{ cancel_url }}"
-         class="btn btn-secondary"
-         onclick="return confirmCancel(event);"
-         data-skip-unsaved-check>
-        <i class="bi bi-x-circle"></i> Cancel
-      </a>
-  </form>
+<!-- Cancel -->
+<a href="{{ cancel_url }}"
+   class="btn btn-secondary"
+  <i class="bi bi-x-circle"></i> Cancel
+</a>
 
-      {% if delete_url %}
-        <!-- Delete -->
-        <form method="post"
-              action="{{ delete_url }}"
-              onsubmit="return confirmDelete();"
-              class="d-inline">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-danger">
-            <i class="bi bi-trash"></i> Delete
-          </button>
-        </form>
-      {% endif %}
-    </div>
-  </form>
+{% if delete_url %}
+<!-- Delete -->
+<form method="post"
+      action="{{ delete_url }}"
+      onsubmit="return confirmDelete();"
+      class="d-inline">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-danger">
+    <i class="bi bi-trash"></i> Delete
+  </button>
+</form>
+{% endif %}
+</div>
