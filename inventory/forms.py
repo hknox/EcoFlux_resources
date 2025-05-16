@@ -15,27 +15,28 @@ class SiteForm(forms.ModelForm):
             "gps_coordinates",
         ]
         widgets = {
-            "date_activated": forms.TextInput(
-                attrs={"class": "form-control datepicker"}
+            "date_activated": forms.DateInput(
+                attrs={
+                    "class": "form-control datepicker",  # "datepicker" for JS hook, "form-control" for Bootstrap
+                    "placeholder": "YYYY-MM-DD",  # Needed for floating label
+                    "autocomplete": "off",
+                }
             ),
-        }  # Use existing datepicker
+        }
 
 
 class InventoryItemForm(forms.ModelForm):
-    date_purchased = forms.DateField(
-        widget=forms.DateInput(
-            attrs={"class": "form-control datepicker"}
-        ),  # Add Bootstrap class
-        required=True,
-    )
-
     class Meta:
         model = InventoryItem
         fields = ["description", "serial_number", "date_purchased", "location", "notes"]
         widgets = {
-            "location": forms.Select(
-                attrs={"class": "form-select"}
-            ),  # Bootstrap Select
+            "location": forms.Select(attrs={"class": "form-select"}),
+            "date_purchased": forms.DateInput(
+                attrs={
+                    "class": "form-control datepicker",
+                    "placeholder": "YYYY-MM-DD",
+                }
+            ),
         }
 
     def __init__(self, *args, **kwargs):
@@ -50,9 +51,12 @@ class MaintenanceRecordForm(forms.ModelForm):
         model = MaintenanceRecord
         fields = ["date", "description"]
         widgets = {
-            "date": forms.TextInput(
-                attrs={"class": "form-control datepicker"}
-            ),  # Use existing datepicker
+            "date": forms.DateInput(
+                attrs={
+                    "class": "form-control datepicker",
+                    "placeholder": "YYYY-MM-DD",
+                }
+            ),
             "description": forms.TextInput(
                 attrs={"class": "form-control"}
             ),  # Single-line text input

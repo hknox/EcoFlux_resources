@@ -1,4 +1,4 @@
-# Can add 'help_text' to each field, see
+# Can add 'help_text' to each field creation call, see
 # https://docs.djangoproject.com/en/5.2/topics/db/models/, look for
 # help_text
 

@@ -157,22 +157,36 @@ class SiteListView(LoginRequiredMixin, ListView):
 class InventoryItemCreateView(CreateView):
     model = InventoryItem
     form_class = InventoryItemForm
-    template_name = "inventory/inventory_item_form.html"
+    template_name = "inventory/item_detail.html"
     success_url = reverse_lazy("home")
 
     def form_valid(self, form):
-        messages.success(self.request, "Inventory item added successfully!")
+        messages.success(self.request, "Inventory item added successfully.")
         return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        """Returns a dict with keys, 'object', 'site', 'form', 'view'.
+
+        Each of those items is available under that name in template."""
+        context_data = super().get_context_data(**kwargs)
+        context_data["cancel_url"] = reverse("home")
+        context_data["action"] = "New"
+        print(context_data)
+
+        return context_data
 
 
 class InventoryItemUpdateView(UpdateView):
     model = InventoryItem
     form_class = InventoryItemForm
-    template_name = "inventory/inventory_item_form.html"
+    template_name = "inventory/item_detail.html"
     success_url = reverse_lazy("home")
 
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
+        context_data["cancel_url"] = reverse("home")
+        context_data["action"] = "Edit"
+
         if self.request.POST:
             context_data["formset"] = MaintenanceRecordFormSet(
                 self.request.POST, instance=self.object
@@ -254,6 +268,7 @@ class SiteUpdateView(LoginRequiredMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context_data = super().get_context_data(**kwargs)
         context_data["cancel_url"] = reverse("view_sites")
+        context_data["action"] = "Edit"
         context_data["delete_url"] = reverse(
             "delete_site",
             args=[
@@ -261,6 +276,7 @@ class SiteUpdateView(LoginRequiredMixin, UpdateView):
             ],
         )
         context_data["items"] = self.object.inventory_items.all()
+        # ADD PHOTOS here
         return context_data
 
 
