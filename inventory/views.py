@@ -26,44 +26,81 @@ def test_html(request):
     context = {"user": User()}
     return render(request, "inventory/site_base.html", context)
 
+class SortedListView(ListView):
+    """Add persistent sort machinery to ListView"""
 
-class InventoryListView(LoginRequiredMixin, ListView):
+    lookup_default = "icontains"
+
+    def apply_filters(self, queryset):
+
+        for field_filter in self.filter_fields:
+            raw_value = self.request.GET.get(field_filter["name"], "").strip()
+            if not raw_value:
+                continue
+
+            # Determine the base lookup path (e.g., location__description)
+            field_name = field_filter.get("lookup", field_filter["name"])
+            lookup_type = field_filter.get("lookup_type", self.lookup_default)
+            filter_key = f"{field_name}__{lookup_type}"
+            # Convert numbers safely
+            if field_filter["type"] == "number":
+                try:
+                    raw_value = int(raw_value)
+                except ValueError:
+                    continue
+            queryset = queryset.filter(**{filter_key: raw_value})
+
+        return queryset
+
+    def apply_sort_parameters(self, queryset):
+        sort = self.request.GET.get("sort", self._sort_key)
+        self._sort_key = sort
+        print(sort)
+
+        field_list = [field["name"] for field in self.sort_fields]
+        if sort.lstrip("-") in field_list:
+            if sort.startswith("-"):
+                print(f"BB-de: {sort}, {sort[1:]}")
+                queryset = queryset.order_by(Lower(sort[1:]).desc())
+            else:
+                print(f"BB-as: {sort}")
+                queryset = queryset.order_by(Lower(sort))
+
+        return queryset
+
+
+class InventoryListView(LoginRequiredMixin, SortedListView):
     model = InventoryItem
-    fields = ["description", "serial_number", "location"]
     template_name = "inventory/lists.html"
     paginate_by = 14
     context_object_name = "table_items"
+    # Default sort order
     _sort_key = "description"
 
+    sort_fields = [
+        {"name": "description", "label": "Description"},
+        {"name": "location", "label": "Location"},
+        {"name": "serial_number", "label": "Serial number"},
+        {"name": "notes", "label": "Notes"},
+    ]
+
     def get_queryset(self):
-        base_qs = InventoryItem.objects.all()
-        qs = base_qs
+        qs = InventoryItem.objects.all()
 
         if not qs.exists():
             messages.info(self.request, "No items are currently in the inventory.")
+            return qs
 
-        # Done this way to ensure the ordering matches the desired
-        # order defined in the model Meta class: CHANGE THIS!
-        return qs.annotate(maintenance_count=Count("maintenance_records")).order_by(
-            *self.model._meta.ordering
-        )
+        qs = self.apply_sort_parameters(qs)
+
+        return qs.annotate(maintenance_count=Count("maintenance_records"))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context["sort"] = SiteListView._sort_key
-        context["filter_fields"] = [
-            {"name": "description", "label": "Description", "type": "text"},
-            {"name": "serial_number", "label": "Serial number", "type": "text"},
-            {"name": "site", "label": "Site", "type": "text"},
-            {"name": "notes", "label": "Notes", "type": "text"},
-        ]
-        context["table_fields"] = [
-            {"name": "description", "label": "Description"},
-            {"name": "location", "label": "Site"},
-            {"name": "serial_number", "label": "Serial number"},
-            {"name": "notes", "label": "Notes"},
-        ]
+        context["sort"] = self._sort_key
+        context["filter_fields"] = self.filter_fields
+        context["table_fields"] = self.sort_fields
         context["reset_url"] = reverse("home")
         context["add_url"] = reverse("inventory_add")
         context["heading"] = "Inventory"
@@ -73,16 +110,19 @@ class InventoryListView(LoginRequiredMixin, ListView):
         return context
 
 
-class SiteListView(LoginRequiredMixin, ListView):
+class SiteListView(LoginRequiredMixin, SortedListView):
     model = Site
-    paginate_by = 15
+    paginate_by = 14
     template_name = "inventory/lists.html"
     context_object_name = "table_items"
     # Default sort order
     _sort_key = "description"
-
-    def _temp(self):
-        return super().get_queryset()
+    sort_fields = [
+        {"name": "description", "label": "Name"},
+        {"name": "address", "label": "Address"},
+        {"name": "gps_coordinates", "label": "GPS"},
+        {"name": "item_count", "label": "Items"},
+    ]
 
     def get_queryset(self):
         # This line results in warnings about unreachable code:
@@ -93,58 +133,23 @@ class SiteListView(LoginRequiredMixin, ListView):
 
         if not qs.exists():
             messages.info(self.request, "No sites are currently defined.")
+            return qs
 
-        # Get sort and filter parameters
-        description_filter = self.request.GET.get("description", "")
-        address_filter = self.request.GET.get("address", "")
-        gps_coordinates_filter = self.request.GET.get("gps_coordinates", "")
-        item_count_filter = self.request.GET.get("item_count")
-
-        # Apply filters to queryset
-        if description_filter:
-            qs = qs.filter(description__icontains=description_filter)
-        if address_filter:
-            qs = qs.filter(address__icontains=address_filter)
-        if gps_coordinates_filter:
-            qs = qs.filter(gps_coordinates__icontains=gps_coordinates_filter)
-        if item_count_filter:
-            try:
-                qs = qs.filter(item_count=int(item_count_filter))
-            except ValueError:
-                pass  # Ignore invalid input
-
-        # Apply sorting
-        sort = self.request.GET.get("sort", SiteListView._sort_key)
-        SiteListView._sort_key = sort
-
-        if sort.lstrip("-") in [
-            "description",
-            "address",
-            "gps_coordinates",
-            "id",
-            "item_count",
-        ]:
-            if sort.startswith("-"):
-                qs = qs.order_by(Lower(sort[1:]).desc())
-            else:
-                qs = qs.order_by(Lower(sort))
+        qs = self.apply_filters(qs)
+        qs = self.apply_sort_parameters(qs)
 
         return qs.annotate(item_count=Count("inventory_items"))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context["sort"] = SiteListView._sort_key
         context["filter_fields"] = [
             {"name": "description", "label": "Name", "type": "text"},
             {"name": "address", "label": "Address", "type": "text"},
         ]
-        context["table_fields"] = [
-            {"name": "description", "label": "Name"},
-            {"name": "address", "label": "Address"},
-            {"name": "gps_coordinates", "label": "GPS"},
-            {"name": "item_count", "label": "Items"},
-        ]
+        context["sort"] = self._sort_key
+        context["filter_fields"] = self.filter_fields
+        context["table_fields"] = self.sort_fields
         context["reset_url"] = reverse("view_sites")
         context["add_url"] = reverse("add_site")
         context["heading"] = "Sites"

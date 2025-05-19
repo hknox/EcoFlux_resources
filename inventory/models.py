@@ -22,18 +22,14 @@ class InventoryItem(models.Model):
     description = models.CharField(max_length=100)
     serial_number = models.CharField(max_length=50)
     date_purchased = models.DateField()
-    notes = models.TextField(blank=True, help_text="Free-form notes for this item.")
+    notes = models.TextField(blank=True)
+
     # Using a descriptive related_name, you can write:
-    # "a_location.inventory_items.all()"
+    # "some_site.inventory_items.all()"
     # to get all inventory items at that location.
     location = models.ForeignKey(
         Site, on_delete=models.SET_NULL, null=True, related_name="inventory_items"
     )
-
-    class Meta:
-        ordering = [
-            "id",
-        ]
 
     def __str__(self):
         return f"{self.description} - {self.serial_number}"
