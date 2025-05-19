@@ -1,30 +1,22 @@
-from django.contrib.auth.forms import password_validation
+# from django.contrib.auth.forms import password_validation
 from django.db.models import Count
 from django.views.generic.list import ListView
 from django.views.generic.edit import UpdateView, CreateView, DeleteView
-from django.shortcuts import redirect, render  # , get_object_or_404, redirect
+from django.shortcuts import redirect  # , render  # , get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models.functions import Lower
-from urllib.parse import urlencode
 from django.urls import reverse_lazy, reverse
 
 from inventory.models import Site, InventoryItem
 from .forms import InventoryItemForm, SiteForm, MaintenanceRecordFormSet
 
 
-def test_html(request):
-    class User:
-        def __init__(self):
-            self.is_authenticated = True
-            self.username = "HTML Tester"
-            self.is_superuser = True
+def EndOfInternet(request):
+    return redirect("https://hmpg.net/")
 
-    print("well well, test_html")
-    context = {"user": User()}
-    return render(request, "inventory/site_base.html", context)
 
 class SortedListView(ListView):
     """Add persistent sort machinery to ListView"""

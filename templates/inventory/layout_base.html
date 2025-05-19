@@ -17,6 +17,7 @@
       crossorigin="anonymous">
     <!-- Flatpickr CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/material_blue.css">
 
     {% block extra_css %}
     {% endblock %}
@@ -42,6 +43,8 @@
           <span class="me-3">Hello, <strong>{{user.username}}</strong>!</span>
           <a href="{% url 'home' %}" class="text-white me-3">Inventory</a>
           <a href="{% url 'view_sites' %}" class="text-white me-3">Sites</a>
+          <a href="{% url 'photos' %}" class="text-white me-3">Photos</a>
+          <a href="{% url 'notes' %}" class="text-white me-3">Field notes</a>
           {% if user.is_superuser %}
           <a href="{% url 'admin:index' %}"
              class="text-white me-3">User Admin</a>

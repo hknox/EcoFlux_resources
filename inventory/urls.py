@@ -4,7 +4,7 @@ from django.urls import path
 from inventory import views
 
 urlpatterns = [
-    path("test", views.test_html, name="testing"),
+    # path("test/", views.test_html, name="testing"),
     path("", views.InventoryListView.as_view(), name="home"),
     path(
         "inventory/add/",
@@ -32,4 +32,6 @@ urlpatterns = [
         views.SiteCreateView.as_view(),
         name="add_site",
     ),
+    path("photos/", views.EndOfInternet, name="photos"),
+    path("notes/", views.EndOfInternet, name="notes"),
 ]
