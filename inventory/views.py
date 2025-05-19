@@ -77,6 +77,33 @@ class InventoryListView(LoginRequiredMixin, SortedListView):
     # Default sort order
     _sort_key = "description"
 
+    filter_fields = [
+        {"name": "description", "label": "Description", "type": "text"},
+        {"name": "serial_number", "label": "Serial number", "type": "text"},
+        {
+            "name": "location",
+            "label": "Site",
+            "type": "text",
+            "lookup": "location__description",
+        },
+        {"name": "notes", "label": "Notes", "type": "text"},
+        # {"name": "date_purchased_start", "label": "Purchased After", "type": "date", "lookup": "date_purchased", "lookup_type": "gte"},
+        # {"name": "date_purchased_end", "label": "Purchased Before", "type": "date", "lookup": "date_purchased", "lookup_type": "lte"},
+        {
+            "name": "maintenance_count_min",
+            "label": "Min Maintenance Records",
+            "type": "number",
+            "lookup": "maintenance_count",
+            "lookup_type": "gte",
+        },
+        # {
+        #     "name": "maintenance_count_max",
+        #     "label": "Max Maintenance Records",
+        #     "type": "number",
+        #     "lookup": "maintenance_count",
+        #     "lookup_type": "lte",
+        # },
+    ]
     sort_fields = [
         {"name": "description", "label": "Description"},
         {"name": "location", "label": "Location"},
@@ -91,6 +118,7 @@ class InventoryListView(LoginRequiredMixin, SortedListView):
             messages.info(self.request, "No items are currently in the inventory.")
             return qs
 
+        qs = self.apply_filters(qs)
         qs = self.apply_sort_parameters(qs)
 
         return qs.annotate(maintenance_count=Count("maintenance_records"))
@@ -117,6 +145,20 @@ class SiteListView(LoginRequiredMixin, SortedListView):
     context_object_name = "table_items"
     # Default sort order
     _sort_key = "description"
+    filter_fields = [
+        {"name": "description", "label": "Name"},
+        {"name": "address", "label": "Address"},
+        {"name": "gps_coordinates", "label": "GPS"},
+        {
+            "name": "item_count_min",
+            "label": "Min. Item Count",
+            "type": "number",
+            "lookup": "item_count",
+            "lookup_type": "gte",
+        },
+        # This one needs to account for int type, and maybe < or >
+        # {"name": "item_count", "label": "Items"},
+    ]
     sort_fields = [
         {"name": "description", "label": "Name"},
         {"name": "address", "label": "Address"},
@@ -143,10 +185,6 @@ class SiteListView(LoginRequiredMixin, SortedListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        context["filter_fields"] = [
-            {"name": "description", "label": "Name", "type": "text"},
-            {"name": "address", "label": "Address", "type": "text"},
-        ]
         context["sort"] = self._sort_key
         context["filter_fields"] = self.filter_fields
         context["table_fields"] = self.sort_fields
