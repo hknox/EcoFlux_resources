@@ -44,27 +44,17 @@
 
         {% include "inventory/include/detail_buttons.html" with object=site cancel_url=cancel_url %}
 
-        {% comment %}
-        {% if items %}
         <!-- Section: Inventory at this location -->
-        <h5 class="text-primary fw-bold mt-5">Inventory Items at This Site</h5>
+        {% if items %}
+        <h3 class="mt-4">Inventory Items at This Site</h3>
 
-        <table class="table table-hover mt-3">
-          <thead>
-            <tr>
-              <th>Description</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for item in items %}
-            <tr>
-              <td>{{ item.description }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+        <ul>
+          {% for item in items %}
+          <li class="mx-3">{{ item.description }}</li>
+          {% endfor %}
+        </ul>
         {% endif %}
-        {% endcomment %}
+
 {% endblock content %}
 
 {% block extra_js %}
