@@ -18,6 +18,12 @@
     <!-- Flatpickr CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/material_blue.css">
+    <!-- Turn off crispy-forms asterisks for required fields -->
+    <style>
+      .asteriskField {
+          display: none;
+      }
+    </style>
 
     {% block extra_css %}
     {% endblock %}
@@ -81,14 +87,20 @@
     <!-- </footer> -->
 
     {% bootstrap_javascript %}
-
     <!-- Inventory app JavaScript -->
     <script src="{% static 'js/form_protect.js' %}"></script>
-
     <!-- Flatpickr JS -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- For Bootstrap tooltips -->
+    <script>
+      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+          return new bootstrap.Tooltip(tooltipTriggerEl);
+      });
+    </script>
 
     {% block extra_js %}
     {% endblock %}
+
   </body>
 </html>

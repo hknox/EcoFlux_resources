@@ -1,43 +1,43 @@
 # Can add 'help_text' to each field creation call, see
 # https://docs.djangoproject.com/en/5.2/topics/db/models/, look for
 # help_text
+import os
+import uuid
 
 from django.db import models
-from django.forms import fields
+from django.conf import settings
 
 
 class Site(models.Model):
-    description = models.CharField(max_length=100)
+    name = models.CharField(max_length=50)
     code = models.CharField(max_length=10)
-    address = models.TextField()
+    amp = models.CharField(max_length=10, help_text="AmeriFlux Management Project code")
+    location = models.CharField(max_length=250)
+    description = models.TextField()
     date_activated = models.DateField()
-    date_deactivated = models.DateField(blank=True, null=True)
+    date_retired = models.DateField(blank=True, null=True)
     gps_coordinates = models.CharField(max_length=50, blank=True)
 
     def __str__(self):
-        return f"{self.description} ({self.address})"
+        return f"{self.name} ({self.code})"
 
 
-class InventoryItem(models.Model):
-    description = models.CharField(max_length=100)
-    serial_number = models.CharField(max_length=50)
-    date_purchased = models.DateField()
-    notes = models.TextField(blank=True)
+class DOI(models.Model):
+    """Class to a  Data Object Identifier to a Site"""
 
-    # Using a descriptive related_name, you can write:
-    # "some_site.inventory_items.all()"
-    # to get all inventory items at that location.
-    location = models.ForeignKey(
-        Site, on_delete=models.SET_NULL, null=True, related_name="inventory_items"
-    )
-
-    def __str__(self):
-        return f"{self.description} - {self.serial_number}"
+    label = models.CharField(max_length=20)
+    doi_link = models.URLField()
+    site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name="doi_records")
 
 
-class MaintenanceRecord(models.Model):
-    date = models.DateField()
-    description = models.TextField()
-    item = models.ForeignKey(
-        InventoryItem, on_delete=models.CASCADE, related_name="maintenance_records"
-    )
+def site_photo_upload_path(instance, filename):
+    ext = filename.split(".")[-1]
+    new_filename = f"{uuid.uuid4().hex}.{ext}"
+    return os.path.join(settings.SITE_PHOTO_UPLOAD_SUBDIR, new_filename)
+
+
+class SitePhoto(models.Model):
+    image = models.ImageField(upload_to=site_photo_upload_path)
+    caption = models.CharField(max_length=255, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name="photos")

@@ -1,29 +1,21 @@
 <!-- templates/inventory/include/detail_buttons.html-->
-<!-- NOTE the closing </form> tag after the Cancel button: it assumes --
-  -- the enclosing template opens a form but doesn't close it -->
-<div class="d-flex gap-2 mt-4 flex-wrap align-items-center">
-  <!-- Save -->
-  <button type="submit" class="btn btn-success">
-    <i class="bi bi-check-circle"></i> Save
-  </button>
-</form>
 
-<!-- Cancel -->
-<a href="{{ cancel_url }}"
-   class="btn btn-secondary"
-  <i class="bi bi-x-circle"></i> Cancel
-</a>
-
-{% if delete_url %}
-<!-- Delete -->
-<form method="post"
-      action="{{ delete_url }}"
-      onsubmit="return confirmDelete();"
-      class="d-inline">
-  {% csrf_token %}
-  <button type="submit" class="btn btn-danger">
-    <i class="bi bi-trash"></i> Delete
-  </button>
-</form>
-{% endif %}
-</div>
+        <div class="d-flex gap-2">
+          <!-- Save -->
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-circle"></i> Save
+          </button>
+          <!-- Cancel -->
+          <a href="{{ cancel_url }}" class="btn btn-secondary btn-cancel">
+            <i class="bi bi-x-circle"></i> Cancel
+          </a>
+          <!-- Delete -->
+          {% if delete_url %}
+          <form method="post" action="{{ delete_url }}" onsubmit="return confirmDelete();" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">
+              <i class="bi bi-trash"></i> Delete
+            </button>
+          </form>
+          {% endif %}
+        </div>

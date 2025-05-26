@@ -2,6 +2,8 @@
 
 <head>
   {% load django_bootstrap5 %}
+  {% load crispy_forms_tags %}
+
   {% block extra_css %}
   <style>
     .form-floating.custom-height textarea,
@@ -11,54 +13,47 @@
   </style>
   {% endblock %}
 
-  {% block title %}EcoFlux Site{% endblock %}
+  {% block title %}EcoFlux - Site{% endblock %}
 </head>
 
     {% block content %}
     <h2>{{action}} Site</h2>
 
-    <!-- This <form> will be closed by detail_buttons.html -->
-      <form method="post" enctype="multipart/form-data" class="track-unsaved">
+    <!-- What does the 'novalidate' do? without it, the saved-date
+    check fails to run -->
+      <form method="post" enctype="multipart/form-data"
+            class="track-unsaved" novalidate>
         {% csrf_token %}
-        <div class="row">
-          <div class="col-md-8">
-            {% bootstrap_field form.description layout="floating" %}
-          </div>
-          <div class="col-md-4">
-            {% bootstrap_field form.code layout="floating" %}
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-8">
-            {% bootstrap_field form.address layout="floating" wrapper_class="custom-height" %}
-          </div>
-          <div class="col-md-4">
-            {% bootstrap_field form.gps_coordinates layout="floating" %}
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-6">
-            {% bootstrap_field form.date_activated layout="floating" %}
-          </div>
-        </div>
+        {% crispy form %}
 
-        {% include "inventory/include/detail_buttons.html" with object=site cancel_url=cancel_url %}
+        <h5 class="mt-2">DOI Links</h5>
+        {% crispy doi_formset doi_formset.helper %}
 
-        <!-- Section: Inventory at this location -->
-        {% if items %}
-        <h3 class="mt-4">Inventory items at this site</h3>
-
-        <ul>
-          {% for item in items %}
-          <li class="mx-3">{{ item.description }}</li>
-          {% endfor %}
-        </ul>
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-check-circle"></i> Save
+        </button>
+        <a href="{{ cancel_url }}" class="btn btn-secondary btn-cancel">
+          <i class="bi bi-x-circle"></i> Cancel
+        </a>
+      </form>
+        {% comment %}
+        {% if delete_url %}
+        <form method="post" action="{{ delete_url }}" onsubmit="return confirmDelete();" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-trash"></i> Delete
+          </button>
+        </form>
         {% endif %}
+        {% endcomment %}
+      </div>
+
+
+      <!-- </form> -->
 
 {% endblock content %}
 
 {% block extra_js %}
-
 {% include "inventory/include/flatpickr.html" %}
-
 {% endblock extra_js %}
