@@ -36,8 +36,15 @@ def site_photo_upload_path(instance, filename):
     return os.path.join(settings.SITE_PHOTO_UPLOAD_SUBDIR, new_filename)
 
 
-class SitePhoto(models.Model):
+class Photo(models.Model):
     image = models.ImageField(upload_to=site_photo_upload_path)
     caption = models.CharField(max_length=255, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
     site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name="photos")
+
+
+class FieldNote(models.Model):
+    site = models.ForeignKey(Site, related_name="fieldnotes", on_delete=models.CASCADE)
+    note = models.TextField()
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    user = models.TextField()

@@ -10,13 +10,13 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models.functions import Lower
 from django.urls import reverse_lazy, reverse
 
-from inventory.models import Site, SitePhoto  # InventoryItem
+from inventory.models import Site, Photo  # InventoryItem
 from .forms import (
     SiteForm,
     DOIFormSet,
     DOIFormSetHelper,
     DOIForm,
-)  # , InventoryItemForm, MaintenanceRecordFormSet, SitePhotoForm
+)  # , InventoryItemForm, MaintenanceRecordFormSet, PhotoForm
 
 
 def EndOfInternet(request):
@@ -223,30 +223,30 @@ class SiteUpdateView(LoginRequiredMixin, UpdateView):
         return context_data
 
 
-def upload_photo_from_site(request, site_id):
-    site = get_object_or_404(Site, id=site_id)
-    if request.method == "POST":
-        form = SitePhotoForm(request.POST, request.FILES)
-        if form.is_valid():
-            photo = form.save(commit=False)
-            photo.site = site
-            photo.save()
-            return redirect("site_detail", site_id=site.id)
-    else:
-        form = SitePhotoForm()
-    return render(request, "upload_photo.html", {"form": form, "site": site})
+# def upload_photo_from_site(request, site_id):
+#     site = get_object_or_404(Site, id=site_id)
+#     if request.method == "POST":
+#         form = PhotoForm(request.POST, request.FILES)
+#         if form.is_valid():
+#             photo = form.save(commit=False)
+#             photo.site = site
+#             photo.save()
+#             return redirect("site_detail", site_id=site.id)
+#     else:
+#         form = PhotoForm()
+#     return render(request, "upload_photo.html", {"form": form, "site": site})
 
 
 def upload_photo(request):
     if request.method == "POST":
-        form = SitePhotoForm(request.POST, request.FILES)
+        form = PhotoForm(request.POST, request.FILES)
         if form.is_valid():
             photo = form.save(commit=False)
             photo.site = site
             photo.save()
             return redirect("site_detail", site_id=site.id)
     else:
-        form = SitePhotoForm()
+        form = PhotoForm()
 
     return render(request, "upload_photo.html", {"form": form})
 

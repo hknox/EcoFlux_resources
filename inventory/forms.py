@@ -5,7 +5,24 @@ from crispy_forms.layout import ButtonHolder, Layout, Row, Column, Field, Submit
 from crispy_forms.bootstrap import AppendedText
 from crispy_bootstrap5.bootstrap5 import FloatingField
 
-from .models import Site, DOI, SitePhoto  # , InventoryItem, MaintenanceRecord
+from .models import (
+    Site,
+    DOI,
+    Photo,
+    FieldNote,
+)
+
+
+class FieldNoteForm(forms.ModelForm):
+    class Meta:
+        model = FieldNote
+        fields = ["note", "user"]
+
+
+class PhotoForm(forms.ModelForm):
+    class Meta:
+        model = Photo
+        fields = ["image", "caption"]
 
 
 class DOIForm(forms.ModelForm):
@@ -17,8 +34,12 @@ class DOIForm(forms.ModelForm):
         }
 
 
-DOIFormSet = inlineformset_factory(
-    Site, DOI, form=DOIForm, fields=["label", "doi_link"], extra=1, can_delete=True
+DOIFormSet = inlineformset_factory(Site, DOI, form=DOIForm, extra=1, can_delete=True)
+FieldnoteFormSet = inlineformset_factory(
+    Site, FieldNote, form=FieldNoteForm, extra=1, can_delete=True
+)
+PhotoFormSet = inlineformset_factory(
+    Site, Photo, form=PhotoForm, extra=1, can_delete=True
 )
 
 
@@ -136,7 +157,7 @@ class SiteForm(forms.ModelForm):
                 field.help_text = ""
 
 
-class SitePhotoForm(forms.ModelForm):
+class PhotoForm(forms.ModelForm):
     class Meta:
-        model = SitePhoto
+        model = Photo
         fields = ["image", "caption"]

@@ -4,18 +4,9 @@ from django.urls import path
 from inventory import views
 
 urlpatterns = [
-    # path("test/", views.test_html, name="testing"),
-    path("", views.InventoryListView.as_view(), name="home"),
-    path(
-        "inventory/add/",
-        views.InventoryItemCreateView.as_view(),
-        name="inventory_add",
-    ),
-    path(
-        "inventory/edit/<int:pk>",
-        views.InventoryItemUpdateView.as_view(),
-        name="inventory_edit",
-    ),
+    path("test/", views.test_html, name="testing"),
+    # temporary home view? or change back to InventoryListView?
+    path("", views.SiteListView.as_view(), name="home"),
     path("sites/", views.SiteListView.as_view(), name="view_sites"),
     path(
         "sites/edit/<int:pk>/",
@@ -33,5 +24,6 @@ urlpatterns = [
         name="add_site",
     ),
     path("photos/", views.EndOfInternet, name="photos"),
+    path("photos/add", views.upload_photo, name="new_photo"),
     path("notes/", views.EndOfInternet, name="notes"),
 ]
