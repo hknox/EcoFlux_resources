@@ -2,7 +2,7 @@
 
 <head>
   {% load django_bootstrap5 %}
-  {% load crispy_forms_tags %}
+  {% load crispy_forms_tags static %}
 
   {% block extra_css %}
   <style>
@@ -26,34 +26,39 @@
         {% csrf_token %}
         {% crispy form %}
 
-        <h5 class="mt-2">DOI Links</h5>
-        {% crispy doi_formset doi_formset.helper %}
+        <h5>DOI Links</h5>
+        {% include "inventory/include/formset_block.html" with formset=doi_formset %}
 
-      <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary">
-          <i class="bi bi-check-circle"></i> Save
-        </button>
-        <a href="{{ cancel_url }}" class="btn btn-secondary btn-cancel">
-          <i class="bi bi-x-circle"></i> Cancel
-        </a>
-      </form>
         {% comment %}
-        {% if delete_url %}
-        <form method="post" action="{{ delete_url }}" onsubmit="return confirmDelete();" class="d-inline">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-danger">
-            <i class="bi bi-trash"></i> Delete
-          </button>
-        </form>
-        {% endif %}
+        <h5>Fieldnotes</h5>
+        {% include "inventory/include/formset_block.html" with formset=fieldnote_formset %}
+        <h5>Photos</h5>
+        {% include "inventory/include/formset_block.html" with formset=photo_formset %}
         {% endcomment %}
+
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-circle"></i> Save
+          </button>
+          <a href="{{ cancel_url }}" class="btn btn-secondary btn-cancel">
+            <i class="bi bi-x-circle"></i> Cancel
+          </a>
+      </form>
+      {% comment %}
+      {% if delete_url %}
+      <form method="post" action="{{ delete_url }}" onsubmit="return confirmDelete();" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">
+          <i class="bi bi-trash"></i> Delete
+        </button>
+      </form>
+      {% endif %}
+      {% endcomment %}
       </div>
-
-
-      <!-- </form> -->
 
 {% endblock content %}
 
 {% block extra_js %}
 {% include "inventory/include/flatpickr.html" %}
+<script src="{% static 'js/formset_add.js' %}"></script>
 {% endblock extra_js %}

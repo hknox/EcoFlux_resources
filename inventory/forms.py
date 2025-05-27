@@ -1,8 +1,7 @@
 from django import forms
 from django.forms import inlineformset_factory
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import ButtonHolder, Layout, Row, Column, Field, Submit, HTML
-from crispy_forms.bootstrap import AppendedText
+from crispy_forms.layout import Layout, Row, Column, Field
 from crispy_bootstrap5.bootstrap5 import FloatingField
 
 from .models import (
@@ -34,13 +33,13 @@ class DOIForm(forms.ModelForm):
         }
 
 
-DOIFormSet = inlineformset_factory(Site, DOI, form=DOIForm, extra=1, can_delete=True)
+DOIFormSet = inlineformset_factory(Site, DOI, form=DOIForm, extra=0, can_delete=True)
 FieldnoteFormSet = inlineformset_factory(
     Site, FieldNote, form=FieldNoteForm, extra=1, can_delete=True
 )
-PhotoFormSet = inlineformset_factory(
-    Site, Photo, form=PhotoForm, extra=1, can_delete=True
-)
+# PhotoFormSet = inlineformset_factory(
+#     Site, Photo, form=PhotoForm, extra=1, can_delete=True
+# )
 
 
 class DOIFormSetHelper(FormHelper):
@@ -49,9 +48,9 @@ class DOIFormSetHelper(FormHelper):
         self.form_tag = False
         self.layout = Layout(
             Row(
-                Column(FloatingField("label"), css_class="col-md-5"),
-                Column(FloatingField("doi_link"), css_class="col-md-5"),
-                Column(Field("DELETE"), css_class="col-md-2"),
+                Column(FloatingField("label"), css_class="col-md-6"),
+                Column(FloatingField("doi_link"), css_class="col-md-6"),
+                # Column(Field("DELETE"), css_class="col-md-2"),
                 css_class="mb-2",
             )
         )
@@ -155,9 +154,3 @@ class SiteForm(forms.ModelForm):
                 field.widget.attrs["data-bs-placement"] = "top"
                 # Suppress default help_text rendering
                 field.help_text = ""
-
-
-class PhotoForm(forms.ModelForm):
-    class Meta:
-        model = Photo
-        fields = ["image", "caption"]

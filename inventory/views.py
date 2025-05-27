@@ -14,9 +14,10 @@ from inventory.models import Site, Photo  # InventoryItem
 from .forms import (
     SiteForm,
     DOIFormSet,
+    # PhotoFormSet,
     DOIFormSetHelper,
-    DOIForm,
-)  # , InventoryItemForm, MaintenanceRecordFormSet, PhotoForm
+    # PhotoFormSetHelper,
+)
 
 
 def EndOfInternet(request):
@@ -33,29 +34,43 @@ class SiteCreateView(CreateView):
         """Returns a dict with keys, 'object', 'site', 'form', 'view'.
 
         Each of those items is available under that name in template."""
-        context_data = super().get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)
 
-        context_data["cancel_url"] = reverse("view_sites")
-        context_data["action"] = "New"
+        context["cancel_url"] = reverse("view_sites")
+        context["action"] = "New"
         if self.request.POST:
-            data["doi_formset"] = DOIFormSet(self.request.POST, instance=self.object)
+            context["doi_formset"] = DOIFormSet(self.request.POST, instance=self.object)
+            # context["photo_formset"] = PhotoFormSet(
+            #     self.request.POST, self.request.FILES, instance=self.object
+            # )
         else:
-            context_data["doi_formset"] = DOIFormSet(instance=self.object)
-        context_data["doi_formset"].helper = DOIFormSetHelper()
-
-        # ADD PHOTOS here
-        return context_data
+            context["doi_formset"] = DOIFormSet(instance=self.object)
+            # context["photo_formset"] = PhotoFormSet(instance=self.object)
+        # Attach crispy-form helpers (if using them for layout)
+        context["doi_formset"].helper = DOIFormSetHelper()
+        # context["photo_formset"].helper = PhotoFormSetHelper()
+        return context
 
     def form_valid(self, form):
         context = self.get_context_data()
         doi_formset = context["doi_formset"]
+        # photo_formset = context["photo_formset"]
         self.object = form.save()
-        if doi_formset.is_valid():
-            doi_formset.instance = self.object
+        valid = True
+
+        for fset in [
+            doi_formset,
+        ]:  # photo_formset]:
+            fset.instance = self.object
+            if not fset.is_valid():
+                valid = False
+
+        if valid:
             doi_formset.save()
+            # photo_formset.save()
             return redirect(self.get_success_url())
         else:
-            # Delete the just-created Site if DOIs are invalid? Optional!
+            # Optionally delete the just-created Site if formsets are invalid
             return self.render_to_response(self.get_context_data(form=form))
 
     def get_form_kwargs(self):
