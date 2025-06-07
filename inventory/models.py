@@ -6,6 +6,7 @@ import uuid
 
 from django.db import models
 from django.conf import settings
+from django.utils.timezone import now
 
 
 class Site(models.Model):
@@ -39,12 +40,12 @@ def site_photo_upload_path(instance, filename):
 class Photo(models.Model):
     image = models.ImageField(upload_to=site_photo_upload_path)
     caption = models.CharField(max_length=255, blank=True)
-    uploaded_at = models.DateTimeField(auto_now_add=True)
+    uploaded_at = models.DateTimeField(default=now)
     site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name="photos")
 
 
 class FieldNote(models.Model):
     site = models.ForeignKey(Site, related_name="fieldnotes", on_delete=models.CASCADE)
     note = models.TextField()
-    uploaded_at = models.DateTimeField(auto_now_add=True)
+    uploaded_at = models.DateTimeField(default=now)
     user = models.TextField()
