@@ -12,18 +12,31 @@ from .models import (
 )
 
 
+# FieldNotes
 class FieldNoteForm(forms.ModelForm):
     class Meta:
         model = FieldNote
-        fields = ["note", "user"]
+        fields = ["note", "user", "uploaded_at"]
 
 
+FieldNoteFormSet = inlineformset_factory(
+    Site, FieldNote, form=FieldNoteForm, extra=1, can_delete=True
+)
+
+
+# Photos
 class PhotoForm(forms.ModelForm):
     class Meta:
         model = Photo
         fields = ["image", "caption"]
 
 
+# PhotoFormSet = inlineformset_factory(
+#     Site, Photo, form=PhotoForm, extra=1, can_delete=True
+# )
+
+
+# DOI links
 class DOIForm(forms.ModelForm):
     class Meta:
         model = DOI
@@ -33,13 +46,7 @@ class DOIForm(forms.ModelForm):
         }
 
 
-DOIFormSet = inlineformset_factory(Site, DOI, form=DOIForm, extra=0, can_delete=True)
-FieldnoteFormSet = inlineformset_factory(
-    Site, FieldNote, form=FieldNoteForm, extra=1, can_delete=True
-)
-# PhotoFormSet = inlineformset_factory(
-#     Site, Photo, form=PhotoForm, extra=1, can_delete=True
-# )
+DOIFormSet = inlineformset_factory(Site, DOI, form=DOIForm, extra=1, can_delete=True)
 
 
 class DOIFormSetHelper(FormHelper):
@@ -50,10 +57,49 @@ class DOIFormSetHelper(FormHelper):
             Row(
                 Column(FloatingField("label"), css_class="col-md-6"),
                 Column(FloatingField("doi_link"), css_class="col-md-6"),
-                # Column(Field("DELETE"), css_class="col-md-2"),
                 css_class="mb-2",
             )
         )
+
+
+# class SiteFormHelper(FormHelper):
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         self.form_tag = False
+
+#         # self.form_id = 'some-id'
+#         self.form_method = "post"
+#         self.form_action = "sites"
+#         self.layout = Layout(
+#             Row(
+#                 Column(
+#                     FloatingField("name", css_class="col-md-6"),
+#                 ),
+#                 Column(
+#                     FloatingField("code", css_class="col-md-4"),
+#                 ),
+#                 Column(
+#                     FloatingField("amp", css_class="col-md-2"),
+#                 ),
+#             ),
+#             FloatingField("description"),
+#             Row(
+#                 Column(FloatingField("location", css_class="col-md-4")),
+#                 Column(FloatingField("gps_coordinates", css_class="col-md-2")),
+#             ),
+#             Row(
+#                 Column(
+#                     # NB having datepicker here isn't supposed to be necessary.
+#                     # But FloatingFields have issues....
+#                     FloatingField("date_activated", css_class="col-md-4 datepicker")
+#                 ),
+#                 (
+#                     Column(FloatingField("date_retired", css_class="col-md-4"))
+#                     if self.existing_site
+#                     else None
+#                 ),
+#             ),
+#         )
 
 
 class SiteForm(forms.ModelForm):
