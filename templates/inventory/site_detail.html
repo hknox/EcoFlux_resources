@@ -5,6 +5,8 @@
   {% load crispy_forms_tags static %}
 
   {% block extra_css %}
+
+  <!-- Make more space for textarea widgets -->
   <style>
     .form-floating.custom-height textarea,
     .custom-height .form-control {
@@ -19,8 +21,8 @@
     {% block content %}
     <h2>{{action}} Site</h2>
 
-    <!-- What does the 'novalidate' do? without it, the saved-date
-    check fails to run -->
+    <!-- What does the 'novalidate' do?
+         without it the saved-data check fails to run -->
       <form method="post" enctype="multipart/form-data"
             class="track-unsaved" novalidate>
         {% csrf_token %}
