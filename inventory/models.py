@@ -10,11 +10,13 @@ from django.utils.timezone import now
 
 
 class Site(models.Model):
-    name = models.CharField(max_length=50)
-    code = models.CharField(max_length=10)
-    amp = models.CharField(max_length=10, help_text="AmeriFlux Management Project code")
+    name = models.CharField(max_length=50)  # , help_text="Site name")
+    code = models.CharField(max_length=10)  # , help_text="Short code for internal use")
+    amp = models.CharField(
+        max_length=10
+    )  # , help_text="AmeriFlux Management Project code")
     location = models.CharField(max_length=250)
-    description = models.TextField()
+    description = models.TextField()  # help_text="Full site description")
     date_activated = models.DateField()
     date_retired = models.DateField(blank=True, null=True)
     gps_coordinates = models.CharField(max_length=50, blank=True)

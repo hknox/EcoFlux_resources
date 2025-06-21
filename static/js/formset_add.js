@@ -1,14 +1,16 @@
 // Modular add/remove form row script for Django formsets
+// alert('formset_add.js loaded and running!');
 document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('.add-form-row').forEach(function(btn) {
     btn.addEventListener('click', function() {
-      const prefix = btn.getAttribute('data-formset-prefix');
-      const formsetDiv = document.getElementById(prefix + '-formset');
-      const totalForms = formsetDiv.querySelector('input[name$="-TOTAL_FORMS"]');
-      const currentCount = parseInt(totalForms.value, 10);
-      const formRows = formsetDiv.querySelectorAll('.formset-row');
-      if (formRows.length === 0) return; // Defensive
-      const newRow = formRows[0].cloneNode(true);
+        // alert('"Add another" clicked!');
+        const prefix = btn.getAttribute('data-formset-prefix');
+        const formsetDiv = document.getElementById(prefix + '-formset');
+        const totalForms = formsetDiv.querySelector('input[name$="-TOTAL_FORMS"]');
+        const currentCount = parseInt(totalForms.value, 10);
+        const formRows = formsetDiv.querySelectorAll('.formset-row');
+        if (formRows.length === 0) return; // Defensive
+        const newRow = formRows[0].cloneNode(true);
 
       // Clear values for all inputs/selects
       newRow.querySelectorAll('input,textarea,select').forEach(function(input) {

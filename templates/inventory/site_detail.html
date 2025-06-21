@@ -7,60 +7,80 @@
   {% block extra_css %}
 
   <!-- Make more space for textarea widgets -->
-  <style>
-    .form-floating.custom-height textarea,
-    .custom-height .form-control {
-        height: 120px !important;
-    }
-  </style>
+  <!-- <style> -->
+  <!--   .form-floating.custom-height textarea, -->
+  <!--   .custom-height .form-control { -->
+  <!--       height: 120px !important; -->
+  <!--   } -->
+  <!-- </style> -->
   {% endblock %}
 
   {% block title %}EcoFlux - Site{% endblock %}
 </head>
 
-    {% block content %}
-    <h2>{{action}} Site</h2>
+<body>
+  {% block page_heading %}EcoFlux - Sites{% endblock %}
 
-    <!-- What does the 'novalidate' do?
-         without it the saved-data check fails to run -->
-      <form method="post" enctype="multipart/form-data"
-            class="track-unsaved" novalidate>
-        {% csrf_token %}
-        {% crispy form %}
+  {% block content %}
+  <h2>{{action}} Site</h2>
 
-        <h5>DOI Links</h5>
-        {% include "inventory/include/formset_block.html" with formset=doi_formset %}
+  <!-- What does 'novalidate' do?
+       See https://docs.djangoproject.com/en/5.2/topics/forms/:
 
-        {% comment %}
-        <h5>Fieldnotes</h5>
-        {% include "inventory/include/formset_block.html" with formset=fieldnote_formset %}
-        <h5>Photos</h5>
-        {% include "inventory/include/formset_block.html" with formset=photo_formset %}
-        {% endcomment %}
+       "If your form includes a URLField, an EmailField or any
+       integer field type, Django will use the url, email and number
+       HTML5 input types. By default, browsers may apply their own
+       validation on these fields, which may be stricter than
+       Django’s validation. If you would like to disable this
+       behavior, set the novalidate attribute on the form tag, or
+       specify a different widget on the field, like TextInput."
+       Without it the saved-data check fails to run -->
+  {% comment  This can be deleted if you sort out the buttons! %}
+  <form method="post" enctype="multipart/form-data"
+        class="track-unsaved" novalidate>
+    {% csrf_token %}
+    {% endcomment %}
 
-        <div class="d-flex gap-2">
-          <button type="submit" class="btn btn-primary">
-            <i class="bi bi-check-circle"></i> Save
-          </button>
-          <a href="{{ cancel_url }}" class="btn btn-secondary btn-cancel">
-            <i class="bi bi-x-circle"></i> Cancel
-          </a>
-      </form>
+    {% crispy form %}
+
+    {% comment %}
+    {{ form }}
+
+    <h5>DOI Links</h5>
+    {% include "inventory/include/formset_block.html" with formset=doi_formset %}
+    <h5>Fieldnotes</h5>
+    {% include "inventory/include/formset_block.html" with formset=fieldnote_formset %}
+    <h5>Photos</h5>
+    {% include "inventory/include/formset_block.html" with formset=photo_formset %}
+    {% endcomment %}
+
+    <div class="d-flex gap-2 mt=2">
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-check-circle"></i> Save
+      </button>
       {% comment %}
-      {% if delete_url %}
-      <form method="post" action="{{ delete_url }}" onsubmit="return confirmDelete();" class="d-inline">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-danger">
-          <i class="bi bi-trash"></i> Delete
-        </button>
-      </form>
-      {% endif %}
+      <a href="{{ cancel_url }}" class="btn btn-secondary btn-cancel">
+        <i class="bi bi-x-circle"></i> Cancel
+      </a>
       {% endcomment %}
-      </div>
+  </form>
+  {% comment %}
 
-{% endblock content %}
+  {% if delete_url %}
+  <form method="post" action="{{ delete_url }}" onsubmit="return confirmDelete();" class="d-inline">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">
+      <i class="bi bi-trash"></i> Delete
+    </button>
+  </form>
+  {% endif %}
+  {% endcomment %}
+  </div>
 
-{% block extra_js %}
-{% include "inventory/include/flatpickr.html" %}
-<script src="{% static 'js/formset_add.js' %}"></script>
-{% endblock extra_js %}
+  {% endblock content %}
+
+  {% block extra_js %}
+  {% include "inventory/include/flatpickr.html" %}
+  <script src="{% static 'js/formset_add.js' %}"></script>
+  {% endblock extra_js %}
+</body>

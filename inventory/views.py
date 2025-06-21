@@ -13,15 +13,20 @@ from django.urls import reverse_lazy, reverse
 from inventory.models import Site, Photo  # InventoryItem
 from .forms import (
     SiteForm,
-    DOIFormSet,
+    # DOIFormSet,
+    # DOIFormSetHelper,
+    # FieldNoteFormSet,
     # PhotoFormSet,
-    DOIFormSetHelper,
     # PhotoFormSetHelper,
 )
 
 
 def EndOfInternet(request):
     return redirect("https://hmpg.net/")
+
+
+def logout_view(request):
+    logout(request)
 
 
 class SiteCreateView(CreateView):
@@ -38,45 +43,53 @@ class SiteCreateView(CreateView):
 
         context["cancel_url"] = reverse("view_sites")
         context["action"] = "New"
-        if self.request.POST:
-            context["doi_formset"] = DOIFormSet(self.request.POST, instance=self.object)
-            # context["photo_formset"] = PhotoFormSet(
-            #     self.request.POST, self.request.FILES, instance=self.object
-            # )
-        else:
-            context["doi_formset"] = DOIFormSet(instance=self.object)
-            # context["photo_formset"] = PhotoFormSet(instance=self.object)
-        # Attach crispy-form helpers (if using them for layout)
-        context["doi_formset"].helper = DOIFormSetHelper()
-        # context["photo_formset"].helper = PhotoFormSetHelper()
+        # if self.request.POST:
+        #     context["doi_formset"] = DOIFormSet(self.request.POST, instance=self.object)
+        #     context["fieldnote_formset"] = FieldNoteFormSet(
+        #         self.request.POST, instance=self.object
+        #     )
+        #     context["photo_formset"] = PhotoFormSet(
+        #         self.request.POST, self.request.FILES, instance=self.object
+        #     )
+
+        # else:
+        #     context["doi_formset"] = DOIFormSet(instance=self.object)
+        #     context["fieldnote_formset"] = FieldNoteFormSet(instance=self.object)
+        #     context["photo_formset"] = PhotoFormSet(instance=self.object)
+        # Attach crispy-form helpers to each form in the formset
+        # for form in context["doi_formset"].forms:
+        #     form.helper = DOIFormSetHelper()
+        # for form in context["fieldnote_formset"].forms:
+        #     form.helper = FieldNoteFormHelper()        context["doi_formset"].helper = DOIFormSetHelper()
+        # print(SiteCreateView.form_class())
         return context
 
-    def form_valid(self, form):
-        context = self.get_context_data()
-        doi_formset = context["doi_formset"]
-        # photo_formset = context["photo_formset"]
-        self.object = form.save()
-        valid = True
+    # def form_valid(self, form):
+    #     context = self.get_context_data()
+    #     doi_formset = context["doi_formset"]
+    #     photo_formset = context["photo_formset"]
+    #     self.object = form.save()
+    #     valid = True
 
-        for fset in [
-            doi_formset,
-        ]:  # photo_formset]:
-            fset.instance = self.object
-            if not fset.is_valid():
-                valid = False
+    # for fset in [
+    #     doi_formset,
+    # ]:  # photo_formset]:
+    #     fset.instance = self.object
+    #     if not fset.is_valid():
+    #         valid = False
 
-        if valid:
-            doi_formset.save()
-            # photo_formset.save()
-            return redirect(self.get_success_url())
-        else:
-            # Optionally delete the just-created Site if formsets are invalid
-            return self.render_to_response(self.get_context_data(form=form))
+    # if valid:
+    #     doi_formset.save()
+    #     photo_formset.save()
+    #     return redirect(self.get_success_url())
+    # else:
+    #     # Optionally delete the just-created Site if formsets are invalid
+    #     return self.render_to_response(self.get_context_data(form=form))
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         # Let the form know this is a NEW site
-        # (Not needed in SiteUpdateView)d
+        # (Not needed in SiteUpdateView)
         kwargs["existing_site"] = False
         return kwargs
 
@@ -276,7 +289,3 @@ def test_html(request):
     print("well well, test_html")
     context = {"user": User(), "heading": "Photos"}
     return render(request, "inventory/photos.html", context)
-
-
-def logout_view(request):
-    logout(request)

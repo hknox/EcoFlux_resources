@@ -1,5 +1,5 @@
 function confirmDelete() {
-  return confirm("Are you sure you want to delete this item? This cannot be undone.");
+  return confirm("Are you sure you want to delete this item?\nThis action cannot be undone.");
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -9,11 +9,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
   form.addEventListener('input', e => {
     dirty = true;
-    console.log('[input] Detected:', e.target, 'Value:', e.target.value);
+    // console.log('[input] Detected:', e.target, 'Value:', e.target.value);
   });
   form.addEventListener('change', e => {
     dirty = true;
-    console.log('[change] Detected:', e.target, 'Value:', e.target.value);
+    // console.log('[change] Detected:', e.target, 'Value:', e.target.value);
   });
 
   window.addEventListener('beforeunload', function(e) {

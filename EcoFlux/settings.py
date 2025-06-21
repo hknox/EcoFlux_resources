@@ -142,6 +142,6 @@ MEDIA_URL = "/media/"
 SITE_PHOTO_UPLOAD_SUBDIR = "site_photos/"
 
 # crispy-forms
-CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_ALLOWED_TEMPLATE_PACKS = ("bootstrap5",)
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 CRISPY_FAIL_SILENTLY = not DEBUG
