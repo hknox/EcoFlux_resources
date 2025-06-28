@@ -34,6 +34,7 @@ class SiteCreateView(CreateView):
     form_class = SiteForm
     template_name = "inventory/site_detail.html"
     success_url = reverse_lazy("view_sites")
+    cancel_url = reverse_lazy("view_sites")
 
     def get_context_data(self, **kwargs):
         """Returns a dict with keys, 'object', 'site', 'form', 'view'.
@@ -41,8 +42,7 @@ class SiteCreateView(CreateView):
         Each of those items is available under that name in template."""
         context = super().get_context_data(**kwargs)
 
-        context["cancel_url"] = reverse("view_sites")
-        context["action"] = "New"
+        # context["action"] = "New" DELETE ME?
         # if self.request.POST:
         #     context["doi_formset"] = DOIFormSet(self.request.POST, instance=self.object)
         #     context["fieldnote_formset"] = FieldNoteFormSet(
@@ -91,6 +91,9 @@ class SiteCreateView(CreateView):
         # Let the form know this is a NEW site
         # (Not needed in SiteUpdateView)
         kwargs["existing_site"] = False
+        kwargs["cancel_url"] = self.cancel_url
+        print(f"|{self.success_url}|")
+        print(f"|{self.cancel_url}|")
         return kwargs
 
 

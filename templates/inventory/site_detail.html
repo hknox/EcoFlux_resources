@@ -35,48 +35,26 @@
        behavior, set the novalidate attribute on the form tag, or
        specify a different widget on the field, like TextInput."
        Without it the saved-data check fails to run -->
-  {% comment  This can be deleted if you sort out the buttons! %}
-  <form method="post" enctype="multipart/form-data"
-        class="track-unsaved" novalidate>
-    {% csrf_token %}
-    {% endcomment %}
 
-    {% crispy form %}
-
-    {% comment %}
-    {{ form }}
-
-    <h5>DOI Links</h5>
-    {% include "inventory/include/formset_block.html" with formset=doi_formset %}
-    <h5>Fieldnotes</h5>
-    {% include "inventory/include/formset_block.html" with formset=fieldnote_formset %}
-    <h5>Photos</h5>
-    {% include "inventory/include/formset_block.html" with formset=photo_formset %}
-    {% endcomment %}
-
-    <div class="d-flex gap-2 mt=2">
-      <button type="submit" class="btn btn-primary">
-        <i class="bi bi-check-circle"></i> Save
-      </button>
-      {% comment %}
-      <a href="{{ cancel_url }}" class="btn btn-secondary btn-cancel">
-        <i class="bi bi-x-circle"></i> Cancel
-      </a>
-      {% endcomment %}
-  </form>
+  {% crispy form %}
   {% comment %}
+  <div class="row mb-1">
+    <div class="col-sm">
+      <label class='col-form-label col-sm-2' for="id_name">Name:</label>
+      <input class='col-sm-4 form-control' type="text" name="name" maxlength="50" required id="id_name">
+    </div>
+    <div class="col-sm-1">
+      <label for="id_code">Code:</label>
+      <input type="text" class='form-control' name="code" maxlength="10" required id="id_code">
+    </div>
 
-  {% if delete_url %}
-  <form method="post" action="{{ delete_url }}" onsubmit="return confirmDelete();" class="d-inline">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-danger">
-      <i class="bi bi-trash"></i> Delete
-    </button>
-  </form>
-  {% endif %}
-  {% endcomment %}
+
+
+
+
   </div>
-
+  <h4>Chunga!</h4>
+  {% endcomment %}
   {% endblock content %}
 
   {% block extra_js %}
