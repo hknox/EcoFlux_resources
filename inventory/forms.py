@@ -73,7 +73,7 @@ class SiteForm(forms.ModelForm):
                     """
                     ),
                     HTML(
-                        f"""<a class="btn btn-secondary" href={self.cancel_url}>
+                        f"""<a class="btn btn-secondary btn-cancel" href={self.cancel_url}>
                         <i class="bi bi-trash me-2"></i>Cancel</a>"""
                     ),
                     # DELETE button goes here, then move helper
