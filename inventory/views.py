@@ -92,8 +92,6 @@ class SiteCreateView(CreateView):
         # (Not needed in SiteUpdateView)
         kwargs["existing_site"] = False
         kwargs["cancel_url"] = self.cancel_url
-        print(f"|{self.success_url}|")
-        print(f"|{self.cancel_url}|")
         return kwargs
 
 

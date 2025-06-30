@@ -74,10 +74,8 @@
 
     <!-- Main Content -->
     <main class="container-fluid flex-grow-1">
-      <!-- <div class="row justify-content-center"> DELETE THIS? -->
         {% block content %}
         {% endblock %}
-      <!-- </div> -->
     </main>
 
     <!-- <\!-- Footer -\-> -->
@@ -88,6 +86,8 @@
     <!-- </footer> -->
 
     {% bootstrap_javascript %}
+
+    {% load static %}
     <!-- Inventory app JavaScript -->
     <script src="{% static 'js/form_protect.js' %}"></script>
     <!-- For Bootstrap tooltips -->
