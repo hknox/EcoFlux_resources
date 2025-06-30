@@ -49,7 +49,7 @@ class SiteForm(forms.ModelForm):
                 css_class="mb-1",
             ),
             Row(
-                Column(Field("description"), css_class="col-6"),
+                Column(Field("description", rows=4), css_class="col-6"),
                 Column(Field("location"), css_class="col-md-4"),
                 Column(Field("gps_coordinates"), css_class="col-md-2"),
                 css_class="mb-1",
