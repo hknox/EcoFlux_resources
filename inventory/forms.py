@@ -1,8 +1,17 @@
 from django import forms
+from django.template.loader import render_to_string
 
 # from django.forms import inlineformset_factory
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Field, Row, Column
+from crispy_forms.layout import (
+    ButtonHolder,
+    Layout,
+    Field,
+    Row,
+    Column,
+    LayoutObject,
+    Submit,
+)
 from crispy_forms.layout import HTML
 
 # from crispy_bootstrap5.bootstrap5 import FloatingField
@@ -13,6 +22,40 @@ from .models import (
     # Photo,
     # FieldNote,
 )
+
+
+class DeleteButton(LayoutObject):
+    """
+    Crispy layout object that renders a standalone Delete button
+    meant to go outside the main form, using JavaScript to POST.
+    """
+
+    def __init__(
+        self,
+        delete_url=None,
+        label="Delete",
+        icon="bi-trash",
+        # css_class="btn btn-danger",
+        css_class="",
+    ):
+        self.template = "inventory/crispy_delete_button.html"
+        self.delete_url = delete_url
+        self.label = label
+        self.icon = icon
+        self.css_class = css_class
+
+    def render(self, form, context, template_pack="bootstrap5"):
+        """ChatGPT had a form_style argument after form which is unused now"""
+        context.update(
+            {
+                "delete_url": self.delete_url,
+                "label": self.label,
+                "icon": self.icon,
+                "css_class": self.css_class,
+                "csrf_token": context.get("csrf_token"),
+            }
+        )
+        return render_to_string(self.template, context.flatten())
 
 
 class SiteForm(forms.ModelForm):
@@ -31,8 +74,9 @@ class SiteForm(forms.ModelForm):
 
     def __init_FormHelper(self):
         helper = FormHelper()
-        helper.form_id = "id_create_site"
+        helper.form_id = "id_site_form"
         helper.form_method = "POST"
+        helper.form_tag = False
         # multipart/form-data is automatically set when the form needs
         # this enctype, so there is no official helper attribute for it.
         helper.form_class = "track-unsaved form-class"
@@ -63,32 +107,30 @@ class SiteForm(forms.ModelForm):
                 ),
                 css_class="mb-1",
             ),
-            # Submit/Cancel/Delete Buttons
-            Row(
-                Column(
-                    HTML(
-                        """<button type="submit" class="btn btn-primary me-2">
-                    <i class="bi bi-check-circle me-2"></i>Save
-                    </button>
-                    """
-                    ),
-                    HTML(
-                        f"""<a class="btn btn-secondary btn-cancel" href={self.cancel_url}>
-                        <i class="bi bi-trash me-2"></i>Cancel</a>"""
-                    ),
-                    # DELETE button goes here, then move helper
-                    # creation to a separate class or mixin
-                    css_class="d-flex justify-content-start mt-3",
-                )
+            ButtonHolder(
+                Submit("submit", "Save", css_class="btn btn-primary"),
+                HTML(
+                    f"""
+                <a href="{{{{ cancel_url }}}}" class="btn btn-secondary btn-cancel">
+                <i class="bi bi-x-circle"></i> Cancel
+                </a>
+                """
+                ),
+                *([DeleteButton(self.delete_url)] if self.delete_url else []),
             ),
         )
+
         return helper
 
-    def __init__(self, *args, existing_site=True, cancel_url=None, **kwargs):
+    def __init__(
+        self, *args, existing_site=True, cancel_url=None, delete_url=None, **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.existing_site = existing_site
         self.cancel_url = cancel_url
+        self.delete_url = delete_url
         self.helper = self.__init_FormHelper()
+        # Are these useful?
         self.fields["name"].widget.attrs["size"] = self.fields["name"].max_length
         self.fields["code"].widget.attrs["size"] = self.fields["code"].max_length
         self.fields["amp"].widget.attrs["size"] = self.fields["amp"].max_length

@@ -41,28 +41,17 @@ class SiteCreateView(CreateView):
 
         Each of those items is available under that name in template."""
         context = super().get_context_data(**kwargs)
+        context["cancel_url"] = self.cancel_url
+        context["action"] = "New "
 
-        # context["action"] = "New" DELETE ME?
-        # if self.request.POST:
-        #     context["doi_formset"] = DOIFormSet(self.request.POST, instance=self.object)
-        #     context["fieldnote_formset"] = FieldNoteFormSet(
-        #         self.request.POST, instance=self.object
-        #     )
-        #     context["photo_formset"] = PhotoFormSet(
-        #         self.request.POST, self.request.FILES, instance=self.object
-        #     )
-
-        # else:
-        #     context["doi_formset"] = DOIFormSet(instance=self.object)
-        #     context["fieldnote_formset"] = FieldNoteFormSet(instance=self.object)
-        #     context["photo_formset"] = PhotoFormSet(instance=self.object)
-        # Attach crispy-form helpers to each form in the formset
-        # for form in context["doi_formset"].forms:
-        #     form.helper = DOIFormSetHelper()
-        # for form in context["fieldnote_formset"].forms:
-        #     form.helper = FieldNoteFormHelper()        context["doi_formset"].helper = DOIFormSetHelper()
-        # print(SiteCreateView.form_class())
         return context
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Let the form know this is a NEW site
+        # (Not needed in SiteUpdateView)
+        kwargs["existing_site"] = False
+        return kwargs
 
     # def form_valid(self, form):
     #     context = self.get_context_data()
@@ -71,28 +60,77 @@ class SiteCreateView(CreateView):
     #     self.object = form.save()
     #     valid = True
 
-    # for fset in [
-    #     doi_formset,
-    # ]:  # photo_formset]:
-    #     fset.instance = self.object
-    #     if not fset.is_valid():
-    #         valid = False
+    #     for fset in [
+    #         doi_formset,
+    #     ]:  # photo_formset]:
+    #         fset.instance = self.object
+    #         if not fset.is_valid():
+    #             valid = False
 
-    # if valid:
-    #     doi_formset.save()
-    #     photo_formset.save()
-    #     return redirect(self.get_success_url())
-    # else:
-    #     # Optionally delete the just-created Site if formsets are invalid
-    #     return self.render_to_response(self.get_context_data(form=form))
+    #     if valid:
+    #         doi_formset.save()
+    #         photo_formset.save()
+    #         return redirect(self.get_success_url())
+    #     else:
+    #         # Optionally delete the just-created Site if formsets are invalid
+    #         return self.render_to_response(self.get_context_data(form=form))
+
+
+class SiteUpdateView(LoginRequiredMixin, UpdateView):
+    model = Site
+    form_class = SiteForm
+    template_name = "inventory/site_detail.html"
+    success_url = reverse_lazy("view_sites")
+    cancel_url = reverse_lazy("view_sites")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["cancel_url"] = self.cancel_url
+        context["action"] = "Edit "
+        print("remember to re-add inventory to site detail update view")
+        # context_data["items"] = self.object.inventory_items.all()
+        # ADD PHOTOS here
+        return context
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        # Let the form know this is a NEW site
-        # (Not needed in SiteUpdateView)
-        kwargs["existing_site"] = False
-        kwargs["cancel_url"] = self.cancel_url
+        self.delete_url = reverse(
+            "delete_site",
+            args=[
+                self.object.id,
+            ],
+        )
+        kwargs["delete_url"] = self.delete_url
         return kwargs
+
+
+class SiteDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
+    model = Site
+    success_url = reverse_lazy("view_sites")
+    success_message = "Site %(description)s was deleted successfully!"
+
+    # Can use this to protect agains deleting a location holding
+    # inventory items:
+    # def post(self, request, *args, **kwargs):
+    #     location = self.get_object()
+    #     if location.inventory_items.exists():
+    #         messages.error(
+    #             request, "Cannot delete this location — it still has inventory items."
+    #         )
+    #         return HttpResponseRedirect(
+    #             location.get_absolute_url()
+    #         )  # Or wherever your edit page is
+    #     return super().post(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, "Location was successfully deleted.")
+        return super().delete(request, *args, **kwargs)
+
+    def get_success_message(self, cleaned_data):
+        return self.success_message % dict(
+            cleaned_data,
+            description=self.object.description,
+        )
 
 
 class SortedListView(ListView):
@@ -199,57 +237,6 @@ class SiteListView(LoginRequiredMixin, SortedListView):
         context["edit_url"] = "edit_site"
 
         return context
-
-
-class SiteDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
-    model = Site
-    success_url = reverse_lazy("view_sites")
-    success_message = "Site %(description)s was deleted successfully!"
-
-    # Can use this to protect agains deleting a location holding
-    # inventory items:
-    # def post(self, request, *args, **kwargs):
-    #     location = self.get_object()
-    #     if location.inventory_items.exists():
-    #         messages.error(
-    #             request, "Cannot delete this location — it still has inventory items."
-    #         )
-    #         return HttpResponseRedirect(
-    #             location.get_absolute_url()
-    #         )  # Or wherever your edit page is
-    #     return super().post(request, *args, **kwargs)
-
-    def delete(self, request, *args, **kwargs):
-        messages.success(request, "Location was successfully deleted.")
-        return super().delete(request, *args, **kwargs)
-
-    def get_success_message(self, cleaned_data):
-        return self.success_message % dict(
-            cleaned_data,
-            description=self.object.description,
-        )
-
-
-class SiteUpdateView(LoginRequiredMixin, UpdateView):
-    model = Site
-    form_class = SiteForm
-    template_name = "inventory/site_detail.html"
-    success_url = reverse_lazy("view_sites")
-
-    def get_context_data(self, **kwargs):
-        context_data = super().get_context_data(**kwargs)
-        context_data["cancel_url"] = reverse("view_sites")
-        context_data["action"] = "Edit"
-        context_data["delete_url"] = reverse(
-            "delete_site",
-            args=[
-                self.object.id,
-            ],
-        )
-        print("remember to re-add inventory to site detail update view")
-        # context_data["items"] = self.object.inventory_items.all()
-        # ADD PHOTOS here
-        return context_data
 
 
 # def upload_photo_from_site(request, site_id):

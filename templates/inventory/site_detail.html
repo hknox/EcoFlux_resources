@@ -37,35 +37,19 @@
        Without it the saved-data check fails to run -->
 
 
+  <br>
   <form id="id_site_form" class = "track-unsaved form-class" novalidate method="post">
 
+    {% csrf_token %}
     {% crispy form %}
 
-    <div class="d-flex gap-2 align-items-start">
-      <!-- Save -->
-      <button type="submit" class="btn btn-primary">
-        <i class="bi bi-check-circle"></i> Save
-      </button>
-      <!-- Cancel -->
-      <a href="{{ cancel_url }}" class="btn btn-secondary btn-cancel">
-        <i class="bi bi-x-circle"></i> Cancel
-      </a>
-  </form>
-      {% if delete_url %}
-      <!-- Delete -->
-      <form method="post" action="{{ delete_url }}" onsubmit="return confirmDelete();" class="d-inline">
-      {% csrf_token %}
-      <button type="submit" class="btn btn-danger">
-        <i class="bi bi-trash"></i> Delete
-      </button>
-      </form>
-  </div>
-  {% endif %}
+</form>
 
   {% endblock content %}
 
   {% block extra_js %}
   {% include "inventory/include/flatpickr.html" %}
   <script src="{% static 'js/formset_add.js' %}"></script>
+  <script src="{% static 'js/delete_button.js' %}"></script>
   {% endblock extra_js %}
 </body>

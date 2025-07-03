@@ -1,13 +1,9 @@
-function confirmDelete() {
-  return confirm("Are you sure you want to delete this item?\nThis action cannot be undone.");
-}
 let dirty = false
 
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('form.track-unsaved');
     if (!form)
         return
-    console.log('2', form);
 
     form.addEventListener('input', () => { console.log("input->dirty"); dirty = true });
     form.addEventListener('change', () => { console.log("change->dirty"); dirty = true });
