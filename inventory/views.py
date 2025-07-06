@@ -13,9 +13,9 @@ from django.urls import reverse_lazy, reverse
 from inventory.models import Site, Photo  # InventoryItem
 from .forms import (
     SiteForm,
-    # DOIFormSet,
+    DOIFormSet,
     # DOIFormSetHelper,
-    # FieldNoteFormSet,
+    # fieldnoteformset,
     # PhotoFormSet,
     # PhotoFormSetHelper,
 )
@@ -43,8 +43,23 @@ class SiteCreateView(CreateView):
         context = super().get_context_data(**kwargs)
         context["cancel_url"] = self.cancel_url
         context["action"] = "New "
+        if self.request.POST:
+            context["doi_formset"] = DOIFormSet(self.request.POST)
+        else:
+            context["doi_formset"] = DOIFormSet()
 
         return context
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        doi_formset = context["doi_formset"]
+        self.object = form.save()
+        if doi_formset.is_valid():
+            doi_formset.instance = self.object
+            doi_formset.save()
+            return redirect(self.object.get_absolute_url())
+        else:
+            return self.form_invalid(form)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -52,28 +67,6 @@ class SiteCreateView(CreateView):
         # (Not needed in SiteUpdateView)
         kwargs["existing_site"] = False
         return kwargs
-
-    # def form_valid(self, form):
-    #     context = self.get_context_data()
-    #     doi_formset = context["doi_formset"]
-    #     photo_formset = context["photo_formset"]
-    #     self.object = form.save()
-    #     valid = True
-
-    #     for fset in [
-    #         doi_formset,
-    #     ]:  # photo_formset]:
-    #         fset.instance = self.object
-    #         if not fset.is_valid():
-    #             valid = False
-
-    #     if valid:
-    #         doi_formset.save()
-    #         photo_formset.save()
-    #         return redirect(self.get_success_url())
-    #     else:
-    #         # Optionally delete the just-created Site if formsets are invalid
-    #         return self.render_to_response(self.get_context_data(form=form))
 
 
 class SiteUpdateView(LoginRequiredMixin, UpdateView):
@@ -94,6 +87,11 @@ class SiteUpdateView(LoginRequiredMixin, UpdateView):
         )
         context["delete_url"] = delete_url
         context["action"] = "Edit "
+        if self.request.POST:
+            context["doi_formset"] = DOIFormSet(self.request.POST)
+        else:
+            context["doi_formset"] = DOIFormSet()
+
         print("remember to re-add inventory to site detail update view")
         # context_data["items"] = self.object.inventory_items.all()
         # ADD PHOTOS here
@@ -118,6 +116,17 @@ class SiteDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
     #             location.get_absolute_url()
     #         )  # Or wherever your edit page is
     #     return super().post(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        doi_formset = context["doi_formset"]
+        self.object = form.save()
+        if doi_formset.is_valid():
+            doi_formset.instance = self.object
+            doi_formset.save()
+            return redirect(self.object.get_absolute_url())
+        else:
+            return self.form_invalid(form)
 
     def delete(self, request, *args, **kwargs):
         messages.success(request, "Location was successfully deleted.")

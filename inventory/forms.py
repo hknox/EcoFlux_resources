@@ -1,7 +1,7 @@
 from django import forms
 from django.template.loader import render_to_string
+from django.forms import inlineformset_factory
 
-# from django.forms import inlineformset_factory
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import (
     ButtonHolder,
@@ -18,7 +18,7 @@ from crispy_forms.layout import HTML
 
 from .models import (
     Site,
-    # DOI,
+    DOI,
     # Photo,
     # FieldNote,
 )
@@ -159,17 +159,39 @@ class SiteForm(forms.ModelForm):
 # )
 
 
-# # DOI links
-# class DOIForm(forms.ModelForm):
-#     class Meta:
-#         model = DOI
-#         fields = ["label", "doi_link"]
-#         labels = {
-#             "doi_link": "DOI link",
-#         }
+# DOI links
+class DOIForm(forms.ModelForm):
+    class Meta:
+        model = DOI
+        fields = ["label", "doi_link"]
+        labels = {
+            "doi_link": "DOI link",
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_tag = False  # the <form> is in the parent template
+        self.helper.layout = Layout(
+            Row(
+                Column(Field("label", wrapper_class="mb-0"), css_class="col-3"),
+                Column(Field("doi_link", wrapper_class="mb-0"), css_class="col-7"),
+                css_class="g-2 align-items-center",
+            )
+        )
 
 
-# DOIFormSet = inlineformset_factory(Site, DOI, form=DOIForm, extra=1, can_delete=True)
+DOIFormSet = inlineformset_factory(
+    Site,
+    DOI,
+    form=DOIForm,
+    fields=[
+        "label",
+        "doi_link",
+    ],  # List all editable DOI fields here
+    extra=1,
+    can_delete=True,
+)
 
 
 # class DOIFormSetHelper(FormHelper):

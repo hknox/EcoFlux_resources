@@ -33,13 +33,60 @@
     {% csrf_token %}
     {% crispy form %}
 
+    <!-- DOI formset -->
+    <div class="d-flex align-items-center mb-2">
+      <h5 class="mb-0 me-3 col-8">DOIs</h5>
+      <button type="button"
+              class="btn btn-primary btn-sm add-form-row"
+              data-formset-prefix="{{ doi_formset.prefix }}">
+        <i class="bi bi-plus-circle"></i> Add another
+      </button>
+    </div>
+    {% include "inventory/include/formset_block.html" with formset=doi_formset %}
+
+    {% comment %}
+    <!-- FieldNotes formset -->
+    <h4>Field Notes</h4>
+    {% include "formset_block.html" with formset=fieldnote_formset %}
+    {% endcomment %}
+
+    <!-- Save/Delete buttons -->
+    <div class="mt-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-check-circle"></i> Save
+        </button>
+        <a href="{{ cancel_url }}" class="btn btn-secondary btn-cancel">
+            <i class="bi bi-x-circle"></i> Cancel
+        </a>
+        {% if delete_url %}
+            {% include "inventory/crispy_delete_button.html" with delete_url=delete_url label="Delete" icon="bi-trash" %}
+        {% endif %}
+    </div>
+
+</form>
+
+
 </form>
 
   {% endblock content %}
 
   {% block extra_js %}
+
   {% include "inventory/include/flatpickr.html" %}
   <script src="{% static 'js/formset_add.js' %}"></script>
   <script src="{% static 'js/delete_button.js' %}"></script>
+  <script>
+    function markForDelete(btn) {
+    // Find the hidden DELETE checkbox in the same row and check it
+    var row = btn.closest('.row');
+    var delInput = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+    if (delInput) {
+    delInput.checked = true;
+    // Optionally: hide the row for immediate feedback
+    row.style.display = 'none';
+    }
+    }
+  </script>
+
   {% endblock extra_js %}
 </body>
