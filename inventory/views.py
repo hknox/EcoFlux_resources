@@ -86,22 +86,18 @@ class SiteUpdateView(LoginRequiredMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["cancel_url"] = self.cancel_url
+        delete_url = reverse(
+            "delete_site",
+            args=[
+                context["object"].id,
+            ],
+        )
+        context["delete_url"] = delete_url
         context["action"] = "Edit "
         print("remember to re-add inventory to site detail update view")
         # context_data["items"] = self.object.inventory_items.all()
         # ADD PHOTOS here
         return context
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        self.delete_url = reverse(
-            "delete_site",
-            args=[
-                self.object.id,
-            ],
-        )
-        kwargs["delete_url"] = self.delete_url
-        return kwargs
 
 
 class SiteDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
@@ -109,8 +105,9 @@ class SiteDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
     success_url = reverse_lazy("view_sites")
     success_message = "Site %(description)s was deleted successfully!"
 
-    # Can use this to protect agains deleting a location holding
-    # inventory items:
+    # Can eventually use this to protect agains deleting a location
+    # holding inventory items:
+    #
     # def post(self, request, *args, **kwargs):
     #     location = self.get_object()
     #     if location.inventory_items.exists():

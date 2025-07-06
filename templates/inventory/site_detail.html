@@ -5,17 +5,8 @@
   {% load crispy_forms_tags static %}
 
   {% block extra_css %}
-
-  <!-- Make more space for textarea widgets -->
-  <style>
-    .form-floating.custom-height textarea,
-    .custom-height .form-control {
-        height: 60px !important;
-    }
-  </style>
   {% endblock %}
 
-  {% block title %}EcoFlux - Site{% endblock %}
 </head>
 
 <body>
@@ -37,8 +28,7 @@
        Without it the saved-data check fails to run -->
 
 
-  <br>
-  <form id="id_site_form" class = "track-unsaved form-class" novalidate method="post">
+  <form id="id_site_form" class = "mt-3 track-unsaved form-class" novalidate method="post">
 
     {% csrf_token %}
     {% crispy form %}

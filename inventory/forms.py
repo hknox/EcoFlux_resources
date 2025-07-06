@@ -107,28 +107,14 @@ class SiteForm(forms.ModelForm):
                 ),
                 css_class="mb-1",
             ),
-            ButtonHolder(
-                Submit("submit", "Save", css_class="btn btn-primary"),
-                HTML(
-                    f"""
-                <a href="{{{{ cancel_url }}}}" class="btn btn-secondary btn-cancel">
-                <i class="bi bi-x-circle"></i> Cancel
-                </a>
-                """
-                ),
-                *([DeleteButton(self.delete_url)] if self.delete_url else []),
-            ),
         )
 
         return helper
 
-    def __init__(
-        self, *args, existing_site=True, cancel_url=None, delete_url=None, **kwargs
-    ):
+    def __init__(self, *args, existing_site=True, cancel_url=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.existing_site = existing_site
         self.cancel_url = cancel_url
-        self.delete_url = delete_url
         self.helper = self.__init_FormHelper()
         # Are these useful?
         self.fields["name"].widget.attrs["size"] = self.fields["name"].max_length
