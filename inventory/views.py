@@ -2,7 +2,7 @@
 from django.db.models import Count
 from django.views.generic.list import ListView
 from django.views.generic.edit import UpdateView, CreateView, DeleteView
-from django.shortcuts import redirect, render, get_object_or_404
+from django.shortcuts import redirect, render  # get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -10,7 +10,7 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models.functions import Lower
 from django.urls import reverse_lazy, reverse
 
-from inventory.models import Site, Photo  # InventoryItem
+from inventory.models import Site  # ,Photo  # ,InventoryItem
 from .forms import (
     SiteForm,
     DOIFormSet,
@@ -29,56 +29,97 @@ def logout_view(request):
     logout(request)
 
 
-class SiteCreateView(CreateView):
+class SiteViewsMixin:
     model = Site
     form_class = SiteForm
     template_name = "inventory/site_detail.html"
     success_url = reverse_lazy("view_sites")
     cancel_url = reverse_lazy("view_sites")
 
-    def get_context_data(self, **kwargs):
-        """Returns a dict with keys, 'object', 'site', 'form', 'view'.
-
-        Each of those items is available under that name in template."""
+    def initialize_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["cancel_url"] = self.cancel_url
-        context["action"] = "New "
-        if self.request.POST:
-            context["doi_formset"] = DOIFormSet(self.request.POST)
-        else:
-            context["doi_formset"] = DOIFormSet()
 
         return context
 
-    def form_valid(self, form):
-        context = self.get_context_data()
-        doi_formset = context["doi_formset"]
-        self.object = form.save()
-        if doi_formset.is_valid():
-            doi_formset.instance = self.object
-            doi_formset.save()
-            return redirect(self.object.get_absolute_url())
+    def handle_post(self, request, *args, **kwargs):
+        # Construct form and formset here
+        form = self.get_form()
+        if self.object == None:
+            # New site
+            formset = DOIFormSet(request.POST)
         else:
-            return self.form_invalid(form)
+            # Existing site
+            formset = DOIFormSet(request.POST, instance=self.object)
+
+        # Store for use in get_context_data()
+        self._form = form
+        self._formset = formset
+
+        if form.is_valid() and formset.is_valid():
+            site = form.save()
+            formset.instance = site
+            formset.save()
+            return redirect(self.success_url)
+
+        return self.render_to_response(self.get_context_data())
+
+    # def form_valid(self, form):
+    #     """You can safely delete this form_valid() method if you’re not
+    #     using Django’s built-in form-handling flow (i.e., if you’re
+    #     manually handling POST requests in your own post() method as shown
+    #     earlier). Why?
+
+    #     The form_valid method is part of Django’s generic class-based
+    #     view workflow. If you override post() and handle all form and
+    #     formset logic there (including saving and redirecting), Django
+    #     will not call form_valid. Your logic in post() takes
+    #     precedence.
+
+    #     When would you need form_valid? If you rely on the default CBV
+    #     flow (don’t override post()), you would only need to override
+    #     form_valid to add formset-handling logic after the parent form
+    #     is saved.
+    #     """
+    #     context = self.get_context_data()
+    #     doi_formset = context["doi_formset"]
+    #     self.object = form.save()
+    #     if doi_formset.is_valid():
+    #         doi_formset.instance = self.object
+    #         doi_formset.save()
+    #         return redirect(self.object.get_absolute_url())
+    #     else:
+    #         return self.form_invalid(form)
+
+
+class SiteCreateView(LoginRequiredMixin, SiteViewsMixin, CreateView):
+
+    def get_context_data(self, **kwargs):
+        context = self.initialize_context_data(**kwargs)
+        context["action"] = "New "
+
+        # Use cached versions if present (from POST)
+        context["form"] = getattr(self, "_form", self.get_form())
+        context["doi_formset"] = getattr(self, "_formset", DOIFormSet())
+
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = None  # Required for CreateView
+        return self.handle_post(request, *args, **kwargs)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         # Let the form know this is a NEW site
-        # (Not needed in SiteUpdateView)
         kwargs["existing_site"] = False
         return kwargs
 
 
-class SiteUpdateView(LoginRequiredMixin, UpdateView):
-    model = Site
-    form_class = SiteForm
-    template_name = "inventory/site_detail.html"
-    success_url = reverse_lazy("view_sites")
-    cancel_url = reverse_lazy("view_sites")
+class SiteUpdateView(LoginRequiredMixin, SiteViewsMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["cancel_url"] = self.cancel_url
+        context = self.initialize_context_data(**kwargs)
+        context["action"] = "Edit "
         delete_url = reverse(
             "delete_site",
             args=[
@@ -86,22 +127,39 @@ class SiteUpdateView(LoginRequiredMixin, UpdateView):
             ],
         )
         context["delete_url"] = delete_url
-        context["action"] = "Edit "
-        if self.request.POST:
-            context["doi_formset"] = DOIFormSet(self.request.POST)
-        else:
-            context["doi_formset"] = DOIFormSet()
 
-        print("remember to re-add inventory to site detail update view")
-        # context_data["items"] = self.object.inventory_items.all()
-        # ADD PHOTOS here
+        context["form"] = getattr(self, "_form", self.get_form())
+        context["doi_formset"] = getattr(
+            self, "_formset", DOIFormSet(instance=self.get_object())
+        )
+
         return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()  # Required for UpdateView
+        return self.handle_post(request, *args, **kwargs)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        # Let the form know this is an EXISTING site
+        kwargs["existing_site"] = True
+        return kwargs
 
 
 class SiteDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
     model = Site
     success_url = reverse_lazy("view_sites")
     success_message = "Site %(description)s was deleted successfully!"
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, "Location was successfully deleted.")
+        return super().delete(request, *args, **kwargs)
+
+    def get_success_message(self, cleaned_data):
+        return self.success_message % dict(
+            cleaned_data,
+            description=self.object.description,
+        )
 
     # Can eventually use this to protect agains deleting a location
     # holding inventory items:
@@ -117,26 +175,17 @@ class SiteDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
     #         )  # Or wherever your edit page is
     #     return super().post(request, *args, **kwargs)
 
-    def form_valid(self, form):
-        context = self.get_context_data()
-        doi_formset = context["doi_formset"]
-        self.object = form.save()
-        if doi_formset.is_valid():
-            doi_formset.instance = self.object
-            doi_formset.save()
-            return redirect(self.object.get_absolute_url())
-        else:
-            return self.form_invalid(form)
-
-    def delete(self, request, *args, **kwargs):
-        messages.success(request, "Location was successfully deleted.")
-        return super().delete(request, *args, **kwargs)
-
-    def get_success_message(self, cleaned_data):
-        return self.success_message % dict(
-            cleaned_data,
-            description=self.object.description,
-        )
+    # CAN THIS BE DELETED?
+    # def form_valid(self, form):
+    #     context = self.get_context_data()
+    #     doi_formset = context["doi_formset"]
+    #     self.object = form.save()
+    #     if doi_formset.is_valid():
+    #         doi_formset.instance = self.object
+    #         doi_formset.save()
+    #         return redirect(self.object.get_absolute_url())
+    #     else:
+    #         return self.form_invalid(form)
 
 
 class SortedListView(ListView):

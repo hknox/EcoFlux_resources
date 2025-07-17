@@ -1,16 +1,18 @@
 from django import forms
 from django.template.loader import render_to_string
 from django.forms import inlineformset_factory
+from django.forms.models import BaseInlineFormSet
+from django.core.exceptions import ValidationError
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import (
-    ButtonHolder,
+    # ButtonHolder,
     Layout,
     Field,
     Row,
     Column,
     LayoutObject,
-    Submit,
+    # Submit,
 )
 from crispy_forms.layout import HTML
 
@@ -111,7 +113,11 @@ class SiteForm(forms.ModelForm):
 
         return helper
 
-    def __init__(self, *args, existing_site=True, cancel_url=None, **kwargs):
+    def __init__(self, *args, existing_site=None, cancel_url=None, **kwargs):
+        if existing_site is None:
+            raise ValueError(
+                "SiteForm must be initalized with existing_site=True|False"
+            )
         super().__init__(*args, **kwargs)
         self.existing_site = existing_site
         self.cancel_url = cancel_url
@@ -160,6 +166,28 @@ class SiteForm(forms.ModelForm):
 
 
 # DOI links
+class BaseDOIFormSet(BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        for form in self.forms:
+            print(f"\n{form}")
+            if form.cleaned_data.get("DELETE", False):
+                print("DELETE=false")
+                continue
+            if form.has_changed():
+                # Force validation even if not already done
+                print("form changed")
+                form.full_clean()
+                if not form.is_valid():
+                    raise ValidationError("Incomplete or invalid DOI record.")
+            else:
+                print("not changed")
+
+
+class StrictDOIFormSet(BaseDOIFormSet):
+    pass
+
+
 class DOIForm(forms.ModelForm):
     class Meta:
         model = DOI
@@ -171,11 +199,27 @@ class DOIForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
-        self.helper.form_tag = False  # the <form> is in the parent template
+        self.helper.form_tag = (
+            False  # the <form> and Submit buttons are in the parent template
+        )
         self.helper.layout = Layout(
             Row(
                 Column(Field("label", wrapper_class="mb-0"), css_class="col-3"),
                 Column(Field("doi_link", wrapper_class="mb-0"), css_class="col-7"),
+                Column(
+                    Field("DELETE", type="hidden"),  # Hidden delete field
+                    HTML(
+                        """
+                      <button type="button"
+                              class="btn btn-danger btn-sm remove-form-row"
+                              title=" Remove"
+                              data-confirm="Are you sure you want to remove this DOI record?">
+                        <i class="bi bi-trash"></i> Remove
+                      </button>
+                    """
+                    ),
+                    css_class="col-auto d-flex mt-4 align-items-center",
+                ),
                 css_class="g-2 align-items-center",
             )
         )
@@ -185,34 +229,13 @@ DOIFormSet = inlineformset_factory(
     Site,
     DOI,
     form=DOIForm,
+    formset=StrictDOIFormSet,
     fields=[
         "label",
         "doi_link",
     ],  # List all editable DOI fields here
-    extra=1,
+    extra=0,
     can_delete=True,
+    min_num=0,
+    validate_min=True,
 )
-
-
-# class DOIFormSetHelper(FormHelper):
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         self.form_tag = False
-#         self.layout = Layout(
-#             Row(
-#                 Column(FloatingField("label"), css_class="col-md-4"),
-#                 Column(FloatingField("doi_link"), css_class="col-md-4"),
-#                 css_class="mb-2",
-#             )
-#         )
-
-
-# class SiteFormHelper(FormHelper):
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         self.form_tag = False
-
-#         # self.form_id = 'some-id'
-#         self.form_method = "post"
-#         self.form_action = "sites"
-#         self.layout = Layout(
