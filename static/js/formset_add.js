@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.add-form-row').forEach(function(btn) {
         btn.addEventListener('click', function() {
             const prefix = btn.getAttribute('data-formset-prefix');
-            console.log("Prefix ",prefix)
             const formsetDiv = document.getElementById(prefix + '-formset');
             const totalForms = formsetDiv.querySelector('input[name$="-TOTAL_FORMS"]');
             const currentCount = parseInt(totalForms.value, 10);
@@ -33,10 +32,54 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             if (hasVisibleEmptyRow) {
-                const toast = new bootstrap.Toast(document.getElementById('formset-toast'));
-                toast.show();
-                return
+                // Find and scroll to the first empty visible row
+                formRows.forEach(function (row) {
+                    if (row.style.display === 'none') return;
+
+                    const inputs = row.querySelectorAll('input, select, textarea');
+                    let hasData = false;
+
+                    // inputs.forEach(function (field) {
+                    for (const field of inputs) {
+                        if (
+                            (field.type === 'checkbox' || field.type === 'radio') ? field.checked :
+                                field.value.trim() !== ''
+                        ) {
+                            hasData = true;
+                            break;
+                        }
+                    };
+
+                    if (!hasData) {
+                        // Scroll to it
+                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                        // Flash it with a highlight
+                        row.classList.add('border', 'border-warning', 'rounded');
+                        row.style.transition = 'background-color 0.6s ease-in-out';
+                        row.style.backgroundColor = '#fff3cd'; // light yellow
+
+                        const firstInput = row.querySelector('input:not([type=hidden]):not([disabled]), select:not([disabled]), textarea:not([disabled])');
+
+                        if (firstInput) {
+                            firstInput.focus();
+                        }
+                        setTimeout(() => {
+                            row.style.backgroundColor = '';
+                            row.classList.remove('border', 'border-warning', 'rounded');
+                        }, 4000);
+                    }
+                });
+
+                return;
             }
+
+
+            // if (hasVisibleEmptyRow) {
+            //     const toast = new bootstrap.Toast(document.getElementById('formset-toast'));
+            //     toast.show();
+            //     return
+            // }
 
 
             // Clone and insert row as before...

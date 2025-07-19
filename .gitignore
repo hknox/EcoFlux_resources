@@ -1,0 +1,12 @@
+Pipfile.lock
+.envrc
+test.py
+*__pycache__*
+/templates/snippets/
+/inventory/migrations/*
+*temp*
+*Lab_Invent*
+db.sqlite*
+/notes.org
+/Pipfile
+/inventory/inventory_code.org
