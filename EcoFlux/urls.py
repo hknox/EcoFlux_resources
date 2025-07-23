@@ -25,7 +25,7 @@ from inventory import views
 urlpatterns = [
     path("accounts/", include("django.contrib.auth.urls")),  # for authentication
     path("admin/", admin.site.urls),  # Django's built-in admin interface
-    path("inventory/", include("inventory.urls")),
+    path("ecoflux/", include("inventory.urls")),
     # TODO: Is this the best way to do this?
     # path("", views.InventoryListView.as_view(), name="root"),
 ]
