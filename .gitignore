@@ -4,8 +4,9 @@ test.py
 *__pycache__*
 /templates/snippets/
 /inventory/migrations/*
-*temp*
 *Lab_Invent*
+*obsolete*
+site_test*
 db.sqlite*
 /notes.org
 /Pipfile

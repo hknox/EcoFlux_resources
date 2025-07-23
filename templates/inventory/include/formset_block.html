@@ -1,0 +1,24 @@
+{% load crispy_forms_tags %}
+
+<div id="{{ formset.prefix }}-formset" class="mt-0 mb-0">
+  {{ formset.management_form }}
+  {% for form in formset %}
+    <div class="formset-row row align-items-center m-0">
+      {% for hidden in form.hidden_fields %}
+        {{ hidden }}
+      {% endfor %}
+
+      {% crispy form %}
+    </div>
+  {% endfor %}
+
+  {# Hidden empty form for JS duplication #}
+  <div class="formset-row row align-items-center m-0"
+       id="{{ formset.prefix }}-empty-form"
+       style="display: none;">
+    {% for hidden in formset.empty_form.hidden_fields %}
+      {{ hidden }}
+    {% endfor %}
+    {% crispy formset.empty_form %}
+  </div>
+</div>
