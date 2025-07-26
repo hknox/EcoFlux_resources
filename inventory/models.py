@@ -22,11 +22,11 @@ class Site(models.Model):
     gps_coordinates = models.CharField(max_length=50, blank=True)
 
     def __str__(self):
-        return f"{self.name} ({self.code})"
+        return f"{self.code}: {self.name}"
 
 
 class DOI(models.Model):
-    """Class to a  Data Object Identifier to a Site"""
+    """Class for a Data Object Identifier to a Site"""
 
     label = models.CharField(max_length=20)
     doi_link = models.URLField()
@@ -42,12 +42,13 @@ def site_photo_upload_path(instance, filename):
 class Photo(models.Model):
     image = models.ImageField(upload_to=site_photo_upload_path)
     caption = models.CharField(max_length=255, blank=True)
-    uploaded_at = models.DateTimeField(default=now)
+    uploaded_at = models.DateField(default=now)
     site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name="photos")
 
 
 class FieldNote(models.Model):
     site = models.ForeignKey(Site, related_name="fieldnotes", on_delete=models.CASCADE)
     note = models.TextField()
-    uploaded_at = models.DateTimeField(default=now)
-    user = models.TextField()
+    date_submitted = models.DateField(default=now)
+    summary = models.CharField(max_length=80, blank=True)
+    submitter = models.CharField()
