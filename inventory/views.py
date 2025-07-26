@@ -1,5 +1,5 @@
 # from django.contrib.auth.forms import password_validation
-from django.db.models import Count
+# from django.db.models import Count
 from django.views.generic.list import ListView
 from django.views.generic.edit import UpdateView, CreateView, DeleteView
 from django.shortcuts import redirect, render  # get_object_or_404
@@ -81,15 +81,6 @@ class SiteViewsMixin:
     #     form_valid to add formset-handling logic after the parent form
     #     is saved.
     #     """
-    #     context = self.get_context_data()
-    #     doi_formset = context["doi_formset"]
-    #     self.object = form.save()
-    #     if doi_formset.is_valid():
-    #         doi_formset.instance = self.object
-    #         doi_formset.save()
-    #         return redirect(self.object.get_absolute_url())
-    #     else:
-    #         return self.form_invalid(form)
 
 
 class SiteCreateView(LoginRequiredMixin, SiteViewsMixin, CreateView):
@@ -174,18 +165,6 @@ class SiteDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
     #             location.get_absolute_url()
     #         )  # Or wherever your edit page is
     #     return super().post(request, *args, **kwargs)
-
-    # CAN THIS BE DELETED?
-    # def form_valid(self, form):
-    #     context = self.get_context_data()
-    #     doi_formset = context["doi_formset"]
-    #     self.object = form.save()
-    #     if doi_formset.is_valid():
-    #         doi_formset.instance = self.object
-    #         doi_formset.save()
-    #         return redirect(self.object.get_absolute_url())
-    #     else:
-    #         return self.form_invalid(form)
 
 
 class SortedListView(ListView):
