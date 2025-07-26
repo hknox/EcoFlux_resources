@@ -22,7 +22,7 @@ from .models import (
     Site,
     DOI,
     # Photo,
-    # FieldNote,
+    FieldNote,
 )
 
 
@@ -141,16 +141,67 @@ class SiteForm(forms.ModelForm):
                 # field.help_text = ""
 
 
-# # FieldNotes
-# class FieldNoteForm(forms.ModelForm):
-#     class Meta:
-#         model = FieldNote
-#         fields = ["note", "user", "uploaded_at"]
+# FieldNotes
+class FieldNoteForm(forms.ModelForm):
+    class Meta:
+        model = FieldNote
+        fields = ["site", "note", "submitter", "date_submitted", "summary"]
 
+    def __init_FormHelper(self):
+        helper = FormHelper()
+        helper.form_id = "id_fieldnote_form"
+        helper.form_method = "POST"
+        helper.form_tag = False
+        # multipart/form-data is automatically set when the form needs
+        # this enctype, so there is no official helper attribute for it.
+        helper.form_class = "track-unsaved form-class"
+        helper.label_class = (
+            "col-auto col-form-label text-end align-self-center py-0 pe-2 label-class"
+        )
+        helper.field_class = "col-auto field-class"  # auto-width for inputs
+        helper.attrs = {"novalidate": ""}
+        helper.layout = Layout(
+            Row(
+                Column(Field("site"), css_class="col-md-4", label="Site"),
+                Column(
+                    Field("submitter"),
+                    css_class="col-md-4",
+                    label="Submitted by",
+                ),
+                Column(Field("date_submitted", css_class="col-md-2  datepicker")),
+                css_class="mb-1",
+            ),
+            Row(
+                Field("note", rows=20),
+                css_class="mb-1",
+            ),
+            Row(
+                Field(
+                    "summary",
+                ),
+                css_class="mb-1",
+            ),
+        )
 
-# FieldNoteFormSet = inlineformset_factory(
-#     Site, FieldNote, form=FieldNoteForm, extra=1, can_delete=True
-# )
+        return helper
+
+    def __init__(self, *args, site_id=None, cancel_url=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if site_id:
+            self.fields["site"].initial = Site.objects.get(pk=site_id)
+        self.site_id = site_id
+        self.cancel_url = cancel_url
+        self.helper = self.__init_FormHelper()
+        # Make help_texts appear as Bootstrap tooltips
+        for field_name, field in self.fields.items():
+            # if not field.widget.attrs.get("placeholder", ""):
+            #     field.widget.attrs.setdefault("placeholder", field.label)
+            if field.help_text:
+                field.widget.attrs["title"] = field.help_text
+                field.widget.attrs["data-bs-toggle"] = "tooltip"
+                field.widget.attrs["data-bs-placement"] = "top"
+                # Suppress default help_text rendering
+                # field.help_text = ""
 
 
 # # photos
@@ -166,28 +217,6 @@ class SiteForm(forms.ModelForm):
 
 
 # DOI links
-class BaseDOIFormSet(BaseInlineFormSet):
-    def clean(self):
-        super().clean()
-        for form in self.forms:
-            print(f"\n{form}")
-            if form.cleaned_data.get("DELETE", False):
-                print("DELETE=false")
-                continue
-            if form.has_changed():
-                # Force validation even if not already done
-                print("form changed")
-                form.full_clean()
-                if not form.is_valid():
-                    raise ValidationError("Incomplete or invalid DOI record.")
-            else:
-                print("not changed")
-
-
-class StrictDOIFormSet(BaseDOIFormSet):
-    pass
-
-
 class DOIForm(forms.ModelForm):
     class Meta:
         model = DOI
@@ -223,6 +252,23 @@ class DOIForm(forms.ModelForm):
                 css_class="g-2 align-items-center",
             )
         )
+
+
+class BaseDOIFormSet(BaseInlineFormSet):
+    def clean(self):
+        super().clean()
+        for form in self.forms:
+            if form.cleaned_data.get("DELETE", False):
+                continue
+            if form.has_changed():
+                # Force validation even if not already done
+                form.full_clean()
+                if not form.is_valid():
+                    raise ValidationError("Incomplete or invalid DOI record.")
+
+
+class StrictDOIFormSet(BaseDOIFormSet):
+    pass
 
 
 DOIFormSet = inlineformset_factory(

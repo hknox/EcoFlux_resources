@@ -10,14 +10,13 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models.functions import Lower
 from django.urls import reverse_lazy, reverse
 
-from inventory.models import Site  # ,Photo  # ,InventoryItem
+from inventory.models import Site, FieldNote  # ,Photo  # ,InventoryItem
 from .forms import (
     SiteForm,
     DOIFormSet,
-    # DOIFormSetHelper,
-    # fieldnoteformset,
+    FieldNoteForm,
+    # Fieldnoteformset,
     # PhotoFormSet,
-    # PhotoFormSetHelper,
 )
 
 
@@ -27,6 +26,39 @@ def EndOfInternet(request):
 
 def logout_view(request):
     logout(request)
+
+
+class FieldNoteCreateView(LoginRequiredMixin, CreateView):
+    model = FieldNote
+    form_class = FieldNoteForm
+    template_name = "inventory/fieldnote.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["cancel_url"] = self.request.GET.get("next")
+
+        return context
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["site_id"] = self.request.GET.get("site")
+        # kwargs["success_url"] = self.request.GET.get("next")
+
+        return kwargs
+
+    def get_success_url(self):
+        print("FieldNoteCreateView.get_success_url()")
+        return self.request.GET.get("next")
+
+
+class FieldNoteUpdateView(LoginRequiredMixin, UpdateView):
+    model = FieldNote
+    form_class = FieldNoteForm
+    template_name = "inventory/fieldnote.html"
+
+    def get_success_url(self):
+        print("FieldNoteUpdateView.get_success_url()")
+        return self.request.GET.get("next")
 
 
 class SiteViewsMixin:
@@ -123,6 +155,7 @@ class SiteUpdateView(LoginRequiredMixin, SiteViewsMixin, UpdateView):
         context["doi_formset"] = getattr(
             self, "_formset", DOIFormSet(instance=self.get_object())
         )
+        context["fieldnotes"] = self.object.fieldnotes.order_by("date_submitted")
 
         return context
 

@@ -23,6 +23,11 @@ urlpatterns = [
         views.SiteCreateView.as_view(),
         name="add_site",
     ),
+    path(
+        "fieldnotes/create/",
+        views.FieldNoteCreateView.as_view(),
+        name="fieldnote_create",
+    ),
     path("photos/", views.EndOfInternet, name="photos"),
     path("photos/add", views.upload_photo, name="new_photo"),
     path("notes/", views.EndOfInternet, name="notes"),
