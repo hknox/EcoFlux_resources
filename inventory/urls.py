@@ -28,6 +28,11 @@ urlpatterns = [
         views.FieldNoteCreateView.as_view(),
         name="fieldnote_create",
     ),
+    path(
+        "fieldnotes/edit/<int:pk>",
+        views.FieldNoteUpdateView.as_view(),
+        name="fieldnote_edit",
+    ),
     path("photos/", views.EndOfInternet, name="photos"),
     path("photos/add", views.upload_photo, name="new_photo"),
     path("notes/", views.EndOfInternet, name="notes"),

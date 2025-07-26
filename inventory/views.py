@@ -42,12 +42,10 @@ class FieldNoteCreateView(LoginRequiredMixin, CreateView):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs["site_id"] = self.request.GET.get("site")
-        # kwargs["success_url"] = self.request.GET.get("next")
 
         return kwargs
 
     def get_success_url(self):
-        print("FieldNoteCreateView.get_success_url()")
         return self.request.GET.get("next")
 
 
@@ -56,8 +54,13 @@ class FieldNoteUpdateView(LoginRequiredMixin, UpdateView):
     form_class = FieldNoteForm
     template_name = "inventory/fieldnote.html"
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["cancel_url"] = self.request.GET.get("next")
+
+        return context
+
     def get_success_url(self):
-        print("FieldNoteUpdateView.get_success_url()")
         return self.request.GET.get("next")
 
 

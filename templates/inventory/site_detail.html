@@ -42,6 +42,9 @@
         <i class="bi bi-plus-circle"></i> Add a DOI record
       </button>
     </div>
+    {% if not doi_formset.forms %}
+      <div type="row" class="mt-2">No DOI records for this site yet.</div>
+    {% endif %}
     {% include "inventory/include/formset_block.html" with formset=doi_formset %}
 
     <!-- FieldNotes -->
@@ -60,11 +63,14 @@
             <th>Summary</th>
             <th>Submitted by</th>
           </thead>
-
           <tbody>
             {% for note in fieldnotes %}
               <tr>
-                <td>{{ note.date_submitted }}</td>
+                <td>
+                  <a href="{% url 'fieldnote_edit' note.pk %}?next={{request.get_full_path}}">
+                    {{ note.date_submitted }}
+                  </a>
+                </td>
                 {% if note.summary %}
                   <td>{{ note.summary }}</td>
                 {% else %}
@@ -76,7 +82,7 @@
           </tbody>
         </table>
       {% else %}
-        <h5 class="mt-2 ms-2">No field notes for this site yet.</h5>
+        <div type="row" class="mt-2">No field notes for this site yet.</div>
       {% endif %}
 
 
