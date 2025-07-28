@@ -1,5 +1,5 @@
 # from django.contrib.auth.forms import password_validation
-# from django.db.models import Count
+from django.db.models import Count
 from django.views.generic.list import ListView
 from django.views.generic.edit import UpdateView, CreateView, DeleteView
 from django.shortcuts import redirect, render  # get_object_or_404
@@ -22,10 +22,6 @@ from .forms import (
 
 def EndOfInternet(request):
     return redirect("https://hmpg.net/")
-
-
-def logout_view(request):
-    logout(request)
 
 
 class FieldNoteCreateView(LoginRequiredMixin, CreateView):
@@ -203,7 +199,7 @@ class SiteDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
     #     return super().post(request, *args, **kwargs)
 
 
-class SortedListView(ListView):
+class SortedListMixin(ListView):
     """Add persistent sort machinery to ListView"""
 
     lookup_default = "icontains"
@@ -233,7 +229,7 @@ class SortedListView(ListView):
         sort = self.request.GET.get("sort", self._sort_key)
         self._sort_key = sort
 
-        field_list = [field["name"] for field in self.sort_fields]
+        field_list = [field["name"] for field in self.table_fields]
         if sort.lstrip("-") in field_list:
             if sort.startswith("-"):
                 print(f"BB-de: {sort}, {sort[1:]}")
@@ -245,66 +241,75 @@ class SortedListView(ListView):
         return queryset
 
 
-class SiteListView(LoginRequiredMixin, SortedListView):
+class SiteListView(LoginRequiredMixin, SortedListMixin):
     model = Site
     paginate_by = 14
     template_name = "inventory/lists.html"
     context_object_name = "table_items"
     # Default sort order
-    _sort_key = "description"
+    _sort_key = "code"
+    # Default maximum field width
+    _default_max_chars = 50
     filter_fields = [
-        {"name": "description", "label": "Name"},
-        {"name": "address", "label": "Address"},
-        {"name": "gps_coordinates", "label": "GPS"},
-        {
-            "name": "item_count_min",
-            "label": "Min. Item Count",
-            "type": "number",
-            "lookup": "item_count",
-            "lookup_type": "gte",
-        },
+        {"name": "code", "label": "Code"},
+        {"name": "name", "label": "Name"},
+        {"name": "description", "label": "Description"},
+        # {"name": "gps_coordinates", "label": "GPS"},
+        # {
+        #     "name": "item_count_min",
+        #     "label": "Min. Item Count",
+        #     "type": "number",
+        #     "lookup": "item_count",
+        #     "lookup_type": "gte",
+        # },
         # This one needs to account for int type, and maybe < or >
         # {"name": "item_count", "label": "Items"},
     ]
-    sort_fields = [
-        {"name": "description", "label": "Name"},
-        {"name": "address", "label": "Address"},
-        {"name": "gps_coordinates", "label": "GPS"},
-        {"name": "item_count", "label": "Items"},
-    ]
-    display_fields = [
-        {"name": "name", "label": "Name"},
+    # This gets passed to the template to control display of headers and data:
+    # If "sortable" is "no", don't offer sort arrows on the column header.
+    # Use "max_chars" to truncate the data to max_chars number of characters.
+    # TODO reflect on a default for max_chars: it's 200 in sortable_table.html
+    #      but maybe it should really be less?
+    table_fields = [
         {"name": "code", "label": "Code"},
+        {"name": "name", "label": "Name"},
+        {"name": "location", "label": "Location"},
+        {"name": "description", "label": "Description", "max_chars": 80},
+        # {"name": "item_count", "label": "Items"},
+        # {"name": "fieldnotes", "label": "Field notes"},
     ]
+    # TODO: Delete?
+    # display_fields = [
+    #     {"name": "name", "label": "Name"},
+    #     {"name": "code", "label": "Code"},
+    # ]
 
     def get_queryset(self):
         # This line results in warnings about unreachable code:
         # qs = super().get_queryset().annotate(item_count=Count("inventory_items"))
         # Doing it this way avoids the warning:
         base_qs = Site.objects.all()
-        qs = base_qs  # .annotate(item_count=Count("inventory_items"))
-
-        if not qs.exists():
-            messages.info(self.request, "No sites are currently defined.")
-            return qs
+        qs = base_qs
+        # qs = base_qs.annotate(fieldnotes_count=Count("fieldnote_items"))
 
         qs = self.apply_filters(qs)
         qs = self.apply_sort_parameters(qs)
 
-        return qs  # .annotate(item_count=Count("inventory_items"))
+        return qs  # .annotate(item_count=Count("fieldnotes_items"))
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
         context["sort"] = self._sort_key
         context["filter_fields"] = self.filter_fields
-        context["table_fields"] = self.sort_fields
-        context["sorted_fields"] = self.sort_fields
+        context["table_fields"] = self.table_fields
+        # context["sorted_fields"] = self.sort_fields NOT USED?
         context["reset_url"] = reverse("view_sites")
         context["add_url"] = reverse("add_site")
         context["heading"] = "Sites"
         context["add_button"] = "Add New Site"
         context["edit_url"] = "edit_site"
+        context["default_max_chars"] = self._default_max_chars
 
         return context
 
@@ -335,6 +340,10 @@ def upload_photo(request):
         form = PhotoForm()
 
     return render(request, "upload_photo.html", {"form": form})
+
+
+def logout_view(request):
+    logout(request)
 
 
 def test_html(request):

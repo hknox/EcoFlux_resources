@@ -3,27 +3,27 @@
 {% load querystring custom_filters %}
 
 <table class="table table-striped table-hover table-bordered m-0">
-  <thead>
+  <thead class="table-light">
     <tr>
-      {% with current_sort=sort %}
       {% for field in table_fields %}
       <th>
-        {% if current_sort == field.name %}
-        <a href="?{% querystring_without_sort %}&sort=-{{ field.name }}">
-          {{ field.label }} <i class="fas fa-sort-down"></i>
-        </a>
-        {% elif current_sort == "-"|add:field.name %}
-        <a href="?{% querystring_without_sort %}&sort={{ field.name }}">
-          {{ field.label }} <i class="fas fa-sort-up"></i>
-        </a>
+        {% if field.sortable == "no" %}
+          {{ field.label }}
+        {% elif sort == field.name %}
+          <a href="?{% querystring_without_sort %}&sort=-{{ field.name }}">
+            {{ field.label }} <i class="fas fa-sort-down"></i>
+          </a>
+        {% elif sort == "-"|add:field.name %}
+          <a href="?{% querystring_without_sort %}&sort={{ field.name }}">
+            {{ field.label }} <i class="fas fa-sort-up"></i>
+          </a>
         {% else %}
-        <a href="?{% querystring_without_sort %}&sort={{ field.name }}">
-          {{ field.label }} <i class="fas fa-sort text-muted"></i>
-        </a>
+          <a href="?{% querystring_without_sort %}&sort={{ field.name }}">
+            {{ field.label }} <i class="fas fa-sort text-muted"></i>
+          </a>
         {% endif %}
       </th>
       {% endfor %}
-      {% endwith %}
     </tr>
   </thead>
 
@@ -31,13 +31,19 @@
     {% for item in table_items %}
     <tr>
       {% for field in table_fields %}
-        <td>
-          {% if forloop.first and item.id %}
-            <a href="{% url edit_url_name item.id %}">{{ item|get_field_display:field.name }}</a>
-          {% else %}
-            {{ item|get_field_display:field.name }}
-          {% endif %}
-        </td>
+        {% with max_chars=field.max_chars|default:default_max_chars %}
+          {% with field_value=item|get_field_display:field.name|truncatechars:max_chars %}
+            <td>
+              {% if forloop.first %}
+                <a href="{% url edit_url_name item.id %}">
+                  {{ field_value }}
+                </a>
+              {% else %}
+                {{ field_value }}
+              {% endif %}
+            </td>
+          {% endwith %}
+        {% endwith %}
       {% endfor %}
     </tr>
     {% endfor %}
