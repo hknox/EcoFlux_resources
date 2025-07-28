@@ -275,6 +275,7 @@ class SiteListView(LoginRequiredMixin, SortedListMixin):
         {"name": "name", "label": "Name"},
         {"name": "location", "label": "Location"},
         {"name": "description", "label": "Description", "max_chars": 80},
+        {"name": "fieldnotes_count", "label": "Fieldnotes"},
         # {"name": "item_count", "label": "Items"},
         # {"name": "fieldnotes", "label": "Field notes"},
     ]
@@ -289,13 +290,12 @@ class SiteListView(LoginRequiredMixin, SortedListMixin):
         # qs = super().get_queryset().annotate(item_count=Count("inventory_items"))
         # Doing it this way avoids the warning:
         base_qs = Site.objects.all()
-        qs = base_qs
-        # qs = base_qs.annotate(fieldnotes_count=Count("fieldnote_items"))
+        qs = base_qs.annotate(fieldnotes_count=Count("fieldnotes"))
 
         qs = self.apply_filters(qs)
         qs = self.apply_sort_parameters(qs)
 
-        return qs  # .annotate(item_count=Count("fieldnotes_items"))
+        return qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
