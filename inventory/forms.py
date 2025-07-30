@@ -122,13 +122,15 @@ class SiteForm(forms.ModelForm):
         self.existing_site = existing_site
         self.cancel_url = cancel_url
         self.helper = self.__init_FormHelper()
-        # Are these useful?
+        # TODO Are these useful?
         self.fields["name"].widget.attrs["size"] = self.fields["name"].max_length
         self.fields["code"].widget.attrs["size"] = self.fields["code"].max_length
         self.fields["amp"].widget.attrs["size"] = self.fields["amp"].max_length
         self.fields["location"].widget.attrs["size"] = self.fields[
             "location"
         ].max_length
+        # TODO move this to a common mixin?
+        #      or add a simple function to this module and call it?
         # Make help_texts appear as Bootstrap tooltips
         for field_name, field in self.fields.items():
             # if not field.widget.attrs.get("placeholder", ""):
@@ -189,9 +191,12 @@ class FieldNoteForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if site_id:
             self.fields["site"].initial = Site.objects.get(pk=site_id)
+            self.fields["site"].disabled = True
         self.site_id = site_id
         self.cancel_url = cancel_url
         self.helper = self.__init_FormHelper()
+        # TODO move this to a common mixin?
+        #      or add a simple function to this module and call it?
         # Make help_texts appear as Bootstrap tooltips
         for field_name, field in self.fields.items():
             # if not field.widget.attrs.get("placeholder", ""):

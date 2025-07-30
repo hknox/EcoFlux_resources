@@ -1,5 +1,5 @@
 # from django.contrib.auth.forms import password_validation
-from django.db.models import Count
+from django.db.models import Case, When, Value, CharField, Count
 from django.views.generic.list import ListView
 from django.views.generic.edit import UpdateView, CreateView, DeleteView
 from django.shortcuts import redirect, render  # get_object_or_404
@@ -52,12 +52,36 @@ class FieldNoteUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["cancel_url"] = self.request.GET.get("next")
-
+        context["cancel_url"] = self.request.GET.get(
+            "next", reverse_lazy("view_fieldnotes")
+        )
+        delete_url = reverse(
+            "fieldnote_delete",
+            args=[
+                context["object"].id,
+            ],
+        )
+        context["delete_url"] = delete_url
         return context
 
     def get_success_url(self):
-        return self.request.GET.get("next")
+        return self.request.GET.get("next", reverse_lazy("view_fieldnotes"))
+
+
+class FieldNoteDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
+    model = FieldNote
+    success_url = reverse_lazy("view_fieldnotes")
+    success_message = "Field note site %(site)s was deleted successfully!"
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, "Field note was successfully deleted.")
+        return super().delete(request, *args, **kwargs)
+
+    def get_success_message(self, cleaned_data):
+        return self.success_message % dict(
+            cleaned_data,
+            site=self.object.site,
+        )
 
 
 class SiteViewsMixin:
@@ -200,9 +224,25 @@ class SiteDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
 
 
 class SortedListMixin(ListView):
-    """Add persistent sort machinery to ListView"""
+    """Add persistent sort machinery to ListView.
+
+    Pass a table_fields list of dicts for the template via the context
+    to control display of headers and data, eg:
+
+    table_fields = [
+        {"name": "date_submitted", "label": "Date submitted"},
+        {"name": "site", "label": "Site"},
+        {"name": "display_summary", "label": # "Summary"},
+    ]
+
+    Use extra keys for more control:
+    - "sortable": if "no", don't offer sort arrows on the column header.
+    - "max_chars": truncate the data to max_chars number of characters.
+    """
 
     lookup_default = "icontains"
+    # Default maximum field width
+    _default_max_chars = 50
 
     def apply_filters(self, queryset):
 
@@ -248,28 +288,15 @@ class SiteListView(LoginRequiredMixin, SortedListMixin):
     context_object_name = "table_items"
     # Default sort order
     _sort_key = "code"
-    # Default maximum field width
-    _default_max_chars = 50
+
     filter_fields = [
-        {"name": "code", "label": "Code"},
-        {"name": "name", "label": "Name"},
-        {"name": "description", "label": "Description"},
-        # {"name": "gps_coordinates", "label": "GPS"},
-        # {
-        #     "name": "item_count_min",
-        #     "label": "Min. Item Count",
-        #     "type": "number",
-        #     "lookup": "item_count",
-        #     "lookup_type": "gte",
-        # },
+        # {"name": "code", "label": "Code"},
         # This one needs to account for int type, and maybe < or >
         # {"name": "item_count", "label": "Items"},
     ]
     # This gets passed to the template to control display of headers and data:
     # If "sortable" is "no", don't offer sort arrows on the column header.
     # Use "max_chars" to truncate the data to max_chars number of characters.
-    # TODO reflect on a default for max_chars: it's 200 in sortable_table.html
-    #      but maybe it should really be less?
     table_fields = [
         {"name": "code", "label": "Code"},
         {"name": "name", "label": "Name"},
@@ -277,20 +304,10 @@ class SiteListView(LoginRequiredMixin, SortedListMixin):
         {"name": "description", "label": "Description", "max_chars": 80},
         {"name": "fieldnotes_count", "label": "Fieldnotes"},
         # {"name": "item_count", "label": "Items"},
-        # {"name": "fieldnotes", "label": "Field notes"},
     ]
-    # TODO: Delete?
-    # display_fields = [
-    #     {"name": "name", "label": "Name"},
-    #     {"name": "code", "label": "Code"},
-    # ]
 
     def get_queryset(self):
-        # This line results in warnings about unreachable code:
-        # qs = super().get_queryset().annotate(item_count=Count("inventory_items"))
-        # Doing it this way avoids the warning:
-        base_qs = Site.objects.all()
-        qs = base_qs.annotate(fieldnotes_count=Count("fieldnotes"))
+        qs = Site.objects.annotate(fieldnotes_count=Count("fieldnotes"))
 
         qs = self.apply_filters(qs)
         qs = self.apply_sort_parameters(qs)
@@ -303,12 +320,60 @@ class SiteListView(LoginRequiredMixin, SortedListMixin):
         context["sort"] = self._sort_key
         context["filter_fields"] = self.filter_fields
         context["table_fields"] = self.table_fields
-        # context["sorted_fields"] = self.sort_fields NOT USED?
         context["reset_url"] = reverse("view_sites")
         context["add_url"] = reverse("add_site")
         context["heading"] = "Sites"
         context["add_button"] = "Add New Site"
         context["edit_url"] = "edit_site"
+        context["default_max_chars"] = self._default_max_chars
+
+        return context
+
+
+class FieldNoteListView(LoginRequiredMixin, SortedListMixin):
+    model = FieldNote
+    paginate_by = 14
+    template_name = "inventory/lists.html"
+    context_object_name = "table_items"
+    # Default sort order
+    _sort_key = "date_submitted"
+    filter_fields = [
+        # See SiteListView for ideas
+    ]
+    # This gets passed to the template to control display of headers and data:
+    # If "sortable" is "no", don't offer sort arrows on the column header.
+    # Use "max_chars" to truncate the data to max_chars number of characters.
+    table_fields = [
+        {"name": "date_submitted", "label": "Date submitted"},
+        {"name": "site", "label": "Site"},
+        {"name": "display_summary", "label": "Summary"},
+        {"name": "submitter", "label": "Submitter"},
+    ]
+
+    def get_queryset(self):
+        qs = FieldNote.objects.annotate(
+            display_summary=Case(
+                When(summary__isnull=False, summary__gt="", then="summary"),
+                default="note",
+                output_field=CharField(),
+            )
+        )
+
+        qs = self.apply_filters(qs)
+        qs = self.apply_sort_parameters(qs)
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["sort"] = self._sort_key
+        context["filter_fields"] = self.filter_fields
+        context["table_fields"] = self.table_fields
+        context["reset_url"] = reverse("view_fieldnotes")
+        context["add_url"] = reverse("fieldnote_create")
+        context["heading"] = "Field notes"
+        context["add_button"] = "Add New Field note"
+        context["edit_url"] = "fieldnote_edit"
         context["default_max_chars"] = self._default_max_chars
 
         return context
