@@ -1,0 +1,150 @@
+Design and planning notes.
+
+* Questions to sort
+** Do we need or want side panels for navigation or filtering?
+Maybe just a (right-side) panel for filtering on the appropriate
+screen: list screens, primarily (maybe field notes)
+** What menu items do we offer
+Sites
+Photos
+Inventory
+Suppliers
+Link to main EcoFlux site?
+Personal profiile (needed?)
+Logout
+
+If that's ALL, then no need for a nav list on a separate panel
+OR simplify the top header bar, but it seems a waste of space not to
+use that space for anything but LOGOUT
+
+OR: header bar: logo, greeting, profile (maybe include logout in a
+dropdown?), logout (if not in Profile
+)
+
+* Accessibility
+Aria offers accessibility for screenreaders
+
+
+* Tables
+Possible fields gathered from Denis' site, carbonique.ca, Sara's
+current .xlsx file.
+
+** Field notes
+- summary
+- Date entered
+- Person who entered (populate user dropdown from user base)
+- Others who were there (free hand entry)
+- photos
+** Sites
+See https://ecoflux-lab.github.io/Data.html
+See also https://carbonique.ca/en/data.html
+
+From biometlab.cnr.berkeley.edu/biometlab/:
+- Description
+- Short code
+- AMP (ameriflex management project)
+
+- Location (pretty simple: Town, STATE, Country)
+- GPS or Lat,Long?
+- Date activated
+- Date retired (empty = active to present)
+- Status: active/retired (calculated from dates)
+
+- Last field site visit (with link to list of field notes for the
+  site) (nice to have)
+
+- Digital Data Object Identifiers (DOI) - needs multiple per site
+- Display list of equipment at the site
+
+- Display list of Metadata and Data Sets (NICE TO HAVE LATER, could be
+  in field notes)
+- Display list of Related Documents
+- Display associated photos
+** Equipment
+First draft!
+- Description
+- type (usse same types as Denis: Sara will send a list to populate a dropdown)
+- model number
+- Serial/ID number
+- Location (link to Location table)
+- Price paid
+- Date Purchased?
+- maintenance=history records
+- project (later)
+
+from https://biometlab.cnr.berkeley.edu/biometlab/bmetdata/equipment.php:
+- Equipment (1 or 2 word description)
+- Manufacturer
+- Model
+- Serial number
+- Last entry (?)
+- Acquisition date
+- Current location (site)
+- associated Project
+- Description / Notes
+- List of maintenance notes/History
+
+** Photos
+From BioMet:
+- photo filename (internal imagefield value)
+Metadata (maybe retrievable from Exif data?)
+- Data taken (from exif data)
+- Size (in MB)
+- Camera used (nice to have)
+- Owner (person who took the photo?)
+- Location (Site) (X)
+- Caption (X)
+
+** History records
+- Date
+- Activity
+- Person who did it(in notes)
+- notes
+** Suppliers NOT NOW
+
+
+** DOI records
+many-to-one to site records
+see Denis
+
+** Users
+many-to-many maintenance_records-to-users
+many(or one)-to-many users-to-items
+- contact info (email) (phone?)
+
+** Index fields that will be used for lookups?
+
+
+
+
+* Delete sites? (Need to rethink cascading deletes)
+
+
+
+* Basic planning
+initial landing is login page:
+  header: show project name, actions (edit items, locations, users (if
+          have the right credentials), user name, profile button?
+          logout
+          help button?
+  body: maybe a default view of the item database
+  footer? maybe a copyright notice, credits
+
+edit items:
+  display with options to: filter by description (regex)
+                           sort by any field (asc, desc)
+  add new item
+  edit existing item
+edit locations:
+edit maintenance records
+edit users:
+
+logout action returns to initial landing page
+** Looks
+background colour: lightish green: #57e389
+
+
+
+
+* Configuration
+#+TODO: TODO(t) NEXTACTION(n) STARTED(s) WAITING(w) | DONE(d) CANCELED(c) DEFERRED(f)
