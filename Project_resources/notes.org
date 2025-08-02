@@ -1,10 +1,8 @@
 Various notes and reminders to myself.
 
-<<<<<<< HEAD
-=======
 * [[https://chatgpt.com/c/687295f7-4304-8001-b080-4f2e315195eb][ChatGPT discussions]]
 
->>>>>>> inventory
+
 * Forms
 ** Goals
 control over layout
@@ -17,13 +15,10 @@ add field note records
 ** Adding attributes to input widgets using crispy Layout
 Field: can add arbitrary attributes to input widgets using keyword
 assignments, eg 'rows=4', 'cols=25', etc.
-<<<<<<< HEAD
-=======
 ** multipart/form-data
 This is automatically set when the form needs this enctype, so there
 is no official crispy-layout helper attribute for it.
 
->>>>>>> inventory
 ** [[https://www.youtube.com/watch?v=X8ECf3Ow3ww][Intro to crispy-forms (YouTube)]]
 ** FormHelper attributes
 From ChatGPT:
@@ -76,6 +71,7 @@ How to add CSS classes to widgets in Python
 
 * Bootstrap notes
 
+
 * MDN exploration
 ** To pick up later
 - Forms and buttons
@@ -85,8 +81,6 @@ How to add CSS classes to widgets in Python
 
 
 
-<<<<<<< HEAD
-=======
 * novalidate
 Re: 'novalidate' attribute: See https://docs.djangoproject.com/en/5.2/topics/forms/:
 
@@ -106,7 +100,6 @@ Using an href="?site=4.." reloads the current site using this as a
 query string.
 
 
->>>>>>> inventory
 * [[https://learndjango.com/tutorials/django-favicon-tutorial][Adding favicons in Django]]
 
 

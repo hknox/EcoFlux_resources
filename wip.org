@@ -1,28 +1,9 @@
-<<<<<<< HEAD
-Notes about work in progress
-
 * Current issues/Next steps
-** Add inventory items
-** Edit inventory items
-** Delete inventory items
-** Refactor list views?
-
-** History for inventory? [[From Sara][See Sara's requirements]]
-
-** STARTED FieldNotes list page
-Filters
-** STARTED Site list page
-- add counts of items
-- fix filter
-- move Filter header to same line as Sites
-=======
-* Current issues/Next steps
-** History for inventory? [[From Sara][See Sara's requirements]]
-
-
 ** Refactor list views
 ** Refactor other views
 
+** View/edit equipment from a site?
+** Photos
 ** If Equipment.location == None, display as something else?
 ** Review Filters
 - move Filter header to same line as Sites
@@ -30,30 +11,17 @@ Filters
 ** STARTED Site list page
 - add counts of items
 
->>>>>>> inventory
-
 ** WAITING Edit fieldnote
 - Write some JS to get confirmation if the Site is going to be changed
 when editing; for now, it's disabled
-<<<<<<< HEAD
-=======
 
->>>>>>> inventory
+
 ** How to create snippets like:
 {% comment
 {% if...
 <!-- -->
-<<<<<<< HEAD
-** FieldNote contributors
-** other stuff
-Using an href="?site=4 reloads the current site using this as a query
-string.
-=======
 ** clean up tooltip stuff in forms
 ** FieldNote contributors
->>>>>>> inventory
-
-
 
 ** Photos
 
@@ -87,20 +55,12 @@ Only used for FieldNote user field?
 
 
 * From Sara
-Item  history: see berkeley site
-<<<<<<< HEAD
-Add documents: linked to inventory/sensor
-Add notes, linked to each history record
 Photos are linked to sites
-Field notes linked to site; photo links?
-No supplier: encode mfr/supplier in model number field
-=======
-Add notes, linked to each history record
 Add documents: linked to inventory/sensor
-Photo links linked to a site
+X Add notes, linked to each history record
+X Field notes linked to site
 X No supplier: encode mfr/supplier in model number field
-X Field notes linked to a site.
->>>>>>> inventory
+
 
 * Filtering
 How to INPUT filter parameters?
@@ -131,19 +91,12 @@ Where do photos get placed? In a single folder or in subfolders by site?
 * STARTED maintenance records + new record on item edit/create template
 
 
-<<<<<<< HEAD
 * Add new site from inventory location dropdown
 
 * eventually for missing inventory location:
 check into listing unlocated items somewhere
 automatically reassign them to a "Holding Area" or dummy location
 instead of Null
-=======
-* Fix Unassigned=None inventory location
-check into listing unlocated items somewhere
-automatically reassign them to a "Holding Area" or dummy location
-instead of None
->>>>>>> inventory
 See Highlight unassigned inventory items on Django Edit location tab
 
 add to inventory templates to show NO location selected (can happen
@@ -157,13 +110,8 @@ OR
   <span class="text-muted">Not located</span>
 {% endif %}
 
-
-<<<<<<< HEAD
 * Unlocated items
-=======
-* Add new site from inventory location dropdown
 
->>>>>>> inventory
 
 * Conversations with Sara
 ** [2025-04-16 Wed]
