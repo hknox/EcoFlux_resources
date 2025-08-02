@@ -33,6 +33,37 @@ class DOI(models.Model):
     site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name="doi_records")
 
 
+class Equipment(models.Model):
+    instrument = models.CharField(max_length=75)
+    manufacturer = models.CharField(max_length=75, blank=True)
+    model_number = models.CharField(max_length=75, blank=True)
+    serial_number = models.CharField(max_length=50, blank=True)
+    date_purchased = models.DateField()
+    notes = models.TextField(blank=True)
+    location = models.ForeignKey(
+        Site, on_delete=models.SET_NULL, null=True, blank=True, related_name="equipment"
+    )
+
+    def __str__(self):
+        return f"{self.instrument} - {self.serial_number}"
+
+
+class History(models.Model):
+    date = models.DateField(default=now)
+    note = models.TextField()
+    item = models.ForeignKey(
+        Equipment, related_name="equipment", on_delete=models.CASCADE
+    )
+
+
+class FieldNote(models.Model):
+    site = models.ForeignKey(Site, related_name="fieldnotes", on_delete=models.CASCADE)
+    note = models.TextField()
+    date_submitted = models.DateField(default=now)
+    summary = models.CharField(max_length=80, blank=True)
+    submitter = models.CharField()
+
+
 def site_photo_upload_path(instance, filename):
     ext = filename.split(".")[-1]
     new_filename = f"{uuid.uuid4().hex}.{ext}"
@@ -44,11 +75,3 @@ class Photo(models.Model):
     caption = models.CharField(max_length=255, blank=True)
     uploaded_at = models.DateField(default=now)
     site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name="photos")
-
-
-class FieldNote(models.Model):
-    site = models.ForeignKey(Site, related_name="fieldnotes", on_delete=models.CASCADE)
-    note = models.TextField()
-    date_submitted = models.DateField(default=now)
-    summary = models.CharField(max_length=80, blank=True)
-    submitter = models.CharField()

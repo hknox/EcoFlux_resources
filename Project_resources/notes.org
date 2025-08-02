@@ -1,5 +1,10 @@
 Various notes and reminders to myself.
 
+<<<<<<< HEAD
+=======
+* [[https://chatgpt.com/c/687295f7-4304-8001-b080-4f2e315195eb][ChatGPT discussions]]
+
+>>>>>>> inventory
 * Forms
 ** Goals
 control over layout
@@ -12,6 +17,13 @@ add field note records
 ** Adding attributes to input widgets using crispy Layout
 Field: can add arbitrary attributes to input widgets using keyword
 assignments, eg 'rows=4', 'cols=25', etc.
+<<<<<<< HEAD
+=======
+** multipart/form-data
+This is automatically set when the form needs this enctype, so there
+is no official crispy-layout helper attribute for it.
+
+>>>>>>> inventory
 ** [[https://www.youtube.com/watch?v=X8ECf3Ow3ww][Intro to crispy-forms (YouTube)]]
 ** FormHelper attributes
 From ChatGPT:
@@ -73,6 +85,28 @@ How to add CSS classes to widgets in Python
 
 
 
+<<<<<<< HEAD
+=======
+* novalidate
+Re: 'novalidate' attribute: See https://docs.djangoproject.com/en/5.2/topics/forms/:
+
+"If your form includes a URLField, an EmailField or any integer field
+type, Django will use the url, email and number HTML5 input types. By
+default, browsers may apply their own validation on these fields,
+which may be stricter than Django’s validation. If you would like to
+disable this behavior, set the novalidate attribute on the form tag,
+or specify a different widget on the field, like TextInput."
+
+Without it the saved-data check fails to run.
+
+
+
+* HTML notes
+Using an href="?site=4.." reloads the current site using this as a
+query string.
+
+
+>>>>>>> inventory
 * [[https://learndjango.com/tutorials/django-favicon-tutorial][Adding favicons in Django]]
 
 

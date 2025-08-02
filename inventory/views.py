@@ -10,18 +10,86 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models.functions import Lower
 from django.urls import reverse_lazy, reverse
 
-from inventory.models import Site, FieldNote  # ,Photo  # ,InventoryItem
+from inventory.models import Site, FieldNote, Equipment  # ,Photo
 from .forms import (
+    HistoryFormSet,
     SiteForm,
     DOIFormSet,
     FieldNoteForm,
-    # Fieldnoteformset,
+    EquipmentForm,
     # PhotoFormSet,
 )
 
 
 def EndOfInternet(request):
     return redirect("https://hmpg.net/")
+
+
+class EquipmentViewsMixin:
+    model = Equipment
+    form_class = EquipmentForm
+    template_name = "inventory/equipment_detail.html"
+    success_url = reverse_lazy("view_equipment")
+    cancel_url = reverse_lazy("view_equipment")
+
+    def initialize_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["cancel_url"] = self.cancel_url
+
+        return context
+
+    def handle_post(self, request, *args, **kwargs):
+        # Construct form and formset here
+        form = self.get_form()
+        if self.object == None:
+            # New site
+            formset = HistoryFormSet(request.POST)
+        else:
+            # Existing site
+            formset = HistoryFormSet(request.POST, instance=self.object)
+
+        # Store for use in get_context_data()
+        self._form = form
+        self._formset = formset
+
+        if form.is_valid() and formset.is_valid():
+            site = form.save()
+            formset.instance = site
+            formset.save()
+            return redirect(self.success_url)
+
+        return self.render_to_response(self.get_context_data())
+
+
+class EquipmentCreateView(LoginRequiredMixin, EquipmentViewsMixin, CreateView):
+
+    def get_context_data(self, **kwargs):
+        context_data = self.initialize_context_data(**kwargs)
+        context_data["action"] = "New"
+        return context_data
+
+
+class EquipmentUpdateView(LoginRequiredMixin, EquipmentViewsMixin, UpdateView):
+
+    def get_context_data(self, **kwargs):
+        context = self.initialize_context_data(**kwargs)
+        context["action"] = "Edit "
+        delete_url = reverse(
+            "site_delete",
+            args=[
+                context["object"].id,
+            ],
+        )
+        context["delete_url"] = delete_url
+        context["form"] = getattr(self, "_form", self.get_form())
+        context["history_formset"] = getattr(
+            self, "_formset", HistoryFormSet(instance=self.get_object())
+        )
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()  # Required for UpdateView
+        return self.handle_post(request, *args, **kwargs)
 
 
 class FieldNoteCreateView(LoginRequiredMixin, CreateView):
@@ -31,7 +99,9 @@ class FieldNoteCreateView(LoginRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["cancel_url"] = self.request.GET.get("next")
+        context["cancel_url"] = self.request.GET.get(
+            "next", reverse_lazy("view_fieldnotes")
+        )
 
         return context
 
@@ -42,7 +112,7 @@ class FieldNoteCreateView(LoginRequiredMixin, CreateView):
         return kwargs
 
     def get_success_url(self):
-        return self.request.GET.get("next")
+        return self.request.GET.get("next", reverse_lazy("view_fieldnotes"))
 
 
 class FieldNoteUpdateView(LoginRequiredMixin, UpdateView):
@@ -71,15 +141,14 @@ class FieldNoteUpdateView(LoginRequiredMixin, UpdateView):
 class FieldNoteDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
     model = FieldNote
     success_url = reverse_lazy("view_fieldnotes")
-    success_message = "Field note site %(site)s was deleted successfully!"
-
-    def delete(self, request, *args, **kwargs):
-        messages.success(request, "Field note was successfully deleted.")
-        return super().delete(request, *args, **kwargs)
+    success_message = (
+        "Field note of %(date)s for site %(site)s was deleted successfully!"
+    )
 
     def get_success_message(self, cleaned_data):
         return self.success_message % dict(
             cleaned_data,
+            date=self.object.date_submitted,
             site=self.object.site,
         )
 
@@ -167,7 +236,7 @@ class SiteUpdateView(LoginRequiredMixin, SiteViewsMixin, UpdateView):
         context = self.initialize_context_data(**kwargs)
         context["action"] = "Edit "
         delete_url = reverse(
-            "delete_site",
+            "site_delete",
             args=[
                 context["object"].id,
             ],
@@ -196,16 +265,13 @@ class SiteUpdateView(LoginRequiredMixin, SiteViewsMixin, UpdateView):
 class SiteDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
     model = Site
     success_url = reverse_lazy("view_sites")
-    success_message = "Site %(description)s was deleted successfully!"
-
-    def delete(self, request, *args, **kwargs):
-        messages.success(request, "Location was successfully deleted.")
-        return super().delete(request, *args, **kwargs)
+    success_message = "Site %(code)s: %(name)s was deleted successfully!"
 
     def get_success_message(self, cleaned_data):
         return self.success_message % dict(
             cleaned_data,
-            description=self.object.description,
+            code=self.object.code,
+            name=self.object.name,
         )
 
     # Can eventually use this to protect agains deleting a location
@@ -213,7 +279,7 @@ class SiteDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
     #
     # def post(self, request, *args, **kwargs):
     #     location = self.get_object()
-    #     if location.inventory_items.exists():
+    #     if location.inventory.exists():
     #         messages.error(
     #             request, "Cannot delete this location — it still has inventory items."
     #         )
@@ -302,13 +368,14 @@ class SiteListView(LoginRequiredMixin, SortedListMixin):
         {"name": "name", "label": "Name"},
         {"name": "location", "label": "Location"},
         {"name": "description", "label": "Description", "max_chars": 80},
-        {"name": "fieldnotes_count", "label": "Fieldnotes"},
+        {"name": "fieldnotes_count", "label": "No. Fieldnotes"},
+        {"name": "equipment_count", "label": "No. Equipment"},
         # {"name": "item_count", "label": "Items"},
     ]
 
     def get_queryset(self):
         qs = Site.objects.annotate(fieldnotes_count=Count("fieldnotes"))
-
+        qs = qs.annotate(equipment_count=Count("equipment"))
         qs = self.apply_filters(qs)
         qs = self.apply_sort_parameters(qs)
 
@@ -321,10 +388,75 @@ class SiteListView(LoginRequiredMixin, SortedListMixin):
         context["filter_fields"] = self.filter_fields
         context["table_fields"] = self.table_fields
         context["reset_url"] = reverse("view_sites")
-        context["add_url"] = reverse("add_site")
+        context["add_url"] = reverse("site_add")
         context["heading"] = "Sites"
         context["add_button"] = "Add New Site"
-        context["edit_url"] = "edit_site"
+        context["edit_url"] = "site_edit"
+        context["default_max_chars"] = self._default_max_chars
+
+        return context
+
+
+class EquipmentListView(LoginRequiredMixin, SortedListMixin):
+    model = Equipment
+    template_name = "inventory/lists.html"
+    paginate_by = 14
+    context_object_name = "table_items"
+    # Default sort order
+    _sort_key = "description"
+
+    filter_fields = [
+        # {"name": "description", "label": "Description", "type": "text"},
+        # {"name": "serial_number", "label": "Serial number", "type": "text"},
+        # {
+        #     "name": "location",
+        #     "label": "Site",
+        #     "type": "text",
+        #     "lookup": "location__description",
+        # },
+        # {"name": "notes", "label": "Notes", "type": "text"},
+        # # {"name": "date_purchased_start", "label": "Purchased After", "type": "date", "lookup": "date_purchased", "lookup_type": "gte"},
+        # # {"name": "date_purchased_end", "label": "Purchased Before", "type": "date", "lookup": "date_purchased", "lookup_type": "lte"},
+        # {
+        #     "name": "maintenance_count_min",
+        #     "label": "Min Maintenance Records",
+        #     "type": "number",
+        #     "lookup": "maintenance_count",
+        #     "lookup_type": "gte",
+        # },
+        # # {
+        # #     "name": "maintenance_count_max",
+        # #     "label": "Max Maintenance Records",
+        # #     "type": "number",
+        # #     "lookup": "maintenance_count",
+        # #     "lookup_type": "lte",
+        # # },
+    ]
+    table_fields = [
+        {"name": "instrument", "label": "Instrument"},
+        {"name": "serial_number", "label": "Serial number", "sortable": "no"},
+        {"name": "location", "label": "Location"},
+        {"name": "notes", "label": "Notes", "max_chars": 80, "sortable": "no"},
+    ]
+
+    def get_queryset(self):
+        qs = Equipment.objects.all()
+        qs = self.apply_filters(qs)
+        qs = self.apply_sort_parameters(qs)
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["sort"] = self._sort_key
+        context["filter_fields"] = self.filter_fields
+        context["table_fields"] = self.table_fields
+        context["reset_url"] = reverse("view_equipment")
+        context["add_url"] = reverse("equipment_add")
+        context["heading"] = "Equipment"
+        context["add_button"] = "Add Equipment"
+        context["edit_url"] = "equipment_edit"
         context["default_max_chars"] = self._default_max_chars
 
         return context
@@ -358,7 +490,6 @@ class FieldNoteListView(LoginRequiredMixin, SortedListMixin):
                 output_field=CharField(),
             )
         )
-
         qs = self.apply_filters(qs)
         qs = self.apply_sort_parameters(qs)
 

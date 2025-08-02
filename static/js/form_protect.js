@@ -40,7 +40,7 @@ document.addEventListener('click', function(e) {
     const href = target.getAttribute('href');
     const isNavigation = href && !href.startsWith('#') && !target.hasAttribute('download');
     if (isNavigation || target.classList.contains('btn-cancel')) {
-        const confirmed = confirm("You have unsaved changes. Are you sure you want to leave?");
+        const confirmed = confirm("You have unsaved changes. Are you sure you want to leave?\n(Click OK to leave without saving changes or\n click Cancel to stay on this page.)");
         // alert("OK");
         if (!confirmed) {
             e.preventDefault();  // stop the navigation

@@ -116,9 +116,19 @@ document.addEventListener('DOMContentLoaded', function() {
             // Add the row before the empty-form template
             formsetDiv.insertBefore(newRow, emptyForm);
             totalForms.value = currentCount + 1;
+            // Re-initialize flatpickr on new date fields in the added row only
+            if (typeof flatpickr !== 'undefined') {
+                newRow.querySelectorAll('.datepicker').forEach(function(input) {
+                    if (input._flatpickr) {
+                        input._flatpickr.destroy();  // Clean up previous instance if any
+                    }
+                    flatpickr(input, { dateFormat: "Y-m-d" });  // Apply fresh flatpickr
+                });
+            }
+            // Hook up dirty form tracking
             if (typeof attachDirtyListeners === 'function') {
                 attachDirtyListeners(newRow);
-}
+            }
         });
     });
 });

@@ -6,58 +6,20 @@ from django.core.exceptions import ValidationError
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import (
-    # ButtonHolder,
     Layout,
     Field,
     Row,
     Column,
-    LayoutObject,
-    # Submit,
+    HTML,
 )
-from crispy_forms.layout import HTML
-
-# from crispy_bootstrap5.bootstrap5 import FloatingField
 
 from .models import (
+    Equipment,
     Site,
     DOI,
-    # Photo,
     FieldNote,
+    History,
 )
-
-
-class DeleteButton(LayoutObject):
-    """
-    Crispy layout object that renders a standalone Delete button
-    meant to go outside the main form, using JavaScript to POST.
-    """
-
-    def __init__(
-        self,
-        delete_url=None,
-        label="Delete",
-        icon="bi-trash",
-        # css_class="btn btn-danger",
-        css_class="",
-    ):
-        self.template = "inventory/crispy_delete_button.html"
-        self.delete_url = delete_url
-        self.label = label
-        self.icon = icon
-        self.css_class = css_class
-
-    def render(self, form, context, template_pack="bootstrap5"):
-        """ChatGPT had a form_style argument after form which is unused now"""
-        context.update(
-            {
-                "delete_url": self.delete_url,
-                "label": self.label,
-                "icon": self.icon,
-                "css_class": self.css_class,
-                "csrf_token": context.get("csrf_token"),
-            }
-        )
-        return render_to_string(self.template, context.flatten())
 
 
 class SiteForm(forms.ModelForm):
@@ -79,8 +41,6 @@ class SiteForm(forms.ModelForm):
         helper.form_id = "id_site_form"
         helper.form_method = "POST"
         helper.form_tag = False
-        # multipart/form-data is automatically set when the form needs
-        # this enctype, so there is no official helper attribute for it.
         helper.form_class = "track-unsaved form-class"
         helper.label_class = (
             "col-auto col-form-label text-end align-self-center py-0 pe-2 label-class"
@@ -101,7 +61,7 @@ class SiteForm(forms.ModelForm):
                 css_class="mb-1",
             ),
             Row(
-                Column(Field("date_activated", css_class="col-md-2  datepicker")),
+                Column(Field("date_activated", css_class="col-md-2 datepicker")),
                 (
                     Column(Field("date_retired", css_class="col-md-4 datepicker"))
                     if self.existing_site
@@ -154,8 +114,6 @@ class FieldNoteForm(forms.ModelForm):
         helper.form_id = "id_fieldnote_form"
         helper.form_method = "POST"
         helper.form_tag = False
-        # multipart/form-data is automatically set when the form needs
-        # this enctype, so there is no official helper attribute for it.
         helper.form_class = "track-unsaved form-class"
         helper.label_class = (
             "col-auto col-form-label text-end align-self-center py-0 pe-2 label-class"
@@ -164,13 +122,13 @@ class FieldNoteForm(forms.ModelForm):
         helper.attrs = {"novalidate": ""}
         helper.layout = Layout(
             Row(
-                Column(Field("site"), css_class="col-md-4", label="Site"),
+                Column(Field("site"), css_class="col-md-4"),
                 Column(
                     Field("submitter"),
                     css_class="col-md-4",
                     label="Submitted by",
                 ),
-                Column(Field("date_submitted", css_class="col-md-2  datepicker")),
+                Column(Field("date_submitted", css_class="col-md-2 datepicker")),
                 css_class="mb-1",
             ),
             Row(
@@ -194,7 +152,84 @@ class FieldNoteForm(forms.ModelForm):
             self.fields["site"].disabled = True
         self.site_id = site_id
         self.cancel_url = cancel_url
+        self.fields["site"].empty_label = "--Select a site--"
         self.helper = self.__init_FormHelper()
+        # TODO move this to a common mixin?
+        #      or add a simple function to this module and call it?
+        # Make help_texts appear as Bootstrap tooltips
+        for field_name, field in self.fields.items():
+            # if not field.widget.attrs.get("placeholder", ""):
+            #     field.widget.attrs.setdefault("placeholder", field.label)
+            if field.help_text:
+                field.widget.attrs["title"] = field.help_text
+                field.widget.attrs["data-bs-toggle"] = "tooltip"
+                field.widget.attrs["data-bs-placement"] = "top"
+                # Suppress default help_text rendering
+                # field.help_text = ""
+
+
+# Equipment
+class EquipmentForm(forms.ModelForm):
+    class Meta:
+        model = Equipment
+        fields = [
+            "instrument",
+            "manufacturer",
+            "model_number",
+            "serial_number",
+            "date_purchased",
+            "notes",
+            "location",
+        ]
+
+    def __init_FormHelper(self):
+        helper = FormHelper()
+        helper.form_id = "id_equipment_form"
+        helper.form_method = "POST"
+        helper.form_tag = False
+        helper.form_class = "track-unsaved form-class"
+        helper.label_class = (
+            "col-auto col-form-label text-end align-self-center py-0 pe-2 label-class"
+        )
+        helper.field_class = "col-auto field-class"
+        helper.attrs = {"novalidate": ""}
+        helper.layout = Layout(
+            Row(
+                Column(Field("instrument"), css_class="col-md-6"),
+                Column(Field("manufacturer"), css_class="col-md-6"),
+                css_class="mb-1",
+            ),
+            Row(
+                Column(
+                    Field("model_number"),
+                    css_class="col-md-6",
+                ),
+                Column(Field("serial_number", css_class="col-md-6")),
+                css_class="mb-1",
+            ),
+            Row(
+                Column(
+                    Field("location"),
+                    css_class="col-md-6",
+                ),
+                Column(
+                    Field("date_purchased", css_class="datepicker"),
+                ),
+                css_class="mb-1",
+            ),
+            Row(
+                Field("notes", rows=6),
+                css_class="mb-1",
+            ),
+        )
+
+        return helper
+
+    def __init__(self, *args, cancel_url=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.cancel_url = cancel_url
+        self.helper = self.__init_FormHelper()
+        self.fields["location"].empty_label = "--Select a site--"
         # TODO move this to a common mixin?
         #      or add a simple function to this module and call it?
         # Make help_texts appear as Bootstrap tooltips
@@ -259,7 +294,48 @@ class DOIForm(forms.ModelForm):
         )
 
 
-class BaseDOIFormSet(BaseInlineFormSet):
+# History
+class HistoryForm(forms.ModelForm):
+    class Meta:
+        model = History
+        fields = ["date", "note"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_tag = (
+            False  # the <form> and Submit buttons are in the parent template
+        )
+        self.helper.layout = Layout(
+            Row(
+                Column(
+                    Field("date", wrapper_class="mb-0", css_class="datepicker"),
+                    css_class="col-3",
+                ),
+                Column(
+                    Field("note", wrapper_class="mb-0", rows=2),
+                ),
+                Column(
+                    Field("DELETE", type="hidden"),  # Hidden delete field
+                    HTML(
+                        """
+                      <button type="button"
+                              class="btn btn-danger btn-sm remove-form-row"
+                              title=" Remove"
+                              data-confirm="Are you sure you want to remove this DOI record?">
+                        <i class="bi bi-trash"></i> Remove
+                      </button>
+                    """
+                    ),
+                    css_class="col-auto d-flex mt-4 align-items-center",
+                ),
+                css_class="g-2 align-items-center",
+            )
+        )
+
+
+# Formsets
+class BaseStrictFormSet(BaseInlineFormSet):
     def clean(self):
         super().clean()
         for form in self.forms:
@@ -269,12 +345,28 @@ class BaseDOIFormSet(BaseInlineFormSet):
                 # Force validation even if not already done
                 form.full_clean()
                 if not form.is_valid():
-                    raise ValidationError("Incomplete or invalid DOI record.")
+                    raise ValidationError("Incomplete or invalid record.")
 
 
-class StrictDOIFormSet(BaseDOIFormSet):
+class StrictDOIFormSet(BaseStrictFormSet):
     pass
 
+
+class StrictHistoryFormSet(BaseStrictFormSet):
+    pass
+
+
+HistoryFormSet = inlineformset_factory(
+    Equipment,
+    History,
+    form=HistoryForm,
+    formset=StrictHistoryFormSet,
+    fields=["date", "note"],
+    extra=0,
+    can_delete=True,
+    min_num=0,
+    validate_min=True,
+)
 
 DOIFormSet = inlineformset_factory(
     Site,
