@@ -19,6 +19,22 @@
     {% csrf_token %}
     {% crispy form %}
 
+    <!-- History -->
+
+    <!-- History formset -->
+    <div class="d-flex justify-content-between align-items-center mt-2 mb-0 bg-primary">
+      <h5 class="mb-0 mt-0 me-1 ms-2 text-bg-primary">History</h5> -->
+      <button type="button"
+              class="btn btn-info btn-sm add-form-row"
+              data-formset-prefix="{{ history_formset.prefix }}">
+        <i class="bi bi-plus-circle"></i> Add a History record
+      </button>
+    </div>
+    {% if not history_formset.forms %}
+      <div type="row" class="mt-2">No history records yet.</div>
+    {% endif %}
+    {% include "inventory/include/formset_block.html" with formset=history_formset %}
+
     <!-- Save/Cancel/Delete buttons -->
     {% include "inventory/save_cancel_delete.html" %}
 
@@ -29,9 +45,7 @@
 
   {% include "inventory/include/flatpickr.html" %}
   {# NB important: formset_add.js must load AFTER form_protect.js #}
-  {% comment %}
   <script src="{% static 'js/formset_add.js' %}"></script>
-  {% endcomment %}
   <script src="{% static 'js/delete_button.js' %}"></script>
 
 

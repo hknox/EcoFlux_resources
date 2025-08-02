@@ -18,6 +18,7 @@ from .models import (
     Site,
     DOI,
     FieldNote,
+    History,
 )
 
 
@@ -293,7 +294,48 @@ class DOIForm(forms.ModelForm):
         )
 
 
-class BaseDOIFormSet(BaseInlineFormSet):
+# History
+class HistoryForm(forms.ModelForm):
+    class Meta:
+        model = History
+        fields = ["date", "note"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_tag = (
+            False  # the <form> and Submit buttons are in the parent template
+        )
+        self.helper.layout = Layout(
+            Row(
+                Column(
+                    Field("date", wrapper_class="mb-0", css_class="datepicker"),
+                    css_class="col-3",
+                ),
+                Column(
+                    Field("note", wrapper_class="mb-0", rows=2),
+                ),
+                Column(
+                    Field("DELETE", type="hidden"),  # Hidden delete field
+                    HTML(
+                        """
+                      <button type="button"
+                              class="btn btn-danger btn-sm remove-form-row"
+                              title=" Remove"
+                              data-confirm="Are you sure you want to remove this DOI record?">
+                        <i class="bi bi-trash"></i> Remove
+                      </button>
+                    """
+                    ),
+                    css_class="col-auto d-flex mt-4 align-items-center",
+                ),
+                css_class="g-2 align-items-center",
+            )
+        )
+
+
+# Formsets
+class BaseStrictFormSet(BaseInlineFormSet):
     def clean(self):
         super().clean()
         for form in self.forms:
@@ -303,12 +345,28 @@ class BaseDOIFormSet(BaseInlineFormSet):
                 # Force validation even if not already done
                 form.full_clean()
                 if not form.is_valid():
-                    raise ValidationError("Incomplete or invalid DOI record.")
+                    raise ValidationError("Incomplete or invalid record.")
 
 
-class StrictDOIFormSet(BaseDOIFormSet):
+class StrictDOIFormSet(BaseStrictFormSet):
     pass
 
+
+class StrictHistoryFormSet(BaseStrictFormSet):
+    pass
+
+
+HistoryFormSet = inlineformset_factory(
+    Equipment,
+    History,
+    form=HistoryForm,
+    formset=StrictHistoryFormSet,
+    fields=["date", "note"],
+    extra=0,
+    can_delete=True,
+    min_num=0,
+    validate_min=True,
+)
 
 DOIFormSet = inlineformset_factory(
     Site,

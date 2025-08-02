@@ -48,6 +48,14 @@ class Equipment(models.Model):
         return f"{self.instrument} - {self.serial_number}"
 
 
+class History(models.Model):
+    date = models.DateField(default=now)
+    note = models.TextField()
+    item = models.ForeignKey(
+        Equipment, related_name="equipment", on_delete=models.CASCADE
+    )
+
+
 class FieldNote(models.Model):
     site = models.ForeignKey(Site, related_name="fieldnotes", on_delete=models.CASCADE)
     note = models.TextField()

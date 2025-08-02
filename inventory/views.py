@@ -12,6 +12,7 @@ from django.urls import reverse_lazy, reverse
 
 from inventory.models import Site, FieldNote, Equipment  # ,Photo
 from .forms import (
+    HistoryFormSet,
     SiteForm,
     DOIFormSet,
     FieldNoteForm,
@@ -27,8 +28,8 @@ def EndOfInternet(request):
 class EquipmentViewsMixin:
     model = Equipment
     form_class = EquipmentForm
-    template_name = "inventory/item_detail.html"
-    success_url = reverse_lazy("view_inventory")
+    template_name = "inventory/equipment_detail.html"
+    success_url = reverse_lazy("view_equipment")
     cancel_url = reverse_lazy("view_equipment")
 
     def initialize_context_data(self, **kwargs):
@@ -40,21 +41,21 @@ class EquipmentViewsMixin:
     def handle_post(self, request, *args, **kwargs):
         # Construct form and formset here
         form = self.get_form()
-        # if self.object == None:
-        #     # New site
-        #     formset = DOIFormSet(request.POST)
-        # else:
-        #     # Existing site
-        #     formset = DOIFormSet(request.POST, instance=self.object)
+        if self.object == None:
+            # New site
+            formset = HistoryFormSet(request.POST)
+        else:
+            # Existing site
+            formset = HistoryFormSet(request.POST, instance=self.object)
 
         # Store for use in get_context_data()
         self._form = form
-        # self._formset = formset
+        self._formset = formset
 
-        if form.is_valid():  # and formset.is_valid():
+        if form.is_valid() and formset.is_valid():
             site = form.save()
-            # formset.instance = site
-            # formset.save()
+            formset.instance = site
+            formset.save()
             return redirect(self.success_url)
 
         return self.render_to_response(self.get_context_data())
@@ -80,11 +81,10 @@ class EquipmentUpdateView(LoginRequiredMixin, EquipmentViewsMixin, UpdateView):
             ],
         )
         context["delete_url"] = delete_url
-        # context["form"] = getattr(self, "_form", self.get_form())
-        # context["doi_formset"] = getattr(
-        #     self, "_formset", DOIFormSet(instance=self.get_object())
-        # )
-        # context["fieldnotes"] = self.object.fieldnotes.order_by("date_submitted")
+        context["form"] = getattr(self, "_form", self.get_form())
+        context["history_formset"] = getattr(
+            self, "_formset", HistoryFormSet(instance=self.get_object())
+        )
         return context
 
     def post(self, request, *args, **kwargs):
