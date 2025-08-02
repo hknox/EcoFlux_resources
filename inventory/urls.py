@@ -1,4 +1,3 @@
-# EcorFlux/inventory/urls.py
 from django.urls import path
 
 from inventory import views
@@ -22,17 +21,17 @@ urlpatterns = [
         views.SiteDeleteView.as_view(),
         name="site_delete",
     ),
-    # Inventory items
-    path("inventory/", views.InventoryListView.as_view(), name="view_inventory"),
+    # Equipment
+    path("inventory/", views.EquipmentListView.as_view(), name="view_equipment"),
     path(
         "inventory/add/",
-        views.InventoryItemCreateView.as_view(),
-        name="inventory_add",
+        views.EquipmentCreateView.as_view(),
+        name="equipment_add",
     ),
     path(
         "inventory/edit/<int:pk>",
-        views.InventoryItemUpdateView.as_view(),
-        name="inventory_edit",
+        views.EquipmentUpdateView.as_view(),
+        name="equipment_edit",
     ),
     # Fieldnotes
     path("fieldnotes/", views.FieldNoteListView.as_view(), name="view_fieldnotes"),

@@ -33,7 +33,7 @@ class DOI(models.Model):
     site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name="doi_records")
 
 
-class InventoryItem(models.Model):
+class Equipment(models.Model):
     instrument = models.CharField(max_length=75)
     manufacturer = models.CharField(max_length=75, blank=True)
     model_number = models.CharField(max_length=75, blank=True)
@@ -41,7 +41,7 @@ class InventoryItem(models.Model):
     date_purchased = models.DateField()
     notes = models.TextField(blank=True)
     location = models.ForeignKey(
-        Site, on_delete=models.SET_NULL, null=True, blank=True, related_name="inventory"
+        Site, on_delete=models.SET_NULL, null=True, blank=True, related_name="equipment"
     )
 
     def __str__(self):

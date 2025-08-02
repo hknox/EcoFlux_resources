@@ -10,11 +10,11 @@
 </head>
 
 <body>
-  {% block page_heading %}EcoFlux - {{action}}Inventory item{% endblock %}
+  {% block page_heading %}EcoFlux - {{action}}Equipment{% endblock %}
 
   {% block content %}
 
-  <form id="id_inventoryitem_form" class = "mt-3 track-unsaved form-class" novalidate method="post">
+  <form id="id_equipment_form" class = "mt-3 track-unsaved form-class" novalidate method="post">
 
     {% csrf_token %}
     {% crispy form %}

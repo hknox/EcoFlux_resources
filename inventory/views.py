@@ -10,12 +10,12 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models.functions import Lower
 from django.urls import reverse_lazy, reverse
 
-from inventory.models import Site, FieldNote, InventoryItem  # ,Photo
+from inventory.models import Site, FieldNote, Equipment  # ,Photo
 from .forms import (
     SiteForm,
     DOIFormSet,
     FieldNoteForm,
-    InventoryItemForm,
+    EquipmentForm,
     # PhotoFormSet,
 )
 
@@ -24,12 +24,12 @@ def EndOfInternet(request):
     return redirect("https://hmpg.net/")
 
 
-class InventoryItemViewsMixin:
-    model = InventoryItem
-    form_class = InventoryItemForm
+class EquipmentViewsMixin:
+    model = Equipment
+    form_class = EquipmentForm
     template_name = "inventory/item_detail.html"
     success_url = reverse_lazy("view_inventory")
-    cancel_url = reverse_lazy("view_inventory")
+    cancel_url = reverse_lazy("view_equipment")
 
     def initialize_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -60,7 +60,7 @@ class InventoryItemViewsMixin:
         return self.render_to_response(self.get_context_data())
 
 
-class InventoryItemCreateView(LoginRequiredMixin, InventoryItemViewsMixin, CreateView):
+class EquipmentCreateView(LoginRequiredMixin, EquipmentViewsMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context_data = self.initialize_context_data(**kwargs)
@@ -68,7 +68,7 @@ class InventoryItemCreateView(LoginRequiredMixin, InventoryItemViewsMixin, Creat
         return context_data
 
 
-class InventoryItemUpdateView(LoginRequiredMixin, InventoryItemViewsMixin, UpdateView):
+class EquipmentUpdateView(LoginRequiredMixin, EquipmentViewsMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = self.initialize_context_data(**kwargs)
@@ -395,8 +395,8 @@ class SiteListView(LoginRequiredMixin, SortedListMixin):
         return context
 
 
-class InventoryListView(LoginRequiredMixin, SortedListMixin):
-    model = InventoryItem
+class EquipmentListView(LoginRequiredMixin, SortedListMixin):
+    model = Equipment
     template_name = "inventory/lists.html"
     paginate_by = 14
     context_object_name = "table_items"
@@ -438,7 +438,7 @@ class InventoryListView(LoginRequiredMixin, SortedListMixin):
     ]
 
     def get_queryset(self):
-        qs = InventoryItem.objects.all()
+        qs = Equipment.objects.all()
         qs = self.apply_filters(qs)
         qs = self.apply_sort_parameters(qs)
 
@@ -450,11 +450,11 @@ class InventoryListView(LoginRequiredMixin, SortedListMixin):
         context["sort"] = self._sort_key
         context["filter_fields"] = self.filter_fields
         context["table_fields"] = self.table_fields
-        context["reset_url"] = reverse("view_inventory")
-        context["add_url"] = reverse("inventory_add")
-        context["heading"] = "Inventory Items"
-        context["add_button"] = "Add New Inventory Item"
-        context["edit_url"] = "inventory_edit"
+        context["reset_url"] = reverse("view_equipment")
+        context["add_url"] = reverse("equipment_add")
+        context["heading"] = "Equipment"
+        context["add_button"] = "Add Equipment"
+        context["edit_url"] = "equipment_edit"
         context["default_max_chars"] = self._default_max_chars
 
         return context

@@ -41,14 +41,14 @@
           <img src="{% static 'images/EcoFlux_logo_smaller.png' %}"
                alt="EcoFlux Logo" class="me-3 py-2 img-fluid"
                style="width: 60px">
-          <span class="fs-2 fw-bold">{% block page_heading %}EcoFlux Lab{% endblock %}</span>
+          <span class="fs-2 fw-bold">{% block page_heading %}EcoFlux Inventory{% endblock %}</span>
         </a>
         <!-- Conditional Links (Collapsible for Mobile)-->
         <nav class="d-flex align-items-center">
           {% if user.is_authenticated %}
           <span class="me-3">Hello, <strong>{{user.username}}</strong>!</span>
           <a href="{% url 'view_sites' %}" class="text-white me-3">Sites</a>
-          <a href="{% url 'view_inventory' %}" class="text-white me-3">Inventory</a>
+          <a href="{% url 'view_equipment' %}" class="text-white me-3">Equipment</a>
           <a href="{% url 'view_fieldnotes' %}" class="text-white me-3">Field notes</a>
           <a href="{% url 'photos' %}" class="text-white me-3">Photos</a>
           {% if user.is_superuser %}

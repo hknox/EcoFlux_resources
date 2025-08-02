@@ -14,7 +14,7 @@ from crispy_forms.layout import (
 )
 
 from .models import (
-    InventoryItem,
+    Equipment,
     Site,
     DOI,
     FieldNote,
@@ -167,10 +167,10 @@ class FieldNoteForm(forms.ModelForm):
                 # field.help_text = ""
 
 
-# Inventory items
-class InventoryItemForm(forms.ModelForm):
+# Equipment
+class EquipmentForm(forms.ModelForm):
     class Meta:
-        model = InventoryItem
+        model = Equipment
         fields = [
             "instrument",
             "manufacturer",
@@ -183,7 +183,7 @@ class InventoryItemForm(forms.ModelForm):
 
     def __init_FormHelper(self):
         helper = FormHelper()
-        helper.form_id = "id_inventoryitem_form"
+        helper.form_id = "id_equipment_form"
         helper.form_method = "POST"
         helper.form_tag = False
         helper.form_class = "track-unsaved form-class"

@@ -1,5 +1,4 @@
 * Current issues/Next steps
-** Change InventoryItem to Equipment
 ** History for inventory? [[From Sara][See Sara's requirements]]
 
 
