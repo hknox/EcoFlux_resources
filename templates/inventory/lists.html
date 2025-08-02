@@ -11,8 +11,13 @@
 </div>
 
 <div class="row">
-  <div class="col-md-10 mt-2">
-    {% include "inventory/include/sortable_table.html" with table_fields=table_fields table_items=table_items edit_url_name=edit_url %}
+  <div class="col-md-10 mt-1">
+    {% if table_items %}
+      {% include "inventory/include/sortable_table.html" with table_fields=table_fields table_items=table_items edit_url_name=edit_url %}
+    {% else %}
+      No {{heading|lower}} entered yet.
+    {% endif %}
+
 
     <!-- Show Django messages -->
     {% include "inventory/include/messages.html" %}

@@ -48,8 +48,7 @@
           {% if user.is_authenticated %}
           <span class="me-3">Hello, <strong>{{user.username}}</strong>!</span>
           <a href="{% url 'view_sites' %}" class="text-white me-3">Sites</a>
-          <!-- Need to fix this eventually -->
-          <a href="{% url 'home' %}" class="text-white me-3">Inventory</a>
+          <a href="{% url 'view_inventory' %}" class="text-white me-3">Inventory</a>
           <a href="{% url 'view_fieldnotes' %}" class="text-white me-3">Field notes</a>
           <a href="{% url 'photos' %}" class="text-white me-3">Photos</a>
           {% if user.is_superuser %}

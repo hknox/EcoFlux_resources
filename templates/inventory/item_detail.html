@@ -2,103 +2,38 @@
 
 <head>
   {% load django_bootstrap5 %}
+  {% load crispy_forms_tags static %}
 
   {% block extra_css %}
-  <style>
-    .form-floating.custom-height textarea,
-    .custom-height .form-control {
-        height: 250px !important;
-    }
-  </style>
   {% endblock %}
 
-  {% block title %}EcoFlux Inventory{% endblock %}
 </head>
 
-    {% block content %}
+<body>
+  {% block page_heading %}EcoFlux - {{action}}Inventory item{% endblock %}
 
-    <h2>{{action}} Inventory Item</h2>
+  {% block content %}
 
-    <!-- This <form> will be closed by detail_buttons.html -->
-      <form method="post" enctype="multipart/form-data" class="track-unsaved">
-        {% csrf_token %}
-        <div class="row">
-          <div class="col-md-8">
-            {% bootstrap_field form.description layout="floating" %}
-          </div>
-          <div class="col-md-4">
-            {% bootstrap_field form.date_purchased layout="floating" %}
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-8">
-            {% bootstrap_field form.serial_number layout="floating" %}
-          </div>
-          <div class="col-md-4">
-            {% bootstrap_field form.location layout="floating" %}
-          </div>
-        </div>
-          <div class="col-md-8">
-            {% bootstrap_field form.notes layout="floating" wrapper_class="custom-height" %}
-          </div>
-        </div>
+  <form id="id_inventoryitem_form" class = "mt-3 track-unsaved form-class" novalidate method="post">
 
-        <!-- This include closes the <form> -->
-        {% include "inventory/include/detail_buttons.html" with object=inventoryitem cancel_url=cancel_url %}
+    {% csrf_token %}
+    {% crispy form %}
 
-    {% comment %}
-    <h3>Maintenance Records</h3>
-    {{ formset.management_form }}
-    <div class="row">
-      {% for form in formset %}
-      <div class="col-md-6">
-        <div class="row">
-          <div class="col-md-4">
-            {{ form.date.label_tag }}
-            {{ form.date }}
-          </div>
-          <div class="col-md-6">
-            {{ form.description.label_tag }}
-            {{ form.description }}
-          </div>
-          <div class="col-md-2 d-flex align-items-end">
-            <button type="button" class="btn btn-danger remove-record">Remove</button>
-          </div>
-        </div>
-        <hr>
-      </div>
-      {% endfor %}
-    </div>
+    <!-- Save/Cancel/Delete buttons -->
+    {% include "inventory/save_cancel_delete.html" %}
 
-    {% endcomment %}
+  </form>
+  {% endblock content %}
 
-</div>
-{% endblock content %}
+  {% block extra_js %}
 
-{% block extra_js %}
+  {% include "inventory/include/flatpickr.html" %}
+  {# NB important: formset_add.js must load AFTER form_protect.js #}
+  {% comment %}
+  <script src="{% static 'js/formset_add.js' %}"></script>
+  {% endcomment %}
+  <script src="{% static 'js/delete_button.js' %}"></script>
 
-{% include "inventory/include/flatpickr.html" %}
-<script>
-  $(document).ready(function() {
-      var formsetContainer = $('.row');  // Container holding the formset
-      var totalForms = $('#id_maintenance_records-TOTAL_FORMS');  // Hidden input tracking total forms
 
-      // Add new form
-      $('#add-record').click(function() {
-          var formNum = parseInt(totalForms.val());
-          var newForm = '{{ formset.empty_form.as_p|escapejs }}'.replace(/__prefix__/g, formNum);
-          formsetContainer.append(newForm);
-          totalForms.val(formNum + 1);  // Update total forms count
-      });
-
-      // Remove form
-      $(document).on('click', '.remove-record', function() {
-          $(this).closest('.col-md-6').remove();
-          // Update total forms count
-          var count = $('.col-md-6').length;
-          totalForms.val(count);
-      });
-  });
-</script>
-
-{% endblock extra_js %}
+  {% endblock extra_js %}
+</body>

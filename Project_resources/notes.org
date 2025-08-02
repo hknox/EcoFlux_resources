@@ -1,0 +1,139 @@
+Various notes and reminders to myself.
+
+* [[https://chatgpt.com/c/687295f7-4304-8001-b080-4f2e315195eb][ChatGPT discussions]]
+
+* Forms
+** Goals
+control over layout
+control over widgets and behaviour
+catch cancel/navigation when page is dirty
+add DOI records
+add field note records
+** [[https://docs.djangoproject.com/en/5.2/topics/][Main Documentation page]]
+** Titles for an input yield help text for that input
+** Adding attributes to input widgets using crispy Layout
+Field: can add arbitrary attributes to input widgets using keyword
+assignments, eg 'rows=4', 'cols=25', etc.
+** multipart/form-data
+This is automatically set when the form needs this enctype, so there
+is no official crispy-layout helper attribute for it.
+
+** [[https://www.youtube.com/watch?v=X8ECf3Ow3ww][Intro to crispy-forms (YouTube)]]
+** FormHelper attributes
+From ChatGPT:
+🔍 What do all these helper attributes do?
+Attribute	Purpose
+form_class	Applied to the <form> element. Common value: "row g-3" for Bootstrap 5 horizontal layout.
+label_class	Applied to all <label> elements. Controls label width and alignment.
+field_class	Applied to the container <div> around each field (not the input itself). Controls how wide the field area is.
+wrapper_class	Applied to the outer wrapper div of each field-label pair (the whole row). Optional but useful for spacing (mb-3, etc.).
+
+(Summary 2:)
+form_class: "row g-3" sets Bootstrap horizontal layout with spacing
+label_class: aligns and sizes labels (left column)
+field_class: sizes input area (right column)
+
+wrapper_class="mb-3": adds vertical spacing between rows (optional but nice)
+🔄 Summary of customization points
+    form_class: "row g-3" sets Bootstrap horizontal layout with spacing
+    label_class: aligns and sizes labels (left column)
+    field_class: sizes input area (right column)
+    wrapper_class="mb-3": adds vertical spacing between rows (optional but nice)
+
+✅ Summary: What can be overridden per field?
+Attribute	Set Globally (on FormHelper)	Override Per Field (Field(...))
+form_class	✅ Yes	🚫 No (applies to <form>)
+label_class	✅ Yes	✅ Yes (via Field(..., wrapper_class=...) or css_class tricks)
+field_class	✅ Yes	✅ Yes (Field(..., wrapper_class=...))
+wrapper_class	✅ Yes	✅ Yes (Field(..., wrapper_class=...))
+
+Note: form_class applies to the <form> element, so it's always global.
+
+🧠 Bonus: You can also use Div(...) for more control
+This is handy for grouping fields or overriding column layout per row.
+
+Adding form-control to all fields:
+Method	Best Use Case
+__init__() loop	                        Medium/large forms with consistency
+Meta.widgets	                        Few fields, specific overrides
+crispy-forms + {% crispy form %}	Automatic Bootstrap styling
+** Container margins, gaps, padding
+default: containers have left and right padding
+** [[https://docs.djangoproject.com/en/5.2/topics/forms/formsets/][Formsets]]
+** [[https://docs.djangoproject.com/en/5.2/topics/forms/modelforms/#model-formsets][Modelformsets]]
+** [[https://docs.djangoproject.com/en/5.2/ref/forms/widgets/][Django widget docs]]
+How to add CSS classes to widgets in Python
+** [[https://docs.djangoproject.com/en/5.2/ref/forms/api/#binding-uploaded-files-to-a-form][Uploading files to a form]]
+
+
+
+
+* Bootstrap notes
+
+* MDN exploration
+** To pick up later
+- Forms and buttons
+- Table challenge: Planets Data
+
+
+
+
+
+* novalidate
+Re: 'novalidate' attribute: See https://docs.djangoproject.com/en/5.2/topics/forms/:
+
+"If your form includes a URLField, an EmailField or any integer field
+type, Django will use the url, email and number HTML5 input types. By
+default, browsers may apply their own validation on these fields,
+which may be stricter than Django’s validation. If you would like to
+disable this behavior, set the novalidate attribute on the form tag,
+or specify a different widget on the field, like TextInput."
+
+Without it the saved-data check fails to run.
+
+
+
+* HTML notes
+Using an href="?site=4.." reloads the current site using this as a
+query string.
+
+
+* [[https://learndjango.com/tutorials/django-favicon-tutorial][Adding favicons in Django]]
+
+
+* template hierarchies
+common template inheritance hierarchy
+- Create a base.html template that holds the main look-and-feel of your site.
+- Create a base_SECTIONNAME.html template for each “section” of your
+  site. For example, base_news.html, base_sports.html. These templates
+  all extend base.html and include section-specific styles/design.
+- Create individual templates for each type of page, such as a news
+  article or blog entry. These templates extend the appropriate
+  section template.
+** bootstrap5 hierarchies
+   [[https://docs.djangoproject.com/en/5.1/ref/templates/language/][Documentation: template language]]
+- django_bootstrap5/bootstrap5.html: basic bootstrap configuration
+  offers several blocks to override:
+  - bootstrap5_title
+  - bootstrap5_before_content
+  - bootstrap5_content
+  - bootstrap5_after_content
+  - bootstrap5_extra_script
+  templates further down set the above variables
+** django_bootstrap-example hierarchies
+- bootstrap.html extends django_boostrap5/bootstrap5.html
+  offers title block and sets bootstrap5_title to title
+- base.html extends bootstrap.html
+  offers blocks to override:
+  - title
+  - content
+  Sets up a navigation bar with links, NOT fixed position (floats with
+  content), shows any bootstrap_messages (set in view)
+ - home.html extends base.html
+   sets title, content blocks
+
+
+
+
+* Configuration
+#+TODO: TODO(t) NEXTACTION(n) STARTED(s) WAITING(w) | DONE(d) CANCELED(c) DEFERRED(f)
