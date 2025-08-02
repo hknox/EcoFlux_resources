@@ -368,9 +368,8 @@ class SiteListView(LoginRequiredMixin, SortedListMixin):
         {"name": "name", "label": "Name"},
         {"name": "location", "label": "Location"},
         {"name": "description", "label": "Description", "max_chars": 80},
-        {"name": "fieldnotes_count", "label": "No. Fieldnotes"},
-        {"name": "equipment_count", "label": "No. Equipment"},
-        # {"name": "item_count", "label": "Items"},
+        {"name": "fieldnotes_count", "label": "# Fieldnotes"},
+        {"name": "equipment_count", "label": "# Equipment"},
     ]
 
     def get_queryset(self):
