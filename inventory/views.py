@@ -368,12 +368,14 @@ class SiteListView(LoginRequiredMixin, SortedListMixin):
         {"name": "name", "label": "Name"},
         {"name": "location", "label": "Location"},
         {"name": "description", "label": "Description", "max_chars": 80},
-        {"name": "fieldnotes_count", "label": "Fieldnotes"},
+        {"name": "fieldnotes_count", "label": "No. Fieldnotes"},
+        {"name": "equipment_count", "label": "No. Equipment"},
         # {"name": "item_count", "label": "Items"},
     ]
 
     def get_queryset(self):
         qs = Site.objects.annotate(fieldnotes_count=Count("fieldnotes"))
+        qs = qs.annotate(equipment_count=Count("equipment"))
         qs = self.apply_filters(qs)
         qs = self.apply_sort_parameters(qs)
 
