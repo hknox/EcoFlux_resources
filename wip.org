@@ -2,7 +2,9 @@
 ** Refactor list views
 ** Refactor other views
 
-** View/edit equipment from a site?
+** Upload documents
+** Start exploring deployment
+
 ** Photos
 ** If Equipment.location == None, display as something else?
 ** Review Filters

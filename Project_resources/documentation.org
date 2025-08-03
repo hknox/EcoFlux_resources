@@ -1,42 +1,46 @@
 Useful links to documentation.
 
-* Resources
-  [[https://docs.djangoproject.com/][Django documentation]]
-  Download the HTML documentation [[https://media.djangoproject.com/docs/django-docs-5.1-en.zip][here]]
-  [[file:/usr/share/doc/python-django-doc/html/index.html][Local install of Debian doc package]]
+* Web design
+** [[https://mcgill.on.worldcat.org/oclc/1480269487][Learning Web Design]]
 
-  [[https://learning.oreilly.com/library/view/django-in-action/9781633438163/?sso_link=yes&sso_link_from=mcgill-university][Django in Action (McGill)]]
-  [[https://docs.djangoproject.com/en/5.1/topics/install/#database-installation][Database selection and config]]
-  [[https://learndjango.com/tutorials/][Learn Django site]]
-
-  [[https://developer.mozilla.org/en-US/docs/Learn_web_development][Mozilla web development course]]
-  [[www.w3schools.com][W3Schools intro-excellent site]]
-
-  [[https://www.codementor.io/@chirilovadrian360/managing-the-ui-in-django-29fbj6oglf][Approaches to managing the UI]]
+** [[https://learning.oreilly.com/library/view/the-principles-of/9781098124717/][The Principles of Beatiful Web Design]]
+** [[https://www.codementor.io/@chirilovadrian360/managing-the-ui-in-django-29fbj6oglf][Approaches to managing the UI]]
+** [[https://www.geeksforgeeks.org/websites-apps/principles-of-web-design/][Principles of web design]]
 
 
-** HTML
+* Django
+** [[https://docs.djangoproject.com/][Django documentation]]
+Download the HTML documentation [[https://media.djangoproject.com/docs/django-docs-5.1-en.zip][here]]
+** [[file:/usr/share/doc/python-django-doc/html/index.html][Local install of Debian Django doc package]]
+
+** [[https://djangopackages.org/][Django Packages Org]]
+** [[https://learndjango.com/tutorials/][Learn Django site]]
+** [[https://django-debug-toolbar.readthedocs.io/en/latest/installation.html][Django Debug Toolbar install]]
+** [[https://docs.djangoproject.com/en/5.1/topics/i18n/][Internationalization for Django]]
+** [[https://blog.jetbrains.com/pycharm/2025/02/the-ultimate-guide-to-django-templates/][Ultimate guide to templates]]
+
+** [[file://~hank/Documents/Programming/Explore_Django/DjangoTutorial][Django Tutorial]]
+** [[file://~hank/Documents/Programming/Explore_Django/RiffMates][RiffMates Tutorial]]
+
+* [[https://learning.oreilly.com/library/view/django-in-action/9781633438163/?sso_link=yes&sso_link_from=mcgill-university][Django in Action (McGill)]]
+* [[https://docs.djangoproject.com/en/5.1/topics/install/#database-installation][Database selection and config]]
+* [[https://developer.mozilla.org/en-US/docs/Learn_web_development][Mozilla web development course]]
+* [[www.w3schools.com][W3Schools intro-excellent site]]
+
+* HTML
 [[https://developer.mozilla.org/en-US/docs/Learn_web_development][Mozilla web development modules]]
-** Bootstrap
+* Bootstrap
   [[https://getbootstrap.com/docs/5.3/getting-started/introduction/][Bootstrap docs]]
   [[https://django-bootstrap-v5.readthedocs.io/en/latest/][Django-bootstrap-readthedocs]]
   [[https://www.w3schools.com/bootstrap5/index.php][w3School intro, very helpful]]
   [[https://getbootstrap.com/][Bootstrap styling]]
   [[https://ngangasn.com/how-to-use-bootstrap-5-with-django-the-right-way/][Intro examples for Django+Bootstrap]]
-** [[https://learning.oreilly.com/library/view/the-principles-of/9781098124717/][The Principles of Beatiful Web Design]]
-** [[https://flatpickr.js.org/][Flatpickr datepicker docs]]
-** [[https://django-debug-toolbar.readthedocs.io/en/latest/installation.html][Django Debug Toolbar install]]
-** [[https://djangopackages.org/][Django Packages Org]]
-** [[https://docs.djangoproject.com/en/5.1/topics/i18n/][Internationalization for Django]]
-** [[https://blog.jetbrains.com/pycharm/2025/02/the-ultimate-guide-to-django-templates/][Ultimate guide to templates]]
+* [[https://flatpickr.js.org/][Flatpickr datepicker docs]]
+* [[https://django-crispy-forms.readthedocs.io/en/latest/][Crispy forms docs]]
 
-** [[https://django-crispy-forms.readthedocs.io/en/latest/][Crispy forms docs]]
+* [[https://medium.com/@azzouzhamza13/django-crispy-forms-bootstrap5-00a1eb3ec3c7][Medium.com intro to crispy-forms/bootstrap5]]
 
-** [[https://medium.com/@azzouzhamza13/django-crispy-forms-bootstrap5-00a1eb3ec3c7][Medium.com intro to crispy-forms/bootstrap5]]
-
-** [[file://~hank/Documents/Programming/Explore_Django/DjangoTutorial][Django Tutorial]]
-** [[file://~hank/Documents/Programming/Explore_Django/RiffMates][RiffMates Tutorial]]
-** Tailwind
+* Tailwind
   [[https://tailwindcss.com/][Tailwind styling]]
   [[https://django-tailwind.readthedocs.io/en/latest/][Tailwind-readthedocs]]
 

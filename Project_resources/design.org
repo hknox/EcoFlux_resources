@@ -1,14 +1,5 @@
 Design and planning notes.
 
-<<<<<<< HEAD
-=======
-* [[https://learning.oreilly.com/library/view/the-principles-of/9781098124717/Text/design4-frontmatter.html][The Principles of Beautiful Web Design (O'Reilly)]]
-
-* [[https://www.geeksforgeeks.org/websites-apps/principles-of-web-design/][Principles of web design]]
-
-
-
->>>>>>> inventory
 * Questions to sort
 ** Do we need or want side panels for navigation or filtering?
 Maybe just a (right-side) panel for filtering on the appropriate
@@ -30,18 +21,14 @@ OR: header bar: logo, greeting, profile (maybe include logout in a
 dropdown?), logout (if not in Profile
 )
 
+
 * Accessibility
 Aria offers accessibility for screenreaders
 
 
 * Tables
-<<<<<<< HEAD
-Possible fields gathered from Denis' site, carbonique.ca, Sara's
-current .xlsx file.
-=======
 My take on possible fields gathered from Denis' site, carbonique.ca,
 Sara's current .xlsx file.
->>>>>>> inventory
 
 ** Field notes
 - summary
