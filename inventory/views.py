@@ -437,10 +437,13 @@ class EquipmentListView(LoginRequiredMixin, SortedListMixin):
         {"name": "serial_number", "label": "Serial number", "sortable": "no"},
         {"name": "location", "label": "Location"},
         {"name": "notes", "label": "Notes", "max_chars": 80, "sortable": "no"},
+        {"name": "history_count", "label": "# History records", "sortable": "no"},
     ]
 
     def get_queryset(self):
         qs = Equipment.objects.all()
+        qs = qs.annotate(history_count=Count("history"))
+
         qs = self.apply_filters(qs)
         qs = self.apply_sort_parameters(qs)
 

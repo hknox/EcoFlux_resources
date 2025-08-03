@@ -52,7 +52,7 @@ class History(models.Model):
     date = models.DateField(default=now)
     note = models.TextField()
     item = models.ForeignKey(
-        Equipment, related_name="equipment", on_delete=models.CASCADE
+        Equipment, related_name="history", on_delete=models.CASCADE
     )
 
 
