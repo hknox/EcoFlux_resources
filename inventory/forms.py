@@ -35,6 +35,7 @@ class SiteForm(forms.ModelForm):
             "date_retired",
             "gps_coordinates",
         ]
+        labels = {"amp": "AMP"}
 
     def __init_FormHelper(self):
         helper = FormHelper()
