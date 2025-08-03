@@ -29,12 +29,12 @@ class EquipmentViewsMixin:
     model = Equipment
     form_class = EquipmentForm
     template_name = "inventory/equipment_detail.html"
-    success_url = reverse_lazy("view_equipment")
-    cancel_url = reverse_lazy("view_equipment")
 
     def initialize_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["cancel_url"] = self.cancel_url
+        context["cancel_url"] = self.request.GET.get(
+            "next", reverse_lazy("view_equipment")
+        )
 
         return context
 
@@ -56,9 +56,12 @@ class EquipmentViewsMixin:
             site = form.save()
             formset.instance = site
             formset.save()
-            return redirect(self.success_url)
+            return redirect(self.get_success_url())
 
         return self.render_to_response(self.get_context_data())
+
+    def get_success_url(self):
+        return self.request.GET.get("next", reverse_lazy("view_equipment"))
 
 
 class EquipmentCreateView(LoginRequiredMixin, EquipmentViewsMixin, CreateView):
