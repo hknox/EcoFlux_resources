@@ -33,9 +33,9 @@
     {% endif %}
     {% include "inventory/include/formset_block.html" with formset=doi_formset %}
 
-    <!-- FieldNotes -->
     <!-- These are only shown if we are editing an existing, deletable site -->
     {% if delete_url %}
+      <!-- FieldNotes -->
       <div class="d-flex justify-content-between align-items-center mt-2 mb-0 bg-primary">
         <h5 class="mb-0 mt-0 me-1 ms-2 text-bg-primary">Field notes</h5>
         <a href="{% url 'fieldnote_create' %}?next={{request.get_full_path}}&site={{ site.id }}"
@@ -69,6 +69,40 @@
         </table>
       {% else %}
         <div type="row" class="mt-2">No field notes for this site yet.</div>
+      {% endif %}
+      <!-- Equipment -->
+      <div class="d-flex justify-content-between align-items-center mt-2 mb-0 bg-primary">
+        <h5 class="mb-0 mt-0 me-1 ms-2 text-bg-primary">Equipment</h5>
+        {% comment $%}
+        <a href="{% url 'equipment_add' %}?next={{request.get_full_path}}&site={{ site.id }}"
+           class="btn btn-info btn-sm">
+          <i class="bi bi-plus-circle"></i> Add a field note</a>
+        {% endcomment %}
+      </div>
+      {% if equipment %}
+        <table class="table table-striped table-hover table-bordered mt-2">
+          <thead>
+            <th>Instrument</th>
+            <th>Notes</th>
+          </thead>
+          <tbody>
+            {% for item in equipment %}
+              <tr>
+                <td>
+                  {% comment %}
+                  <a href="{% url 'fieldnote_edit' item.pk %}?next={{request.get_full_path}}">
+                  {{ item.instrument }}
+                  </a>
+                  {% endcomment %}
+                  {{ item.instrument }}
+                </td>
+                <td>{{ item.note|truncatechars:80 }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div type="row" class="mt-2">No equipment for this site yet.</div>
       {% endif %}
     {% endif %}
 

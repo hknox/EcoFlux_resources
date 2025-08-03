@@ -248,6 +248,7 @@ class SiteUpdateView(LoginRequiredMixin, SiteViewsMixin, UpdateView):
             self, "_formset", DOIFormSet(instance=self.get_object())
         )
         context["fieldnotes"] = self.object.fieldnotes.order_by("date_submitted")
+        context["equipment"] = self.object.equipment.all()
 
         return context
 
