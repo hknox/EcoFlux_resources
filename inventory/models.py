@@ -61,7 +61,7 @@ class FieldNote(models.Model):
     note = models.TextField()
     date_submitted = models.DateField(default=now)
     summary = models.CharField(max_length=80, blank=True)
-    submitter = models.CharField()
+    submitter = models.CharField(max_length=50, blank=True)
 
 
 def site_photo_upload_path(instance, filename):
@@ -74,4 +74,5 @@ class Photo(models.Model):
     image = models.ImageField(upload_to=site_photo_upload_path)
     caption = models.CharField(max_length=255, blank=True)
     uploaded_at = models.DateField(default=now)
+    submitter = models.CharField(max_length=50, blank=True)
     site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name="photos")
