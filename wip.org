@@ -1,9 +1,11 @@
 * Current issues/Next steps
-** Refactor list views
 ** Refactor other views
+change {% if cancel_url %} to {% if action == 'update' %} or something
+
 
 ** Upload documents
 ** Start exploring deployment
+
 
 ** Photos
 ** If Equipment.location == None, display as something else?

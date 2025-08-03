@@ -10,7 +10,7 @@
 </head>
 
 <body>
-  {% block page_heading %} - {{action}}Site{% endblock %}
+  {% block page_heading %} - {{action}} Site{% endblock %}
 
   {% block content %}
 
@@ -34,7 +34,7 @@
     {% include "inventory/include/formset_block.html" with formset=doi_formset %}
 
     <!-- These are only shown if we are editing an existing, deletable site -->
-    {% if delete_url %}
+    {% if action == "Edit" %}
       <!-- FieldNotes -->
       <div class="d-flex justify-content-between align-items-center mt-2 mb-0 bg-primary">
         <h5 class="mb-0 mt-0 me-1 ms-2 text-bg-primary">Field notes</h5>

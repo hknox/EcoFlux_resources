@@ -32,16 +32,32 @@ class EquipmentViewsMixin:
 
     def initialize_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["action"] = self.action
         context["cancel_url"] = self.request.GET.get(
             "next", reverse_lazy("view_equipment")
         )
 
+        # Use cached versions if present (from POST)
+        context["form"] = getattr(self, "_form", self.get_form())
+        # Handle formset safely across Create and Update
+        if hasattr(self, "_formset"):
+            context["doi_formset"] = self._formset
+        elif hasattr(self, "object") and self.object is not None:
+            context["history_formset"] = HistoryFormSet(instance=self.object)
+        else:
+            context["history_formset"] = HistoryFormSet()
+
         return context
 
-    def handle_post(self, request, *args, **kwargs):
+    def _post(self, request, *args, **kwargs):
+        if isinstance(self, CreateView):
+            self.object = None  # required for CreateView
+        else:
+            self.object = self.get_object()
+
         # Construct form and formset here
         form = self.get_form()
-        if self.object == None:
+        if not self.object:
             # New site
             formset = HistoryFormSet(request.POST)
         else:
@@ -61,51 +77,59 @@ class EquipmentViewsMixin:
         return self.render_to_response(self.get_context_data())
 
     def get_success_url(self):
+        # "next" can be set in the template of a page you want to return to:
         return self.request.GET.get("next", reverse_lazy("view_equipment"))
 
 
 class EquipmentCreateView(LoginRequiredMixin, EquipmentViewsMixin, CreateView):
 
+    action = "New"
+
     def get_context_data(self, **kwargs):
         context_data = self.initialize_context_data(**kwargs)
-        context_data["action"] = "New"
         return context_data
 
 
 class EquipmentUpdateView(LoginRequiredMixin, EquipmentViewsMixin, UpdateView):
 
+    action = "Edit"
+
     def get_context_data(self, **kwargs):
         context = self.initialize_context_data(**kwargs)
-        context["action"] = "Edit "
-        delete_url = reverse(
+        context["action"] = self.action
+        context["del"] = reverse(
             "site_delete",
             args=[
                 context["object"].id,
             ],
         )
-        context["delete_url"] = delete_url
         context["form"] = getattr(self, "_form", self.get_form())
         context["history_formset"] = getattr(
             self, "_formset", HistoryFormSet(instance=self.get_object())
         )
         return context
 
-    def post(self, request, *args, **kwargs):
-        self.object = self.get_object()  # Required for UpdateView
-        return self.handle_post(request, *args, **kwargs)
 
-
-class FieldNoteCreateView(LoginRequiredMixin, CreateView):
+class FieldNoteViewsMixin:
     model = FieldNote
     form_class = FieldNoteForm
     template_name = "inventory/fieldnote.html"
 
-    def get_context_data(self, **kwargs):
+    def initialize_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["cancel_url"] = self.request.GET.get(
             "next", reverse_lazy("view_fieldnotes")
         )
+        return context
 
+    def get_success_url(self):
+        return self.request.GET.get("next", reverse_lazy("view_fieldnotes"))
+
+
+class FieldNoteCreateView(LoginRequiredMixin, FieldNoteViewsMixin, CreateView):
+
+    def get_context_data(self, **kwargs):
+        context = self.initialize_context_data()
         return context
 
     def get_form_kwargs(self):
@@ -114,31 +138,18 @@ class FieldNoteCreateView(LoginRequiredMixin, CreateView):
 
         return kwargs
 
-    def get_success_url(self):
-        return self.request.GET.get("next", reverse_lazy("view_fieldnotes"))
 
-
-class FieldNoteUpdateView(LoginRequiredMixin, UpdateView):
-    model = FieldNote
-    form_class = FieldNoteForm
-    template_name = "inventory/fieldnote.html"
+class FieldNoteUpdateView(LoginRequiredMixin, FieldNoteViewsMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["cancel_url"] = self.request.GET.get(
-            "next", reverse_lazy("view_fieldnotes")
-        )
-        delete_url = reverse(
+        context = self.initialize_context_data()
+        context["delete_url"] = reverse(
             "fieldnote_delete",
             args=[
                 context["object"].id,
             ],
         )
-        context["delete_url"] = delete_url
         return context
-
-    def get_success_url(self):
-        return self.request.GET.get("next", reverse_lazy("view_fieldnotes"))
 
 
 class FieldNoteDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
@@ -167,10 +178,25 @@ class SiteViewsMixin:
         context = super().get_context_data(**kwargs)
         context["cancel_url"] = self.cancel_url
 
+        # Use cached versions if present (from POST)
+        context["form"] = getattr(self, "_form", self.get_form())
+        # Handle formset safely across Create and Update
+        if hasattr(self, "_formset"):
+            context["doi_formset"] = self._formset
+        elif hasattr(self, "object") and self.object is not None:
+            context["doi_formset"] = DOIFormSet(instance=self.object)
+        else:
+            context["doi_formset"] = DOIFormSet()
+
         return context
 
-    def handle_post(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         # Construct form and formset here
+        if isinstance(self, CreateView):
+            self.object = None  # required for CreateView
+        else:
+            self.object = self.get_object()
+
         form = self.get_form()
         if self.object == None:
             # New site
@@ -212,56 +238,38 @@ class SiteViewsMixin:
 
 class SiteCreateView(LoginRequiredMixin, SiteViewsMixin, CreateView):
 
+    action = "New"
+
     def get_context_data(self, **kwargs):
         context = self.initialize_context_data(**kwargs)
-        context["action"] = "New "
-
-        # Use cached versions if present (from POST)
-        context["form"] = getattr(self, "_form", self.get_form())
-        context["doi_formset"] = getattr(self, "_formset", DOIFormSet())
-
+        context["action"] = self.action
         return context
-
-    def post(self, request, *args, **kwargs):
-        self.object = None  # Required for CreateView
-        return self.handle_post(request, *args, **kwargs)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        # Let the form know this is a NEW site
         kwargs["existing_site"] = False
         return kwargs
 
 
 class SiteUpdateView(LoginRequiredMixin, SiteViewsMixin, UpdateView):
 
+    action = "Edit"
+
     def get_context_data(self, **kwargs):
         context = self.initialize_context_data(**kwargs)
-        context["action"] = "Edit "
-        delete_url = reverse(
+        context["action"] = self.action
+        context["delete_url"] = reverse(
             "site_delete",
             args=[
                 context["object"].id,
             ],
         )
-        context["delete_url"] = delete_url
-
-        context["form"] = getattr(self, "_form", self.get_form())
-        context["doi_formset"] = getattr(
-            self, "_formset", DOIFormSet(instance=self.get_object())
-        )
         context["fieldnotes"] = self.object.fieldnotes.order_by("date_submitted")
         context["equipment"] = self.object.equipment.all()
-
         return context
-
-    def post(self, request, *args, **kwargs):
-        self.object = self.get_object()  # Required for UpdateView
-        return self.handle_post(request, *args, **kwargs)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        # Let the form know this is an EXISTING site
         kwargs["existing_site"] = True
         return kwargs
 
