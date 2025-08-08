@@ -49,7 +49,7 @@ class EquipmentViewsMixin:
 
         return context
 
-    def _post(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         if isinstance(self, CreateView):
             self.object = None  # required for CreateView
         else:
@@ -385,8 +385,12 @@ class SiteListView(LoginRequiredMixin, SortedListMixin):
     ]
 
     def get_queryset(self):
-        qs = Site.objects.annotate(fieldnotes_count=Count("fieldnotes"))
-        qs = qs.annotate(equipment_count=Count("equipment"))
+        # See https://docs.djangoproject.com/en/5.2/topics/db/aggregation/,
+        # "Combining multiple aggregations" for caveaats re annotate().
+        qs = Site.objects.annotate(
+            fieldnotes_count=Count("fieldnotes", distinct=True),
+            equipment_count=Count("equipment", distinct=True),
+        )
         qs = self.apply_filters(qs)
         qs = self.apply_sort_parameters(qs)
 
