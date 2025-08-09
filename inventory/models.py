@@ -76,3 +76,11 @@ class Photo(models.Model):
     uploaded_at = models.DateField(default=now)
     submitter = models.CharField(max_length=50, blank=True)
     site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name="photos")
+
+
+# class Document(models.Model):
+#     date_uploaded = models.DateField(default=now)
+#     submitter = models.CharField(max_length=50, blank=True)
+#     file = models.FileField(
+#         verbose_name="equipment_document", name="document", upload_to=""
+#     )
