@@ -1,0 +1,33 @@
+Perfect — here’s your **Apache → Nginx configuration translation sheet** so when you eventually migrate, you can quickly see how your current setup maps over.
+
+---
+
+## 🗂 Apache → Nginx Translation Sheet (EcoFlux + Nextcloud case)
+
+| Purpose / Feature         | Apache Directive (Current)                                                                                     | Nginx Equivalent (Future)                                                                                  |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| **Virtual Host start**    | `<VirtualHost *:80>`                                                                                           | `server { listen 80; ... }`                                                                                |
+| Server Name               | `ServerName grandwazoo.ddns.net`                                                                               | `server_name grandwazoo.ddns.net;`                                                                         |
+| Redirect HTTP → HTTPS     | `RewriteEngine On`<br>`RewriteCond %{HTTPS} !=on`<br>`RewriteRule ^/?(.*) https://%{SERVER_NAME}/$1 [R=301,L]` | `return 301 https://$host$request_uri;`                                                                    |
+| SSL Certificate           | `SSLCertificateFile`<br>`SSLCertificateKeyFile`<br>`SSLCertificateChainFile`                                   | `ssl_certificate`, `ssl_certificate_key`, `ssl_trusted_certificate`                                        |
+| **Document root**         | `DocumentRoot /var/www/html/nextcloud`                                                                         | `root /var/www/html/nextcloud;`                                                                            |
+| Directory permissions     | `<Directory /var/www/html/nextcloud/> ... </Directory>` with `Require all granted`                             | `location / { try_files $uri $uri/ /index.php$request_uri; }` and `index index.php index.html;`            |
+| .htaccess overrides       | `AllowOverride All`                                                                                            | No `.htaccess` in Nginx — rewrite & PHP rules go directly in `location` blocks                             |
+| Disable WebDAV for NC     | `<IfModule mod_dav.c> Dav off </IfModule>`                                                                     | Don’t enable `dav_methods` — simply omit DAV modules in Nginx                                              |
+| PHP execution             | Apache + `mod_php` or `php-fpm` proxy                                                                          | `location ~ \.php$ { include snippets/fastcgi-php.conf; fastcgi_pass unix:/var/run/php/php7.4-fpm.sock; }` |
+| Django WSGI app (EcoFlux) | `WSGIDaemonProcess`<br>`WSGIScriptAlias /ecoflux /srv/ecoflux/EcoFlux/wsgi-production.py`                      | `location /ecoflux/ { include uwsgi_params; uwsgi_pass unix:/run/uwsgi/ecoflux.sock; }`                    |
+| Python venv               | `python-home=/srv/ecoflux/.venv`                                                                               | Handled in uWSGI `.ini`: `home = /srv/ecoflux/.venv`                                                       |
+| Static/media for Django   | `Alias /static /srv/ecoflux/static`                                                                            | `location /static/ { alias /srv/ecoflux/static/; }`                                                        |
+| Logs                      | `ErrorLog /var/log/apache2/foo-error.log`<br>`CustomLog /var/log/apache2/foo-access.log combined`              | `error_log /var/log/nginx/foo-error.log;`<br>`access_log /var/log/nginx/foo-access.log;`                   |
+| Security headers          | `<IfModule mod_headers.c> Header always set Strict-Transport-Security "..." </IfModule>`                       | `add_header Strict-Transport-Security "..." always;`                                                       |
+
+---
+
+### 🔹 Key Differences to Remember
+
+1. **No `.htaccess` in Nginx** — all rewrites and overrides must be in `server {}` blocks.
+2. **Nginx is only a reverse proxy for app servers** — PHP runs via PHP-FPM, Django runs via uWSGI/Gunicorn.
+3. **Order of rules matters more** — Nginx matches `location` in a specific order; place specific prefixes (like `/ecoflux/`) before `/`.
+4. **Socket paths** — PHP-FPM and uWSGI communicate via Unix sockets for speed; make sure permissions allow Nginx to read them.
+
+---

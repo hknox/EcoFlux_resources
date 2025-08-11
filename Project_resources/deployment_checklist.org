@@ -1,0 +1,60 @@
+Here’s a **deployment checklist for EcoFlux** so you can go from “new code” → “live site” without breaking things or forgetting a step.
+
+* 1. Prepare changes on the dev server
+** Pull latest updates from Git and test locally:
+  git pull
+  pipenv install   # or pip install -r requirements.txt
+  python manage.py check
+  python manage.py test   # optional but recommended
+* 2. Push changes to the home server
+** From dev:
+  git push home main
+
+** On home server:
+  cd /srv/ecoflux
+  git pull origin main
+
+
+* 3. Update dependencies (if Pipfile/Pipfile.lock changed)
+** Inside `/srv/ecoflux`:
+  source .venv/bin/activate
+  pip install --upgrade pip
+  pipenv install --deploy --ignore-pipfile
+  deactivate
+
+* 4. Apply database migrations
+** Still in `/srv/ecoflux`:
+  source .venv/bin/activate
+  python manage.py migrate
+  deactivate
+* 5. Collect static files
+** Run:
+  source .venv/bin/activate
+  python manage.py collectstatic --noinput
+  deactivate
+
+* 6. Restart Apache
+** Always restart after code or settings changes:
+  sudo systemctl restart apache2
+
+
+---
+
+* 7. Verify site works
+** Visit:
+
+  * `https://grandwazoo.ddns.net/ecoflux/`
+  * Login/logout
+  * Check static files (CSS/JS/images load correctly)
+  * Run a quick smoke test in the admin panel
+* 8. If “DisallowedHost” or env issues occur
+** Confirm `ALLOWED_HOSTS` in `settings.py` includes the production hostname.
+** If `.env` changes were made, restart Apache to reload environment variables.
+* 9. Rollback plan
+
+If things break badly:
+
+```bash
+git reset --hard <previous_commit>
+sudo systemctl restart apache2
+```

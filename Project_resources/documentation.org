@@ -40,6 +40,7 @@ Download the HTML documentation [[https://media.djangoproject.com/docs/django-do
 
 * [[https://medium.com/@azzouzhamza13/django-crispy-forms-bootstrap5-00a1eb3ec3c7][Medium.com intro to crispy-forms/bootstrap5]]
 
+* [[https://pypi.org/project/mod-wsgi/][mod_wsgi python doc]]
 * Tailwind
   [[https://tailwindcss.com/][Tailwind styling]]
   [[https://django-tailwind.readthedocs.io/en/latest/][Tailwind-readthedocs]]

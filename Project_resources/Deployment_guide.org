@@ -1,0 +1,163 @@
+Here’s a **condensed one-page deployment cheat sheet** for your setup
+— tuned for *EcoFlux + Nextcloud on Apache*, with notes so you’ll
+remember the “why” behind each step.
+
+---
+
+# **EcoFlux + Nextcloud Apache Deployment Guide**
+
+## **1. Directory & Virtual Environment Setup**
+
+```bash
+# Clone app into /srv
+sudo mkdir -p /srv/ecoflux
+sudo chown -R hank:hank /srv/ecoflux
+
+# Create venv in project (PIPENV_VENV_IN_PROJECT=1 ensures it stays here)
+cd /srv/ecoflux
+export PIPENV_VENV_IN_PROJECT=1
+pipenv install --deploy --ignore-pipfile
+```
+
+**Why:** Keeping the venv inside the project ensures `mod_wsgi` always
+finds the right Python packages without messing with `WORKON_HOME`.
+
+---
+
+## **2. Django Settings**
+
+In `settings.py`:
+
+```python
+FORCE_SCRIPT_NAME = '/ecoflux'
+STATIC_URL = '/ecoflux/static/'
+MEDIA_URL = '/ecoflux/media/'
+```
+
+**Why:** Ensures Django generates URLs with `/ecoflux/` prefix when
+served from a subpath.
+
+---
+
+## **3. Apache Config**
+
+**File:** `/etc/apache2/sites-available/grandwazoo.conf`
+
+```apache
+<VirtualHost *:80>
+    ServerName grandwazoo.ddns.net
+    RewriteEngine On
+    RewriteCond %{HTTPS} !=on
+    RewriteRule ^/(.*)$ https://%{SERVER_NAME}/$1 [R=301,L]
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName grandwazoo.ddns.net
+
+    SSLEngine on
+    SSLCertificateFile /etc/ssl/nextcloud/grandwazoo_ddns_net.crt
+    SSLCertificateKeyFile /etc/ssl/nextcloud/grandwazoo.ddns.net.key
+    SSLCertificateChainFile /etc/ssl/nextcloud/DigiCertCA.crt
+
+    # -------- Nextcloud root --------
+    DocumentRoot /var/www/html/nextcloud
+    <Directory /var/www/html/nextcloud/>
+        Require all granted
+        AllowOverride All
+        Options FollowSymLinks MultiViews
+    </Directory>
+
+    # -------- EcoFlux under /ecoflux --------
+    WSGIDaemonProcess ecoflux python-home=/srv/ecoflux/.venv python-path=/srv/ecoflux
+    WSGIProcessGroup ecoflux
+    WSGIScriptAlias /ecoflux /srv/ecoflux/EcoFlux/wsgi-production.py process-group=ecoflux application-group=%{GLOBAL}
+
+    <Directory /srv/ecoflux/EcoFlux>
+        <Files wsgi-production.py>
+            Require all granted
+        </Files>
+    </Directory>
+
+    # -------- Static & media --------
+    Alias /ecoflux/static /srv/ecoflux/static
+    <Directory /srv/ecoflux/static>
+        Require all granted
+    </Directory>
+    Alias /ecoflux/media /srv/ecoflux/media
+    <Directory /srv/ecoflux/media>
+        Require all granted
+    </Directory>
+
+    ErrorLog /var/log/apache2/grandwazoo-error.log
+    CustomLog /var/log/apache2/grandwazoo-access.log combined
+</VirtualHost>
+```
+
+**Why:**
+
+- One vhost handles both apps.
+- Nextcloud remains root (`/`).
+- EcoFlux lives under `/ecoflux/` without clashing.
+
+---
+
+## **4. Environment Variables for Django**
+
+- Create `/srv/ecoflux/.env`:
+
+```env
+DB_USER=mydbuser
+DB_PASSWORD=supersecret
+```
+
+- Load in `wsgi-production.py`:
+
+```python
+import os
+from dotenv import load_dotenv
+load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
+```
+
+**Why:** Ensures Apache + Django see the same DB credentials as your dev shell.
+
+---
+
+## **5. Enable & Reload**
+
+```bash
+sudo a2dissite ecoflux.conf nextcloud.conf   # Old files
+sudo a2ensite grandwazoo.conf
+sudo systemctl reload apache2
+```
+
+---
+
+## **6. Common Maintenance**
+
+- **Update packages:**
+
+  ```bash
+  cd /srv/ecoflux
+  pipenv install newpackage
+  ```
+- **Apply DB migrations:**
+
+  ```bash
+  pipenv run python manage.py migrate
+  ```
+- **Restart after code change:**
+
+  ```bash
+  sudo touch /srv/ecoflux/EcoFlux/wsgi-production.py
+  ```
+
+---
+
+✅ **Result:**
+
+- `https://grandwazoo.ddns.net/` → Nextcloud
+- `https://grandwazoo.ddns.net/ecoflux/` → EcoFlux Django app
+
+---
+
+If you want, I can also make you a **flow diagram** showing how a request travels from Apache → mod\_wsgi → Django for `/ecoflux/` and from Apache → PHP-FPM → Nextcloud for `/`. That would make troubleshooting easier later.

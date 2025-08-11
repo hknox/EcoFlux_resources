@@ -3,6 +3,273 @@ Various notes and reminders to myself.
 * [[https://chatgpt.com/c/687295f7-4304-8001-b080-4f2e315195eb][ChatGPT discussions]]
 
 
+* .gitignore/git includes
+- **migrations should be in Git** ✅
+
+1. **Track changes to the database schema over time**
+   Just like code, migrations document what changed in your models and when.
+
+2. **Ensure all team members (or production servers) run the same schema**
+   If migrations aren’t in version control, others can’t apply the same schema changes without guessing.
+
+3. **Enable consistent deployment**
+   When deploying (e.g., to production), the migration files ensure Django knows exactly what schema to apply.
+
+---
+
+### 🧹 Optional Exception (Don’t Commit These)
+
+- You *can* ignore auto-generated migration files **during heavy model prototyping**, especially if you're throwing them away frequently — but only in isolated branches.
+- Once the schema stabilizes, they must be committed.
+
+
+### summary
+
+| File                                  | Commit to Git?                       |
+| ------------------------------------- | ------------------------------------ |
+| `Pipfile` / `requirements.txt`        | ✅ Yes                                |
+| `migrations/*.py` (not `__pycache__`) | ✅ Yes                                |
+
+Let me know if you’d like a `.gitignore` template or a typical migration folder structure explanation.
+
+
+* Deployment
+[[https://absolutecodeworks.com/django-web-application-crud-sample-using-mariadb][Example setup for deployment]]
+** Managing credentials, devel vs prod settings
+Excellent questions — these are core concerns when building a Django
+app that’s cleanly portable across **development**, **staging**, and
+**production** environments.
+
+Let’s tackle your two questions:
+
+
+*** ✅ Q1: How to securely handle secrets like MariaDB credentials in `settings.py`?
+
+- Best practice: **Don't hardcode secrets in `settings.py`**. Use
+  environment variables instead and read them in `settings.py`:
+
+```python
+import os
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.environ.get('DB_NAME', 'default_name'),
+        'USER': os.environ.get('DB_USER', 'default_user'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'default_pass'),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '3306'),
+    }
+}
+```
+
+- In development: set them via `.envrc` or `.env` with `direnv`.
+- In production: set them in your Apache virtual host config, or a WSGI wrapper script, or a systemd unit if you're using Gunicorn later.
+
+*** ✅ Q2: How to handle environment-specific settings (dev vs prod) — and what to put in Git?
+
+### 🔥 Best practice: split settings into **base + environment-specific** files.
+
+```
+config/
+├── __init__.py
+├── settings/
+│   ├── __init__.py         # usually empty
+│   ├── base.py             # shared by all environments
+│   ├── dev.py              # development overrides
+│   └── prod.py             # production overrides
+```
+
+**Example:**
+
+**base.py:**
+
+```python
+# settings/base.py
+
+DEBUG = False
+ALLOWED_HOSTS = []
+INSTALLED_APPS = [... base apps ...]
+
+# Load from environment variables:
+SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
+```
+
+**dev.py:**
+
+```python
+from .base import *
+
+DEBUG = True
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+SECRET_KEY = "insecure-dev-key"
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+```
+
+**prod.py:**
+
+```python
+from .base import *
+
+DEBUG = False
+ALLOWED_HOSTS = ["example.com"]
+
+# Secret key comes from environment
+SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
+```
+
+**In `.envrc` or Apache env:**
+
+```bash
+export DJANGO_SETTINGS_MODULE=config.settings.dev  # or config.settings.prod
+```
+
+---
+
+### ✅ What to commit to Git?
+
+**Commit:**
+
+- `config/settings/base.py`, `dev.py`, `prod.py`
+- A sample `.envrc` or `.env.example` for local development (no real secrets)
+
+**Don't commit:**
+
+- `.envrc` or `.env` with real secrets
+- `.pyc` files, obviously
+
+---
+
+### 🔐 Optional: use `python-decouple` or `django-environ` to streamline
+
+For more structure and type conversion, you can use packages like:
+
+- [`python-decouple`](https://pypi.org/project/python-decouple/)
+- [`django-environ`](https://pypi.org/project/django-environ/)
+
+But raw `os.environ.get()` is totally fine and understandable.
+
+---
+
+## 🧩 Summary
+
+| Concern                   | Best Practice                                      |
+| ------------------------- | -------------------------------------------------- |
+| **Secrets**               | Use environment variables (set via `.envrc`, etc.) |
+| **Multiple environments** | Split settings into `base.py`, `dev.py`, `prod.py` |
+| **Version control**       | Commit example env files; ignore actual secrets    |
+| **Ease of switching**     | Use `DJANGO_SETTINGS_MODULE` in `.envrc`           |
+
+---
+
+Let me know if you want a starter `settings` layout scaffold or a `.envrc` template — I can build one around your current structure.
+
+
+** Database
+*** Using MariaDb on grandwazoo as a test case.
+[[https://www.digitalocean.com/community/tutorials/how-to-use-mysql-or-mariadb-with-your-django-application-on-ubuntu-14-04][
+Using MariaDB with Django app]]
+
+[[https://mariadb.com/docs/server/mariadb-quickstart-guides/mariadb-remote-connection-guide][MariaDB doc for remote access]]
+
+see /etc/mysql/mariadb.conf.d/50-server.cnf:
+
+From DuckAI:
+
+"""Using a hostname can be beneficial in environments with dynamic IPs,
+but it may introduce a slight delay during the resolution process...
+...you do not need to restart the MariaDB server if your dynamic
+hostname's IP address changes. MariaDB will automatically resolve the
+hostname to the new IP address when connections are made...
+...if you want MariaDB to listen on both the specific hostname and
+localhost, you would typically use:
+  bind-address = 0.0.0.0"""
+
+
+
+Use MariaDB only from localhost - install EcoFlux app on sunvillage.
+
+No need to modify bind-address.
+Create EcoFlux db (ecoflux)
+  CREATE ECOFLUX
+Create EcoFlux user and grant privileges
+  CREATE USER 'ecoflux'@'' IDENTIFIED BY [password]
+  GRANT ALL PRIVILEGES ON ecoflux.* to 'ecoflux''%' (any host!)
+  FLUSH PRIVILEGES
+  Test by logging on as ecoflux: OK
+** Webserver
+*** Apache
+**** Installation
+SUMMARY from Chat:
+You don’t need to install your Django code inside /var/www/html/. Use
+a dedicated directory like /srv/ecoflux/, keep ownership as yourself,
+and let Apache (via mod_wsgi) serve it securely. pipenv and the
+www-data user don’t need to mix — mod_wsgi will handle activating your
+virtualenv when configured correctly.
+
+chown -R hank:www-data /srv/ecoflux/
+**** Permissions
+Best Practices:
+Keep ownership as your user (not www-data or root)
+
+Ensure the Apache www-data user can read the Django code and activate
+the virtualenv (you’ll do this via mod_wsgi settings)
+**** Checklist
+***** PREPARE WORKING ENVIRONMENT
+x install envrc
+x install pipenv
+x sudo mkdir /srv/ecoflux/
+x cd /srv/ecoflux/
+x clone git repo
+x chown -R hank:www-data .
+x pipenv install
+***** CONFIGURE MYSQL ACCESS
+x pipenv install mysqlclient (might need to "sudo apt install
+  default-libmysqlclient-dev")
+
+x change settings.py and see Chat re/settings.py ideas
+
+Let me know if you want help with:
+- splitting settings.py for dev vs prod
+- using .env or .envrc for secrets like DB credentials
+
+TEST: python manage.py migrate: OK
+Bonus: I loaded fixtures from JoesGarage.
+
+***** CONFIGURE APACHE:
+X aptitude install libapache2-mod-wsgi-py3
+x a2enmod wsgi
+x systemctl restart apache2
+
+create /etc/apache2/sites-available/ecoflux.conf
+a2ensite ecoflux.conf
+restart apache
+python manage.py collectstatic
+    setting up mod_wsgi to use the virtualenv properly
+
+**** DONE Changes to settings.py
+DATABASES = {
+   'default': {
+       'ENGINE': 'django.db.backends.mysql',
+       'NAME': '<your_database_name>',
+       'USER': '<your_database_user>',
+       'PASSWORD': '<your_database_password>',
+       'HOST': 'localhost',
+       'PORT': '',
+   }
+}
+FORCE_SCRIPT_NAME = '/myapp'
+
+STATIC_URL = '/myapp/static/'
+
+**** VirtualHost conf
+
+
+**** Gunicorn -for later
+reverse proxy to Apache or Nginx
+
+
 * Forms
 ** Goals
 control over layout

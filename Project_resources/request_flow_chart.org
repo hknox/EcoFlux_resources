@@ -1,0 +1,74 @@
+Here’s the **flow diagram** for your combined Nextcloud + EcoFlux
+setup, showing exactly what happens for both `/` and `/ecoflux/`
+requests:
+
+---
+
+```text
+            ┌────────────────────┐
+            │  User's Browser    │
+            │ (HTTPS request)    │
+            └─────────┬──────────┘
+                      │
+                      ▼
+          ┌───────────────────────────┐
+          │ Apache: Port 443 vhost     │
+          │ (grandwazoo.ddns.net)      │
+          └─────────┬─────────────────┘
+                    │
+        ┌───────────┴─────────────────┐
+        │ Apache checks the request    │
+        │ path against config rules    │
+        └───────────┬─────────────────┘
+                    │
+         ┌──────────┴───────────┐
+         │ Path starts with "/"  │
+         │ but NOT "/ecoflux/"   │
+         ▼                       │ Path starts with "/ecoflux/"
+┌──────────────────┐             ▼
+│ Nextcloud section │     ┌─────────────────────────┐
+│ DocumentRoot →    │     │ EcoFlux WSGIScriptAlias  │
+│ /var/www/html/    │     │ maps /ecoflux →          │
+│ nextcloud/        │     │ /srv/ecoflux/EcoFlux/    │
+│                   │     │ wsgi-production.py       │
+└─────────┬─────────┘     └─────────┬────────────────┘
+          │                         │
+          ▼                         ▼
+┌──────────────────┐        ┌────────────────────────┐
+│ .htaccess rules   │        │ mod_wsgi loads Python  │
+│ & PHP-FPM handle  │        │ venv from              │
+│ Nextcloud PHP app │        │ /srv/ecoflux/.venv     │
+└─────────┬─────────┘        └─────────┬──────────────┘
+          │                            │
+          ▼                            ▼
+   ┌──────────────┐           ┌──────────────────────┐
+   │ Nextcloud    │           │ Django app loads via │
+   │ app code     │           │ wsgi-production.py   │
+   └───────┬──────┘           └───────────┬──────────┘
+           │                              │
+           ▼                              ▼
+     ┌───────────────┐            ┌──────────────────┐
+     │ DB + storage  │            │ DB + storage     │
+     └───────────────┘            └──────────────────┘
+           │                              │
+           ▼                              ▼
+   ┌────────────────┐           ┌─────────────────────┐
+   │ HTML/PHP output │           │ HTML from Django    │
+   └────────────────┘           └─────────────────────┘
+           │                              │
+           └──────────────┬───────────────┘
+                          ▼
+              ┌─────────────────────────┐
+              │ Apache sends HTTPS       │
+              │ response back to user    │
+              └─────────────────────────┘
+```
+
+---
+
+### **Key Notes from the Diagram**
+
+- **Nextcloud path (`/`)*- → Apache serves files from `/var/www/html/nextcloud` and hands `.php` to PHP-FPM.
+- **EcoFlux path (`/ecoflux/`)** → Apache passes request to **mod\_wsgi**, which boots Django inside your venv.
+- The **WSGIScriptAlias** ensures `/ecoflux/` never conflicts with Nextcloud’s `.htaccess` rules.
+- Both apps share the same SSL vhost, so HTTPS is consistent.

@@ -1,0 +1,172 @@
+Here’s a **future-friendly migration checklist** you can keep handy for when you decide to move from Apache → Nginx for both **Nextcloud** and **EcoFlux**.
+
+---
+
+## 🗂 Migration Checklist – Apache → Nginx
+
+### 1. Prep Work
+
+* [ ] Make a full backup of `/etc/apache2/sites-available`, `/etc/apache2/sites-enabled`, and both application directories (`/srv/ecoflux`, `/var/www/html/nextcloud`).
+* [ ] Backup your SSL certificates (`/etc/ssl/...`) or make sure they’re stored securely elsewhere.
+* [ ] Confirm that both services are working correctly on Apache (so you have a known-good baseline).
+* [ ] Install Nginx and required packages:
+
+  ```bash
+  sudo apt install nginx php-fpm uwsgi uwsgi-plugin-python3
+  ```
+* [ ] Install MariaDB client libraries for PHP if Nextcloud uses them:
+
+  ```bash
+  sudo apt install php-mysql
+  ```
+
+---
+
+### 2. Map Current Apache Config
+
+* For **EcoFlux**:
+
+  * Identify `DocumentRoot`, `WSGIScriptAlias`, `python-home` and `python-path` settings.
+  * Note which port it’s running on and the `ServerName`/`ServerAlias`.
+* For **Nextcloud**:
+
+  * Note the root path, PHP settings, and any rewrite rules (`.htaccess`).
+  * Collect security headers currently in use.
+* Record all HTTPS settings (cert paths, protocols, ciphers).
+
+---
+
+### 3. Set Up uWSGI for Django (EcoFlux)
+
+* Install uWSGI:
+
+  ```bash
+  sudo apt install uwsgi uwsgi-plugin-python3
+  ```
+* Create `/etc/uwsgi/apps-available/ecoflux.ini`:
+
+  ```ini
+  [uwsgi]
+  chdir = /srv/ecoflux
+  module = EcoFlux.wsgi:application
+  home = /srv/ecoflux/.venv
+  master = true
+  processes = 5
+  socket = /run/uwsgi/ecoflux.sock
+  chmod-socket = 660
+  vacuum = true
+  die-on-term = true
+  ```
+* Enable the app:
+
+  ```bash
+  sudo ln -s /etc/uwsgi/apps-available/ecoflux.ini /etc/uwsgi/apps-enabled/
+  ```
+
+---
+
+### 4. Set Up PHP-FPM for Nextcloud
+
+* Install and enable PHP modules Nextcloud needs:
+
+  ```bash
+  sudo apt install php-cli php-xml php-mbstring php-zip php-gd php-curl php-fpm
+  ```
+* Verify PHP-FPM is running:
+
+  ```bash
+  systemctl status php7.4-fpm  # or your PHP version
+  ```
+
+---
+
+### 5. Nginx Server Blocks
+
+**`/etc/nginx/sites-available/grandwazoo`**:
+
+```nginx
+# Redirect HTTP to HTTPS
+server {
+    listen 80;
+    server_name grandwazoo.ddns.net;
+    return 301 https://$host$request_uri;
+}
+
+# HTTPS block
+server {
+    listen 443 ssl http2;
+    server_name grandwazoo.ddns.net;
+
+    ssl_certificate     /etc/ssl/nextcloud/grandwazoo_ddns_net.crt;
+    ssl_certificate_key /etc/ssl/nextcloud/grandwazoo.ddns.net.key;
+    ssl_trusted_certificate /etc/ssl/nextcloud/DigiCertCA.crt;
+
+    # Nextcloud at /
+    root /var/www/html/nextcloud;
+    index index.php index.html;
+
+    location / {
+        try_files $uri $uri/ /index.php$request_uri;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/var/run/php/php7.4-fpm.sock;  # adjust version
+    }
+
+    # EcoFlux at /ecoflux/
+    location /ecoflux/ {
+        include uwsgi_params;
+        uwsgi_pass unix:/run/uwsgi/ecoflux.sock;
+    }
+
+    # Security headers (from Apache config)
+    add_header Strict-Transport-Security "max-age=15552000; includeSubDomains" always;
+}
+```
+
+---
+
+### 6. Enable & Test
+
+* [ ] Disable default Nginx site:
+
+  ```bash
+  sudo rm /etc/nginx/sites-enabled/default
+  ```
+* [ ] Enable your new config:
+
+  ```bash
+  sudo ln -s /etc/nginx/sites-available/grandwazoo /etc/nginx/sites-enabled/
+  ```
+* [ ] Test Nginx config:
+
+  ```bash
+  sudo nginx -t
+  ```
+* [ ] Restart services:
+
+  ```bash
+  sudo systemctl restart uwsgi
+  sudo systemctl restart php7.4-fpm
+  sudo systemctl restart nginx
+  ```
+
+---
+
+### 7. Verification
+
+* [ ] Check `https://grandwazoo.ddns.net/` → Nextcloud works.
+* [ ] Check `https://grandwazoo.ddns.net/ecoflux/` → Django works.
+* [ ] Review logs in `/var/log/nginx/` and `/var/log/uwsgi/` for errors.
+
+---
+
+### 8. Decommission Apache
+
+* Once everything is stable:
+
+  ```bash
+  sudo systemctl disable apache2
+  sudo systemctl stop apache2
+  ```

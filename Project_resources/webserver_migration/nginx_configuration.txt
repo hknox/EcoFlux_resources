@@ -1,0 +1,135 @@
+Got it — here’s a **complete Nginx config** that’s the functional equivalent of your current Apache setup for **both Nextcloud** and **EcoFlux**, keeping the `/` for Nextcloud and `/ecoflux/` for your Django app.
+
+This assumes:
+
+* **PHP-FPM** is installed for Nextcloud (adjust socket path as needed).
+* **uWSGI** (or Gunicorn) is running EcoFlux, serving via a Unix socket.
+* SSL cert paths match your current Apache ones.
+* Static and media files for EcoFlux are already collected in `/srv/ecoflux/static` and `/srv/ecoflux/media`.
+
+---
+
+```nginx
+# ===============================
+# grandwazoo.ddns.net Nginx config
+# Nextcloud at /
+# EcoFlux at /ecoflux/
+# ===============================
+
+# Redirect HTTP to HTTPS
+server {
+    listen 80;
+    server_name grandwazoo.ddns.net;
+    return 301 https://$host$request_uri;
+}
+
+# Main HTTPS server
+server {
+    listen 443 ssl http2;
+    server_name grandwazoo.ddns.net;
+
+    # SSL certificates
+    ssl_certificate     /etc/ssl/nextcloud/grandwazoo_ddns_net.crt;
+    ssl_certificate_key /etc/ssl/nextcloud/grandwazoo.ddns.net.key;
+    ssl_trusted_certificate /etc/ssl/nextcloud/DigiCertCA.crt;
+
+    # Security headers
+    add_header Strict-Transport-Security "max-age=15552000; includeSubDomains" always;
+
+    # ======================
+    # NEXTCLOUD CONFIG AT /
+    # ======================
+    root /var/www/html/nextcloud;
+    index index.php index.html /index.php$request_uri;
+
+    # Block access to sensitive files
+    location ~ ^/(?:\.htaccess|data|config|db_structure\.xml|README) {
+        deny all;
+    }
+
+    # Main Nextcloud handler
+    location / {
+        try_files $uri $uri/ /index.php$request_uri;
+    }
+
+    # PHP handler for Nextcloud
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/var/run/php/php7.4-fpm.sock;  # Adjust for your PHP version
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    # ======================
+    # ECOFLUX DJANGO APP AT /ecoflux/
+    # ======================
+    location /ecoflux/static/ {
+        alias /srv/ecoflux/static/;
+    }
+
+    location /ecoflux/media/ {
+        alias /srv/ecoflux/media/;
+    }
+
+    # Pass Django to uWSGI
+    location /ecoflux/ {
+        include uwsgi_params;
+        uwsgi_pass unix:/run/uwsgi/ecoflux.sock;  # Must match your uWSGI config
+        uwsgi_param SCRIPT_NAME /ecoflux;
+        uwsgi_modifier1 30;
+    }
+
+    # ======================
+    # LOGS
+    # ======================
+    access_log /var/log/nginx/grandwazoo-access.log;
+    error_log  /var/log/nginx/grandwazoo-error.log;
+}
+```
+
+---
+
+### 🔹 What you’ll need to set up alongside this:
+
+1. **uWSGI app for EcoFlux**
+   Example `/etc/uwsgi/apps-available/ecoflux.ini`:
+
+   ```ini
+   [uwsgi]
+   chdir = /srv/ecoflux
+   module = EcoFlux.wsgi_production:application
+   home = /srv/ecoflux/.venv
+   master = true
+   processes = 5
+   socket = /run/uwsgi/ecoflux.sock
+   chmod-socket = 660
+   vacuum = true
+   die-on-term = true
+   ```
+
+   Enable it:
+
+   ```bash
+   sudo ln -s /etc/uwsgi/apps-available/ecoflux.ini /etc/uwsgi/apps-enabled/
+   sudo systemctl restart uwsgi
+   ```
+
+2. **PHP-FPM for Nextcloud**
+   Make sure it’s running and the socket path matches the one in the config (`/var/run/php/php7.4-fpm.sock`).
+
+3. **Static files for Django**
+   Run:
+
+   ```bash
+   source /srv/ecoflux/.venv/bin/activate
+   python manage.py collectstatic
+   ```
+
+4. **Test before switching**
+
+   ```bash
+   sudo nginx -t
+   sudo systemctl restart nginx
+   ```
+
+---
