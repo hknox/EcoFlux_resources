@@ -33,7 +33,7 @@
     {% endif %}
     {% include "inventory/include/formset_block.html" with formset=doi_formset %}
 
-    <!-- These are only shown if we are editing an existing, deletable site -->
+    <!-- These are only shown if we are editing an existing site -->
     {% if action == "Edit" %}
       <!-- FieldNotes -->
       <div class="d-flex justify-content-between align-items-center mt-2 mb-0 bg-primary">
@@ -73,8 +73,7 @@
       <!-- Equipment -->
       <div class="d-flex justify-content-between align-items-center mt-2 mb-0 bg-primary">
         <h5 class="mb-0 mt-0 me-1 ms-2 text-bg-primary">Equipment</h5>
-        <a href="{% url 'equipment_add' %}?next={{request.get_full_path}}&site={{ site.id }}"
-           class="btn btn-info btn-sm">
+        <a href="{% url 'equipment_add' %}" class="ajax-modal-link btn btn-info btn-sm">
           <i class="bi bi-plus-circle"></i> Add an item</a>
       </div>
       {% if equipment %}
@@ -87,7 +86,7 @@
             {% for item in equipment %}
               <tr>
                 <td>
-                  <a href="{% url 'equipment_edit' item.pk %}?next={{request.get_full_path}}">
+                  <a href="{% url 'equipment_edit' item.pk %}" class="ajax-modal-link">
                   {{ item.instrument }}
                   </a>
                 </td>
@@ -106,6 +105,21 @@
 
   </form>
 
+  <!-- Modal for related class creation/editing -->
+  <div class="modal fade" id="ajaxModal" tabindex="-1" aria-labelledby="ajaxModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="ajaxModalLabel">Loading...</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Form will load here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
   {% endblock content %}
 
   {% block extra_js %}
@@ -114,6 +128,6 @@
   {# NB important: formset_add.js must load AFTER form_protect.js #}
   <script src="{% static 'js/formset_add.js' %}"></script>
   <script src="{% static 'js/delete_button.js' %}"></script>
-
+  <script src="{% static 'js/modal_record_add.js' %}"></script>
   {% endblock extra_js %}
 </body>

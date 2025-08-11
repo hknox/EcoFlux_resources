@@ -1,14 +1,17 @@
 # from django.contrib.auth.forms import password_validation
-from django.db.models import Case, When, Value, CharField, Count
+from django.db.models import Case, When, CharField, Count
 from django.views.generic.list import ListView
 from django.views.generic.edit import UpdateView, CreateView, DeleteView
 from django.shortcuts import redirect, render  # get_object_or_404
-from django.contrib import messages
+
+# from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models.functions import Lower
 from django.urls import reverse_lazy, reverse
+from django.http import JsonResponse
+
 
 from inventory.models import Site, FieldNote, Equipment  # ,Photo
 from .forms import (
@@ -25,10 +28,55 @@ def EndOfInternet(request):
     return redirect("https://hmpg.net/")
 
 
+class AjaxFormMixin:
+    """We keep our normal `CreateView`/`UpdateView`, but make them
+    detect AJAX and return only the form HTML.
+    """
+
+    ajax_template_name = None  # set in subclass
+
+    def form_invalid(self, form):
+        if self.request.headers.get("x-requested-with") == "XMLHttpRequest":
+            html = render(
+                self.request, self.ajax_template_name, {"form": form}
+            ).content.decode("utf-8")
+            return JsonResponse({"success": False, "html": html})
+        return super().form_invalid(form)
+
+    def form_valid(self, form):
+        obj = form.save()
+        if self.request.headers.get("x-requested-with") == "XMLHttpRequest":
+            # Render the updated row or list
+            row_html = render(
+                self.request, self.row_template_name, {"object": obj}
+            ).content.decode("utf-8")
+            return JsonResponse(
+                {"success": True, "row_html": row_html, "object_id": obj.pk}
+            )
+        return super().form_valid(form)
+
+    def get(self, request, *args, **kwargs):
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            self.object = None if isinstance(self, CreateView) else self.get_object()
+            form = self.get_form()
+            html = render(
+                request, self.ajax_template_name, {"form": form}
+            ).content.decode("utf-8")
+            print(JsonResponse({"html": html}).text)
+            return JsonResponse({"html": html})
+        return super().get(request, *args, **kwargs)
+
+
 class EquipmentViewsMixin:
     model = Equipment
     form_class = EquipmentForm
     template_name = "inventory/equipment_detail.html"
+    ajax_template_name = "inventory/equipment_ajax_form.html"
+    row_template_name = "inventory/equipment_row.html"
+
+    def form_valid(self, form):
+        form.instance.site_id = self.kwargs["site_pk"]
+        return super().form_valid(form)
 
     def initialize_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -81,7 +129,9 @@ class EquipmentViewsMixin:
         return self.request.GET.get("next", reverse_lazy("view_equipment"))
 
 
-class EquipmentCreateView(LoginRequiredMixin, EquipmentViewsMixin, CreateView):
+class EquipmentCreateView(
+    LoginRequiredMixin, EquipmentViewsMixin, AjaxFormMixin, CreateView
+):
 
     action = "New"
 
@@ -90,7 +140,9 @@ class EquipmentCreateView(LoginRequiredMixin, EquipmentViewsMixin, CreateView):
         return context_data
 
 
-class EquipmentUpdateView(LoginRequiredMixin, EquipmentViewsMixin, UpdateView):
+class EquipmentUpdateView(
+    LoginRequiredMixin, EquipmentViewsMixin, AjaxFormMixin, UpdateView
+):
 
     action = "Edit"
 

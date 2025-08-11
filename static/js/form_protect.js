@@ -3,11 +3,9 @@ let dirty = false
 function attachDirtyListeners(container) {
     container.querySelectorAll('input, textarea, select').forEach(function (el) {
         el.addEventListener('input', () => {
-            console.log("input->dirty (dynamic)");
             dirty = true;
         });
         el.addEventListener('change', () => {
-            console.log("change->dirty (dynamic)");
             dirty = true;
         });
     });
