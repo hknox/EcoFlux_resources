@@ -1,5 +1,5 @@
 # from django.contrib.auth.forms import password_validation
-from django.db.models import Case, When, CharField, Count
+from django.db.models import Case, When, CharField, Count, F, Value
 from django.views.generic.list import ListView
 from django.views.generic.edit import UpdateView, CreateView, DeleteView
 from django.shortcuts import redirect, render  # get_object_or_404
@@ -8,19 +8,18 @@ from django.shortcuts import redirect, render  # get_object_or_404
 from django.contrib.auth import logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
-from django.db.models.functions import Lower
+from django.db.models.functions import Lower, Concat
 from django.urls import reverse_lazy, reverse
 from django.http import JsonResponse
 
 
-from inventory.models import Site, FieldNote, Equipment  # ,Photo
+from inventory.models import Site, FieldNote, Equipment
 from .forms import (
     HistoryFormSet,
     SiteForm,
     DOIFormSet,
     FieldNoteForm,
     EquipmentForm,
-    # PhotoFormSet,
 )
 
 
@@ -149,7 +148,7 @@ class EquipmentUpdateView(
     def get_context_data(self, **kwargs):
         context = self.initialize_context_data(**kwargs)
         context["action"] = self.action
-        context["del"] = reverse(
+        context["delete_url"] = reverse(
             "site_delete",
             args=[
                 context["object"].id,
@@ -365,7 +364,7 @@ class SortedListMixin(ListView):
         {"name": "display_summary", "label": # "Summary"},
     ]
 
-    Use extra keys for more control:
+    use extra keys for more control:
     - "sortable": if "no", don't offer sort arrows on the column header.
     - "max_chars": truncate the data to max_chars number of characters.
     """
@@ -375,7 +374,6 @@ class SortedListMixin(ListView):
     _default_max_chars = 50
 
     def apply_filters(self, queryset):
-
         for field_filter in self.filter_fields:
             raw_value = self.request.GET.get(field_filter["name"], "").strip()
             if not raw_value:
@@ -430,8 +428,9 @@ class SiteListView(LoginRequiredMixin, SortedListMixin):
     table_fields = [
         {"name": "code", "label": "Code"},
         {"name": "name", "label": "Name"},
-        {"name": "location", "label": "Location"},
         {"name": "description", "label": "Description", "max_chars": 80},
+        {"name": "gps_coordinates", "label": "GPS"},
+        {"name": "dates_active", "label": "Active"},
         {"name": "fieldnotes_count", "label": "# Fieldnotes"},
         {"name": "equipment_count", "label": "# Equipment"},
     ]
@@ -442,6 +441,12 @@ class SiteListView(LoginRequiredMixin, SortedListMixin):
         qs = Site.objects.annotate(
             fieldnotes_count=Count("fieldnotes", distinct=True),
             equipment_count=Count("equipment", distinct=True),
+            dates_active=Concat(
+                F("date_activated"),
+                Value(" - "),
+                (F("date_retired") if F("date_retired") == "" else Value("[ongoing]")),
+                output_field=CharField(),
+            ),
         )
         qs = self.apply_filters(qs)
         qs = self.apply_sort_parameters(qs)
@@ -519,14 +524,14 @@ class EquipmentListView(LoginRequiredMixin, SortedListMixin):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        context["heading"] = "Equipment"
+        context["table_fields"] = self.table_fields
         context["sort"] = self._sort_key
         context["filter_fields"] = self.filter_fields
-        context["table_fields"] = self.table_fields
-        context["reset_url"] = reverse("view_equipment")
-        context["add_url"] = reverse("equipment_add")
-        context["heading"] = "Equipment"
         context["add_button"] = "Add Equipment"
+        context["add_url"] = reverse("equipment_add")
         context["edit_url"] = "equipment_edit"
+        context["reset_url"] = reverse("view_equipment")
         context["default_max_chars"] = self._default_max_chars
 
         return context
