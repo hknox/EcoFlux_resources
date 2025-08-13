@@ -108,7 +108,14 @@ class SiteForm(forms.ModelForm):
 class FieldNoteForm(forms.ModelForm):
     class Meta:
         model = FieldNote
-        fields = ["site", "note", "submitter", "date_submitted", "summary"]
+        fields = [
+            "site",
+            "note",
+            "submitter",
+            "date_submitted",
+            "summary",
+            "site_visitors",
+        ]
 
     def __init_FormHelper(self):
         helper = FormHelper()
@@ -130,6 +137,10 @@ class FieldNoteForm(forms.ModelForm):
                     label="Submitted by",
                 ),
                 Column(Field("date_submitted", css_class="col-md-2 datepicker")),
+                css_class="mb-1",
+            ),
+            Row(
+                Field("site_visitors"),
                 css_class="mb-1",
             ),
             Row(
@@ -180,7 +191,7 @@ class EquipmentForm(forms.ModelForm):
             "serial_number",
             "date_purchased",
             "notes",
-            "location",
+            "site",
         ]
 
     def __init_FormHelper(self):
@@ -210,7 +221,7 @@ class EquipmentForm(forms.ModelForm):
             ),
             Row(
                 Column(
-                    Field("location"),
+                    Field("site"),
                     css_class="col-md-6",
                 ),
                 Column(
@@ -230,7 +241,7 @@ class EquipmentForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.cancel_url = cancel_url
         self.helper = self.__init_FormHelper()
-        self.fields["location"].empty_label = "--Select a site--"
+        self.fields["site"].empty_label = "--Select a site--"
         # TODO move this to a common mixin?
         #      or add a simple function to this module and call it?
         # Make help_texts appear as Bootstrap tooltips
