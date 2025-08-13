@@ -66,7 +66,44 @@ class AjaxFormMixin:
         return super().get(request, *args, **kwargs)
 
 
-class EquipmentViewsMixin:
+class SiteAssignmentMixin:
+    """
+    Handles enabling/disabling the `site` field and ensuring it still
+    submits when disabled.
+    """
+
+    def get_initial(self):
+        initial = super().get_initial()
+        site_pk = self.request.GET.get("site_pk")
+        if site_pk:
+            initial["site"] = site_pk
+        return initial
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+
+        site_pk = self.kwargs.get("site_pk")
+        # self.object is None on Create
+        editing = self.object and self.object.pk is not None
+
+        # Logic for enabling/disabling
+        if site_pk or not self.enable_site_editing(editing):
+            form.fields["site"].disabled = True
+            form.fields["site"].widget.attrs["data-locked"] = "true"
+            form.fields["site"].widget.attrs["data-site-id"] = site_pk
+
+        return form
+
+    def enable_site_editing(self, editing):
+        """
+        Override in subclasses:
+        - Equipment: return True for editing
+        - Others: return False for editing
+        """
+        return False
+
+
+class EquipmentViewsMixin(SiteAssignmentMixin):
     model = Equipment
     form_class = EquipmentForm
     template_name = "inventory/equipment_detail.html"
