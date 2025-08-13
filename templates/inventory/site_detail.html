@@ -38,7 +38,7 @@
       <!-- FieldNotes -->
       <div class="d-flex justify-content-between align-items-center mt-2 mb-0 bg-primary">
         <h5 class="mb-0 mt-0 me-1 ms-2 text-bg-primary">Field notes</h5>
-        <a href="{% url 'fieldnote_create' %}?next={{request.get_full_path}}&site={{ site.id }}"
+        <a href="{% url 'fieldnote_create' %}?next={{request.get_full_path}}&site_pk={{ site.id }}"
            class="btn btn-info btn-sm">
           <i class="bi bi-plus-circle"></i> Add a field note</a>
       </div>
@@ -73,7 +73,7 @@
       <!-- Equipment -->
       <div class="d-flex justify-content-between align-items-center mt-2 mb-0 bg-primary">
         <h5 class="mb-0 mt-0 me-1 ms-2 text-bg-primary">Equipment</h5>
-        <a href="{% url 'equipment_add' %}" class="ajax-modal-link btn btn-info btn-sm">
+        <a href="{% url 'equipment_add' %}?next={{request.get_full_path}}&site_pk={{ site.id }}" class="btn btn-info btn-sm">
           <i class="bi bi-plus-circle"></i> Add an item</a>
       </div>
       {% if equipment %}
@@ -86,7 +86,7 @@
             {% for item in equipment %}
               <tr>
                 <td>
-                  <a href="{% url 'equipment_edit' item.pk %}" class="ajax-modal-link">
+                  <a href="{% url 'equipment_edit' item.pk %}?next={{request.get_full_path}}" class="">
                   {{ item.instrument }}
                   </a>
                 </td>

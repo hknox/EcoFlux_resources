@@ -81,20 +81,18 @@ class SiteAssignmentMixin:
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
-
-        site_pk = self.kwargs.get("site_pk")
         # self.object is None on Create
         editing = self.object and self.object.pk is not None
+        site_pk = self.request.GET.get("site_pk")
 
         # Logic for enabling/disabling
-        if site_pk or not self.enable_site_editing(editing):
+        if (site_pk or editing) and not self.enable_site_editing():
             form.fields["site"].disabled = True
             form.fields["site"].widget.attrs["data-locked"] = "true"
             form.fields["site"].widget.attrs["data-site-id"] = site_pk
-
         return form
 
-    def enable_site_editing(self, editing):
+    def enable_site_editing(self):
         """
         Override in subclasses:
         - Equipment: return True for editing
@@ -211,7 +209,7 @@ class FieldNoteViewsMixin(SiteAssignmentMixin):
         )
         return context
 
-    def enable_site_editing(self, editing):
+    def enable_site_editing(self):
         return False  # Keep disabled, but can change later if needed
 
     def get_success_url(self):
