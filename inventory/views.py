@@ -161,7 +161,7 @@ class EquipmentViewsMixin(SiteAssignmentMixin):
 
         # return self.render_to_response(self.get_context_data())
 
-    def enable_site_editing(self, editing):
+    def enable_site_editing(self):
         return True  # Equipment can change site when editing
 
     def get_success_url(self):
