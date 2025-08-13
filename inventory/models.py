@@ -40,7 +40,7 @@ class Equipment(models.Model):
     serial_number = models.CharField(max_length=50, blank=True)
     date_purchased = models.DateField()
     notes = models.TextField(blank=True)
-    location = models.ForeignKey(
+    site = models.ForeignKey(
         Site, on_delete=models.SET_NULL, null=True, blank=True, related_name="equipment"
     )
 
@@ -62,6 +62,7 @@ class FieldNote(models.Model):
     date_submitted = models.DateField(default=now)
     summary = models.CharField(max_length=80, blank=True)
     submitter = models.CharField(max_length=50, blank=True)
+    site_visitors = models.CharField(max_length=250, blank=True, default="")
 
 
 def site_photo_upload_path(instance, filename):

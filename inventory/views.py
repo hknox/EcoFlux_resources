@@ -88,7 +88,7 @@ class EquipmentViewsMixin:
         context["form"] = getattr(self, "_form", self.get_form())
         # Handle formset safely across Create and Update
         if hasattr(self, "_formset"):
-            context["doi_formset"] = self._formset
+            context["history_formset"] = self._formset
         elif hasattr(self, "object") and self.object is not None:
             context["history_formset"] = HistoryFormSet(instance=self.object)
         else:
@@ -116,32 +116,33 @@ class EquipmentViewsMixin:
         self._formset = formset
 
         if form.is_valid() and formset.is_valid():
-            site = form.save()
-            formset.instance = site
-            formset.save()
-            return redirect(self.get_success_url())
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+        #     site = form.save()
+        #     formset.instance = site
+        #     formset.save()
+        #     return redirect(self.get_success_url())
 
-        return self.render_to_response(self.get_context_data())
+        # return self.render_to_response(self.get_context_data())
+
+    def enable_site_editing(self, editing):
+        return True  # Equipment can change site when editing
 
     def get_success_url(self):
         # "next" can be set in the template of a page you want to return to:
         return self.request.GET.get("next", reverse_lazy("view_equipment"))
 
 
-class EquipmentCreateView(
-    LoginRequiredMixin, EquipmentViewsMixin, AjaxFormMixin, CreateView
-):
+class EquipmentCreateView(LoginRequiredMixin, EquipmentViewsMixin, CreateView):
 
     action = "New"
 
     def get_context_data(self, **kwargs):
-        context_data = self.initialize_context_data(**kwargs)
-        return context_data
+        return self.initialize_context_data(**kwargs)
 
 
-class EquipmentUpdateView(
-    LoginRequiredMixin, EquipmentViewsMixin, AjaxFormMixin, UpdateView
-):
+class EquipmentUpdateView(LoginRequiredMixin, EquipmentViewsMixin, UpdateView):
 
     action = "Edit"
 
@@ -161,7 +162,7 @@ class EquipmentUpdateView(
         return context
 
 
-class FieldNoteViewsMixin:
+class FieldNoteViewsMixin(SiteAssignmentMixin):
     model = FieldNote
     form_class = FieldNoteForm
     template_name = "inventory/fieldnote.html"
@@ -172,6 +173,9 @@ class FieldNoteViewsMixin:
             "next", reverse_lazy("view_fieldnotes")
         )
         return context
+
+    def enable_site_editing(self, editing):
+        return False  # Keep disabled, but can change later if needed
 
     def get_success_url(self):
         return self.request.GET.get("next", reverse_lazy("view_fieldnotes"))
