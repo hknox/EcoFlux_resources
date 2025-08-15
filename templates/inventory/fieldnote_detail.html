@@ -14,10 +14,13 @@
 
   {% block content %}
 
-  <form id="id_fieldnote_form" class = "mt-3 track-unsaved form-class" novalidate method="post">
+  <form id="id_fieldnote_form" class = "mt-3 track-unsaved form-class"
+        data-form-name = "Fieldnote form" novalidate method="post">
 
     {% csrf_token %}
     {% crispy form %}
+
+    <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}">
 
     <!-- Save/Cancel/Delete buttons -->
     {% include "inventory/save_cancel_delete.html" %}

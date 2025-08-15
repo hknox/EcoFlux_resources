@@ -14,10 +14,13 @@
 
   {% block content %}
 
-  <form id="id_equipment_form" class = "mt-3 track-unsaved form-class" novalidate method="post">
+  <form id="id_equipment_form" class = "mt-3 track-unsaved form-class"
+  data-form-name="Equipment form" novalidate method="post">
 
     {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}">
     {% crispy form %}
+
 
     <!-- History formset -->
     <div class="d-flex justify-content-between align-items-center mt-2 mb-0 bg-primary">
@@ -37,6 +40,7 @@
     {% include "inventory/save_cancel_delete.html" %}
 
   </form>
+
   {% endblock content %}
 
   {% block extra_js %}

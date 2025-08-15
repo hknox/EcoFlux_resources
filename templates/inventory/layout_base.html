@@ -35,7 +35,7 @@
   <body>
     <!-- Fixed Banner -->
     <header class="sticky-top text-bg-primary text-white p-1 shadow-sm" >
-      <div class="container-fluid d-flex justify-content-between align-items-center">
+      <div class="p-1 container-fluid d-flex justify-content-between align-items-center">
         <!-- Logo -->
         <a href="{% url 'home' %}" class="d-flex align-items-center text-white text-decoration-none">
           <img src="{% static 'images/C-3_C-2.png' %}"
@@ -83,6 +83,26 @@
     <!--     <p class="mb-0">&copy; 2025 Hank Knox. All rights reserved.</p> -->
     <!--   </div> -->
     <!-- </footer> -->
+
+    <!-- Unsaved changes modal -->
+    <div class="modal fade" id="unsavedChangesModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-warning">
+            <h5 class="modal-title">Unsaved Changes</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p id="unsavedChangesMessage"></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="stayOnPageBtn" class="btn btn-secondary" data-bs-dismiss="modal">Stay on Page</button>
+            <button type="button" id="leaveWithoutSavingBtn" class="btn btn-danger">Leave Without Saving</button>
+            <button type="button" id="saveAndContinueBtn" class="btn btn-primary">Save and Continue</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
 
     {% bootstrap_javascript %}

@@ -47,7 +47,7 @@ class SiteForm(forms.ModelForm):
             "col-auto col-form-label text-end align-self-center py-0 pe-2 label-class"
         )
         helper.field_class = "col-auto field-class"  # auto-width for inputs
-        helper.attrs = {"novalidate": ""}
+        # helper.attrs = {"novalidate": "", "data-form-name": "Site form"}
         helper.layout = Layout(
             Row(
                 Column(Field("name"), css_class="col-md-6"),
@@ -127,7 +127,7 @@ class FieldNoteForm(forms.ModelForm):
             "col-auto col-form-label text-end align-self-center py-0 pe-2 label-class"
         )
         helper.field_class = "col-auto field-class"  # auto-width for inputs
-        helper.attrs = {"novalidate": ""}
+        helper.attrs = {"novalidate": "", "data-form-name": "Fieldnote form"}
         helper.layout = Layout(
             Row(
                 Column(Field("site"), css_class="col-md-4"),
@@ -204,7 +204,7 @@ class EquipmentForm(forms.ModelForm):
             "col-auto col-form-label text-end align-self-center py-0 pe-2 label-class"
         )
         helper.field_class = "col-auto field-class"
-        helper.attrs = {"novalidate": ""}
+        helper.attrs = {"novalidate": "", "data-form-name": "Equipment form"}
         helper.layout = Layout(
             Row(
                 Column(Field("instrument"), css_class="col-md-6"),
@@ -301,7 +301,7 @@ class DOIForm(forms.ModelForm):
                     ),
                     css_class="col-auto d-flex mt-4 align-items-center",
                 ),
-                css_class="g-2 align-items-center",
+                css_class="g-1 align-items-center",
             )
         )
 

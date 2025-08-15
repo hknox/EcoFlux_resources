@@ -27,45 +27,6 @@ def EndOfInternet(request):
     return redirect("https://hmpg.net/")
 
 
-class AjaxFormMixin:
-    """We keep our normal `CreateView`/`UpdateView`, but make them
-    detect AJAX and return only the form HTML.
-    """
-
-    ajax_template_name = None  # set in subclass
-
-    def form_invalid(self, form):
-        if self.request.headers.get("x-requested-with") == "XMLHttpRequest":
-            html = render(
-                self.request, self.ajax_template_name, {"form": form}
-            ).content.decode("utf-8")
-            return JsonResponse({"success": False, "html": html})
-        return super().form_invalid(form)
-
-    def form_valid(self, form):
-        obj = form.save()
-        if self.request.headers.get("x-requested-with") == "XMLHttpRequest":
-            # Render the updated row or list
-            row_html = render(
-                self.request, self.row_template_name, {"object": obj}
-            ).content.decode("utf-8")
-            return JsonResponse(
-                {"success": True, "row_html": row_html, "object_id": obj.pk}
-            )
-        return super().form_valid(form)
-
-    def get(self, request, *args, **kwargs):
-        if request.headers.get("x-requested-with") == "XMLHttpRequest":
-            self.object = None if isinstance(self, CreateView) else self.get_object()
-            form = self.get_form()
-            html = render(
-                request, self.ajax_template_name, {"form": form}
-            ).content.decode("utf-8")
-            print(JsonResponse({"html": html}).text)
-            return JsonResponse({"html": html})
-        return super().get(request, *args, **kwargs)
-
-
 class SiteAssignmentMixin:
     """
     Handles enabling/disabling the `site` field and ensuring it still
@@ -104,17 +65,13 @@ class SiteAssignmentMixin:
 class EquipmentViewsMixin(SiteAssignmentMixin):
     model = Equipment
     form_class = EquipmentForm
+    success_url = reverse_lazy("view_equipment")
+    cancel_url = reverse_lazy("view_equipment")
     template_name = "inventory/equipment_detail.html"
-    ajax_template_name = "inventory/equipment_ajax_form.html"
-    row_template_name = "inventory/equipment_row.html"
-
-    def form_valid(self, form):
-        form.instance.site_id = self.kwargs["site_pk"]
-        return super().form_valid(form)
 
     def initialize_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["action"] = self.action
+        context["action"] = self.action_text
         context["cancel_url"] = self.request.GET.get(
             "next", reverse_lazy("view_equipment")
         )
@@ -139,39 +96,38 @@ class EquipmentViewsMixin(SiteAssignmentMixin):
 
         # Construct form and formset here
         form = self.get_form()
-        if not self.object:
-            # New site
-            formset = HistoryFormSet(request.POST)
-        else:
-            # Existing site
-            formset = HistoryFormSet(request.POST, instance=self.object)
+        formset = (
+            HistoryFormSet(request.POST)
+            if self.object is None
+            else HistoryFormSet(request.POST, instance=self.object)
+        )
 
         # Store for use in get_context_data()
         self._form = form
         self._formset = formset
 
         if form.is_valid() and formset.is_valid():
-            return self.form_valid(form)
-        else:
-            return self.form_invalid(form)
-        #     site = form.save()
-        #     formset.instance = site
-        #     formset.save()
-        #     return redirect(self.get_success_url())
+            return self.form_valid(form, formset)
 
-        # return self.render_to_response(self.get_context_data())
+        return self.render_to_response(self.get_context_data())
 
     def enable_site_editing(self):
         return True  # Equipment can change site when editing
 
+    def form_valid(self, form, formset):
+        equipment = form.save()
+        formset.instance = equipment
+        formset.save()
+        return redirect(self.get_success_url())
+
     def get_success_url(self):
         # "next" can be set in the template of a page you want to return to:
-        return self.request.GET.get("next", reverse_lazy("view_equipment"))
+        return self.request.GET.get("next", self.success_url)
 
 
 class EquipmentCreateView(LoginRequiredMixin, EquipmentViewsMixin, CreateView):
 
-    action = "New"
+    action_text = "New"
 
     def get_context_data(self, **kwargs):
         return self.initialize_context_data(**kwargs)
@@ -179,11 +135,11 @@ class EquipmentCreateView(LoginRequiredMixin, EquipmentViewsMixin, CreateView):
 
 class EquipmentUpdateView(LoginRequiredMixin, EquipmentViewsMixin, UpdateView):
 
-    action = "Edit"
+    action_text = "Edit"
 
     def get_context_data(self, **kwargs):
         context = self.initialize_context_data(**kwargs)
-        context["action"] = self.action
+        context["action"] = self.action_text
         context["delete_url"] = reverse(
             "site_delete",
             args=[
@@ -200,7 +156,7 @@ class EquipmentUpdateView(LoginRequiredMixin, EquipmentViewsMixin, UpdateView):
 class FieldNoteViewsMixin(SiteAssignmentMixin):
     model = FieldNote
     form_class = FieldNoteForm
-    template_name = "inventory/fieldnote.html"
+    template_name = "inventory/fieldnote_detail.html"
 
     def initialize_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -288,30 +244,47 @@ class SiteViewsMixin:
             self.object = self.get_object()
 
         form = self.get_form()
-        if self.object == None:
-            # New site
-            formset = DOIFormSet(request.POST)
-        else:
-            # Existing site
-            formset = DOIFormSet(request.POST, instance=self.object)
+        formset = (
+            DOIFormSet(request.POST)
+            if self.object is None
+            else DOIFormSet(request.POST, instance=self.object)
+        )
 
         # Store for use in get_context_data()
         self._form = form
         self._formset = formset
 
         if form.is_valid() and formset.is_valid():
-            site = form.save()
-            formset.instance = site
-            formset.save()
-            return redirect(self.success_url)
+            return self.form_valid(form, formset)
 
         return self.render_to_response(self.get_context_data())
+
+    def form_valid(self, form, formset):
+        site = form.save()
+        formset.instance = site
+        formset.save()
+        return redirect(self.get_success_url())
+
+    def get_success_url(self):
+        print(
+            self.request.POST.get("redirectAfterSave"),
+            self.request.POST.get("next"),
+            self.request.GET.get("next"),
+            reverse_lazy("view_sites"),
+        )
+
+        return (
+            self.request.POST.get("redirectAfterSave")
+            or self.request.POST.get("next")
+            or self.request.GET.get("next")
+            or self.success_url
+        )
 
     # def form_valid(self, form):
     #     """You can safely delete this form_valid() method if you’re not
     #     using Django’s built-in form-handling flow (i.e., if you’re
     #     manually handling POST requests in your own post() method as shown
-    #     earlier). Why?
+    #     earlier):
 
     #     The form_valid method is part of Django’s generic class-based
     #     view workflow. If you override post() and handle all form and
@@ -328,11 +301,11 @@ class SiteViewsMixin:
 
 class SiteCreateView(LoginRequiredMixin, SiteViewsMixin, CreateView):
 
-    action = "New"
+    action_text = "New"
 
     def get_context_data(self, **kwargs):
         context = self.initialize_context_data(**kwargs)
-        context["action"] = self.action
+        context["action"] = self.action_text
         return context
 
     def get_form_kwargs(self):
@@ -343,11 +316,11 @@ class SiteCreateView(LoginRequiredMixin, SiteViewsMixin, CreateView):
 
 class SiteUpdateView(LoginRequiredMixin, SiteViewsMixin, UpdateView):
 
-    action = "Edit"
+    action_text = "Edit"
 
     def get_context_data(self, **kwargs):
         context = self.initialize_context_data(**kwargs)
-        context["action"] = self.action
+        context["action"] = self.action_text
         context["delete_url"] = reverse(
             "site_delete",
             args=[
@@ -546,7 +519,7 @@ class EquipmentListView(LoginRequiredMixin, SortedListMixin):
     table_fields = [
         {"name": "instrument", "label": "Instrument"},
         {"name": "serial_number", "label": "Serial number", "sortable": "no"},
-        {"name": "location", "label": "Location"},
+        {"name": "site", "label": "Location"},
         {"name": "notes", "label": "Notes", "max_chars": 80, "sortable": "no"},
         {"name": "history_count", "label": "# History records", "sortable": "no"},
     ]

@@ -325,6 +325,65 @@ Method	Best Use Case
 __init__() loop	                        Medium/large forms with consistency
 Meta.widgets	                        Few fields, specific overrides
 crispy-forms + {% crispy form %}	Automatic Bootstrap styling
+** ChatGPT overview of dirty-form protection  options
+...what you’re describing is a pretty common UX pain point with Django
+“detail + related records” pages, and you’re right that just making
+Equipment or FieldNotes part of the main Site formset is the wrong fit
+if you need their full create forms.
+
+There are a few patterns that work well here, and the “dirty form”
+warning is the main challenge to solve.
+
+*** 1. Open the Create form in a modal (Bootstrap modal or similar)**
+
+- You can keep the Site form open and “dirty” in the background.
+- Clicking “Add Equipment” triggers JavaScript to load the `CreateView` form into a Bootstrap modal via AJAX.
+- When the modal form is submitted (via AJAX), the server:
+
+  * Creates the Equipment or FieldNote instance.
+  * Returns a JSON response with the rendered row for the updated list (or the updated list HTML).
+  * JavaScript then injects the new row into the Equipment or FieldNote table without a full page reload.
+ **Benefits**: No dirty form warning, user stays on page.
+ **Downsides**: You have to AJAXify your CreateView (but you can keep the regular non-AJAX view for fallback).
+
+*** 2. Open Create form in a new browser tab**
+
+- “Add Equipment” link uses `target="_blank"`.
+- User fills out the new item in a separate tab.
+- After saving, they close the tab and return to the original Site page — which still has their unsaved changes.
+ **Benefits**: No dirty form prompt.
+ **Downsides**: Slightly clunky UX; users must be comfortable with multiple tabs.
+
+*** 3. Save the Site form automatically before opening Create**
+
+- When “Add Equipment” is clicked:
+
+  * JavaScript first sends an AJAX POST to save the Site form.
+  * If successful, it redirects to the CreateView for Equipment/FieldNote, already knowing the saved Site PK.
+ **Benefits**: Keeps the workflow single-page without modal complexity.
+ **Downsides**: Might commit partially-complete Site data before the user is ready.
+
+*** 4. Use an inline modal form but *not* a formset**
+
+- Instead of a separate CreateView, render a full form for Equipment/FieldNote *inside* a modal on the Site page.
+- Submit it via AJAX to the standard CreateView endpoint.
+- Refresh the relevant list with the new item after save.
+ **Benefits**: Keeps full control of fields; no partial formset.
+ **Downsides**: You need to load the form via AJAX and re-render errors if validation fails.
+
+*** Recommendation for your case**
+
+Given:
+
+- You want the full CreateView fields for Equipment/FieldNote.
+- You don’t want to lose Site form changes.
+- You already have a dirty-form warning system.
+
+I’d go with option 1** — Bootstrap modal + AJAX form submission.
+It avoids the dirty form prompt, keeps UX smooth, and works with your existing CreateView with only a little refactoring to handle AJAX.
+
+But in the end I went with opton 3, save dirty site
+
 ** Container margins, gaps, padding
 default: containers have left and right padding
 ** [[https://docs.djangoproject.com/en/5.2/topics/forms/formsets/][Formsets]]
