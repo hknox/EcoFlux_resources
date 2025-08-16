@@ -22,9 +22,9 @@ urlpatterns = [
         name="site_delete",
     ),
     # Equipment
-    path("inventory/", views.EquipmentListView.as_view(), name="view_equipment"),
+    path("equipment/", views.EquipmentListView.as_view(), name="view_equipment"),
     path(
-        "inventory/add/",
+        "equipment/add/",
         views.EquipmentCreateView.as_view(),
         name="equipment_add",
     ),
