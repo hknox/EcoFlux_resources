@@ -33,7 +33,7 @@
     </div>
 
     {% if not doi_formset.forms %}
-      <div class="row mt-2">No DOI records for this site yet.</div>
+      <div class="row mt-2 ms-1">No DOI records for this site yet.</div>
     {% endif %}
 
     {% include "inventory/include/formset_block.html" with formset=doi_formset %}

@@ -15,6 +15,7 @@ from django.http import JsonResponse
 
 from inventory.models import Site, FieldNote, Equipment
 from .forms import (
+    HistoryForm,
     HistoryFormSet,
     SiteForm,
     DOIFormSet,
@@ -27,9 +28,22 @@ def EndOfInternet(request):
     return redirect("https://hmpg.net/")
 
 
+class BaseViewMixin:
+    """A base class to provide all the things that all Views should do
+    the same way.
+    """
+
+    # Must be set in subclasses
+    success_url = ""
+
+    def get_success_url(self):
+        # "next" can be set in the template of a page you want to return to:
+        return self.request.GET.get("next", self.success_url)
+
+
 class SiteAssignmentMixin:
     """
-    Handles enabling/disabling the `site` field and ensuring it still
+    Handles enabling/disabling the 'site' field and ensuring it still
     submits when disabled.
     """
 
@@ -62,9 +76,52 @@ class SiteAssignmentMixin:
         return False
 
 
-class EquipmentViewsMixin(SiteAssignmentMixin):
+class FormsetMixin:
+    """Mixin to manage issues around formsets.
+
+    The form_valid method is part of Django’s generic class-based view
+    workflow. If you override post() and handle all form and formset
+    logic there (including saving and redirecting), Django will not
+    call form_valid. Your logic in post() takes precedence.
+
+    When would you need form_valid? If you rely on the default CBV
+    flow (don’t override post()), you would only need to override
+    form_valid to add formset-handling logic after the parent form is
+    saved.
+    """
+
+    def post(self, request, *args, **kwargs):
+        if isinstance(self, CreateView):
+            self.object = None  # required for CreateView
+        else:
+            self.object = self.get_object()
+
+        # Construct form and formset here
+        form = self.get_form()
+        formset = (
+            self.formset_class(request.POST)
+            if self.object is None
+            else self.formset_class(request.POST, instance=self.object)
+        )
+
+        # Store for use in get_context_data()
+        self._form = form
+        self._formset = formset
+        if form.is_valid() and formset.is_valid():
+            return self.form_valid(form, formset)
+        return self.render_to_response(self.get_context_data())
+
+    def form_valid(self, form, formset):
+        equipment = form.save()
+        formset.instance = equipment
+        formset.save()
+        return redirect(self.get_success_url())
+
+
+class EquipmentViewsMixin(BaseViewMixin, FormsetMixin, SiteAssignmentMixin):
     model = Equipment
     form_class = EquipmentForm
+    formset_class = HistoryFormSet
     success_url = reverse_lazy("view_equipment")
     cancel_url = reverse_lazy("view_equipment")
     template_name = "inventory/equipment_detail.html"
@@ -88,41 +145,8 @@ class EquipmentViewsMixin(SiteAssignmentMixin):
 
         return context
 
-    def post(self, request, *args, **kwargs):
-        if isinstance(self, CreateView):
-            self.object = None  # required for CreateView
-        else:
-            self.object = self.get_object()
-
-        # Construct form and formset here
-        form = self.get_form()
-        formset = (
-            HistoryFormSet(request.POST)
-            if self.object is None
-            else HistoryFormSet(request.POST, instance=self.object)
-        )
-
-        # Store for use in get_context_data()
-        self._form = form
-        self._formset = formset
-
-        if form.is_valid() and formset.is_valid():
-            return self.form_valid(form, formset)
-
-        return self.render_to_response(self.get_context_data())
-
     def enable_site_editing(self):
         return True  # Equipment can change site when editing
-
-    def form_valid(self, form, formset):
-        equipment = form.save()
-        formset.instance = equipment
-        formset.save()
-        return redirect(self.get_success_url())
-
-    def get_success_url(self):
-        # "next" can be set in the template of a page you want to return to:
-        return self.request.GET.get("next", self.success_url)
 
 
 class EquipmentCreateView(LoginRequiredMixin, EquipmentViewsMixin, CreateView):
@@ -153,9 +177,10 @@ class EquipmentUpdateView(LoginRequiredMixin, EquipmentViewsMixin, UpdateView):
         return context
 
 
-class FieldNoteViewsMixin(SiteAssignmentMixin):
+class FieldNoteViewsMixin(BaseViewMixin, SiteAssignmentMixin):
     model = FieldNote
     form_class = FieldNoteForm
+    success_url = reverse_lazy("view_fieldnotes")
     template_name = "inventory/fieldnote_detail.html"
 
     def initialize_context_data(self, **kwargs):
@@ -167,9 +192,6 @@ class FieldNoteViewsMixin(SiteAssignmentMixin):
 
     def enable_site_editing(self):
         return False  # Keep disabled, but can change later if needed
-
-    def get_success_url(self):
-        return self.request.GET.get("next", reverse_lazy("view_fieldnotes"))
 
 
 class FieldNoteCreateView(LoginRequiredMixin, FieldNoteViewsMixin, CreateView):
@@ -213,9 +235,10 @@ class FieldNoteDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
         )
 
 
-class SiteViewsMixin:
+class SiteViewsMixin(BaseViewMixin, FormsetMixin):
     model = Site
     form_class = SiteForm
+    formset_class = DOIFormSet
     template_name = "inventory/site_detail.html"
     success_url = reverse_lazy("view_sites")
     cancel_url = reverse_lazy("view_sites")
@@ -224,7 +247,7 @@ class SiteViewsMixin:
         context = super().get_context_data(**kwargs)
         context["cancel_url"] = self.cancel_url
 
-        # Use cached versions if present (from POST)
+        # Use cached versions if present from POST
         context["form"] = getattr(self, "_form", self.get_form())
         # Handle formset safely across Create and Update
         if hasattr(self, "_formset"):
@@ -235,68 +258,6 @@ class SiteViewsMixin:
             context["doi_formset"] = DOIFormSet()
 
         return context
-
-    def post(self, request, *args, **kwargs):
-        # Construct form and formset here
-        if isinstance(self, CreateView):
-            self.object = None  # required for CreateView
-        else:
-            self.object = self.get_object()
-
-        form = self.get_form()
-        formset = (
-            DOIFormSet(request.POST)
-            if self.object is None
-            else DOIFormSet(request.POST, instance=self.object)
-        )
-
-        # Store for use in get_context_data()
-        self._form = form
-        self._formset = formset
-
-        if form.is_valid() and formset.is_valid():
-            return self.form_valid(form, formset)
-
-        return self.render_to_response(self.get_context_data())
-
-    def form_valid(self, form, formset):
-        site = form.save()
-        formset.instance = site
-        formset.save()
-        return redirect(self.get_success_url())
-
-    def get_success_url(self):
-        print(
-            self.request.POST.get("redirectAfterSave"),
-            self.request.POST.get("next"),
-            self.request.GET.get("next"),
-            reverse_lazy("view_sites"),
-        )
-
-        return (
-            self.request.POST.get("redirectAfterSave")
-            or self.request.POST.get("next")
-            or self.request.GET.get("next")
-            or self.success_url
-        )
-
-    # def form_valid(self, form):
-    #     """You can safely delete this form_valid() method if you’re not
-    #     using Django’s built-in form-handling flow (i.e., if you’re
-    #     manually handling POST requests in your own post() method as shown
-    #     earlier):
-
-    #     The form_valid method is part of Django’s generic class-based
-    #     view workflow. If you override post() and handle all form and
-    #     formset logic there (including saving and redirecting), Django
-    #     will not call form_valid. Your logic in post() takes
-    #     precedence.
-
-    #     When would you need form_valid? If you rely on the default CBV
-    #     flow (don’t override post()), you would only need to override
-    #     form_valid to add formset-handling logic after the parent form
-    #     is saved.
-    #     """
 
 
 class SiteCreateView(LoginRequiredMixin, SiteViewsMixin, CreateView):
