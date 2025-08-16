@@ -1,5 +1,3 @@
-Pipfile.lock
-.envrc
 test.py
 *__pycache__*
 /templates/snippets/
@@ -9,5 +7,5 @@ site_test*
 *#
 db.sqlite*
 /notes.org
-/Pipfile
 /inventory/inventory_code.org
+/wip.org
