@@ -1,21 +1,19 @@
 # from django.contrib.auth.forms import password_validation
 from django.db.models import Case, When, CharField, Count, F, Value
+from django.db.models.fields import return_None
+from django.db.models.functions import Lower, Concat
 from django.views.generic.list import ListView
 from django.views.generic.edit import UpdateView, CreateView, DeleteView
 from django.shortcuts import redirect, render  # get_object_or_404
-
-# from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
-from django.db.models.functions import Lower, Concat
 from django.urls import reverse_lazy, reverse
-from django.http import JsonResponse
 
+# from django.http import JsonResponse
 
 from inventory.models import Site, FieldNote, Equipment
 from .forms import (
-    HistoryForm,
     HistoryFormSet,
     SiteForm,
     DOIFormSet,
@@ -39,6 +37,21 @@ class BaseViewMixin:
     def get_success_url(self):
         # "next" can be set in the template of a page you want to return to:
         return self.request.GET.get("next", self.success_url)
+
+    def get_base_context_data(self, **kwargs):
+        # super(),keys(): 'object', 'form', 'view', 'model' (eg 'fieldnote')
+        context = super().get_context_data(**kwargs)
+        context["action"] = self.action_text
+        context["cancel_url"] = self.request.GET.get("next", self.cancel_url)
+        if isinstance(self, UpdateView):
+            context["delete_url"] = reverse(
+                self.delete_url_name,
+                args=[
+                    context["object"].id,
+                ],
+            )
+
+        return context
 
 
 class SiteAssignmentMixin:
@@ -90,6 +103,23 @@ class FormsetMixin:
     saved.
     """
 
+    def get_formset_context_data(self):
+        """Return a dict of formset context data."""
+
+        context = {}
+
+        # Use cached versions if present (from POST)
+        context["form"] = getattr(self, "_form", self.get_form())
+        # Handle formset safely across Create and Update
+        if hasattr(self, "_formset"):
+            context[self.formset_key] = self._formset
+        elif hasattr(self, "object") and self.object is not None:
+            context[self.formset_key] = self.formset_class(instance=self.object)
+        else:
+            context[self.formset_key] = self.formset_class()
+
+        return context
+
     def post(self, request, *args, **kwargs):
         if isinstance(self, CreateView):
             self.object = None  # required for CreateView
@@ -122,27 +152,15 @@ class EquipmentViewsMixin(BaseViewMixin, FormsetMixin, SiteAssignmentMixin):
     model = Equipment
     form_class = EquipmentForm
     formset_class = HistoryFormSet
+    formset_key = "history_formset"
     success_url = reverse_lazy("view_equipment")
     cancel_url = reverse_lazy("view_equipment")
+    delete_url_name = "equipment_delete"
     template_name = "inventory/equipment_detail.html"
 
-    def initialize_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["action"] = self.action_text
-        context["cancel_url"] = self.request.GET.get(
-            "next", reverse_lazy("view_equipment")
-        )
-
-        # Use cached versions if present (from POST)
-        context["form"] = getattr(self, "_form", self.get_form())
-        # Handle formset safely across Create and Update
-        if hasattr(self, "_formset"):
-            context["history_formset"] = self._formset
-        elif hasattr(self, "object") and self.object is not None:
-            context["history_formset"] = HistoryFormSet(instance=self.object)
-        else:
-            context["history_formset"] = HistoryFormSet()
-
+    def get_context_data(self, **kwargs):
+        context = self.get_base_context_data(**kwargs)
+        context.update(self.get_formset_context_data())
         return context
 
     def enable_site_editing(self):
@@ -153,42 +171,34 @@ class EquipmentCreateView(LoginRequiredMixin, EquipmentViewsMixin, CreateView):
 
     action_text = "New"
 
-    def get_context_data(self, **kwargs):
-        return self.initialize_context_data(**kwargs)
-
 
 class EquipmentUpdateView(LoginRequiredMixin, EquipmentViewsMixin, UpdateView):
 
     action_text = "Edit"
 
-    def get_context_data(self, **kwargs):
-        context = self.initialize_context_data(**kwargs)
-        context["action"] = self.action_text
-        context["delete_url"] = reverse(
-            "site_delete",
-            args=[
-                context["object"].id,
-            ],
+
+class EquipmentDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
+    model = Equipment
+    success_url = reverse_lazy("view_equipment")
+    success_message = "Inventory item %(instrument)s was deleted successfully!"
+
+    def get_success_message(self, cleaned_data):
+        return self.success_message % dict(
+            cleaned_data,
+            instrument=self.object.instrument,
         )
-        context["form"] = getattr(self, "_form", self.get_form())
-        context["history_formset"] = getattr(
-            self, "_formset", HistoryFormSet(instance=self.get_object())
-        )
-        return context
 
 
 class FieldNoteViewsMixin(BaseViewMixin, SiteAssignmentMixin):
     model = FieldNote
     form_class = FieldNoteForm
     success_url = reverse_lazy("view_fieldnotes")
+    cancel_url = reverse_lazy("view_fieldnotes")
+    delete_url_name = "fieldnote_delete"
     template_name = "inventory/fieldnote_detail.html"
 
-    def initialize_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["cancel_url"] = self.request.GET.get(
-            "next", reverse_lazy("view_fieldnotes")
-        )
-        return context
+    def get_context_data(self, **kwargs):
+        return self.get_base_context_data(**kwargs)
 
     def enable_site_editing(self):
         return False  # Keep disabled, but can change later if needed
@@ -196,9 +206,7 @@ class FieldNoteViewsMixin(BaseViewMixin, SiteAssignmentMixin):
 
 class FieldNoteCreateView(LoginRequiredMixin, FieldNoteViewsMixin, CreateView):
 
-    def get_context_data(self, **kwargs):
-        context = self.initialize_context_data()
-        return context
+    action_text = "New"
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -209,15 +217,7 @@ class FieldNoteCreateView(LoginRequiredMixin, FieldNoteViewsMixin, CreateView):
 
 class FieldNoteUpdateView(LoginRequiredMixin, FieldNoteViewsMixin, UpdateView):
 
-    def get_context_data(self, **kwargs):
-        context = self.initialize_context_data()
-        context["delete_url"] = reverse(
-            "fieldnote_delete",
-            args=[
-                context["object"].id,
-            ],
-        )
-        return context
+    action_text = "Edit"
 
 
 class FieldNoteDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
@@ -236,38 +236,26 @@ class FieldNoteDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
 
 
 class SiteViewsMixin(BaseViewMixin, FormsetMixin):
+    """Base model for SiteViewCreate, SiteViewUpdate"""
+
     model = Site
     form_class = SiteForm
     formset_class = DOIFormSet
+    formset_key = "doi_formset"
     template_name = "inventory/site_detail.html"
     success_url = reverse_lazy("view_sites")
     cancel_url = reverse_lazy("view_sites")
+    delete_url_name = "site_delete"
 
-    def initialize_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["cancel_url"] = self.cancel_url
-
-        # Use cached versions if present from POST
-        context["form"] = getattr(self, "_form", self.get_form())
-        # Handle formset safely across Create and Update
-        if hasattr(self, "_formset"):
-            context["doi_formset"] = self._formset
-        elif hasattr(self, "object") and self.object is not None:
-            context["doi_formset"] = DOIFormSet(instance=self.object)
-        else:
-            context["doi_formset"] = DOIFormSet()
-
+    def get_context_data(self, **kwargs):
+        context = self.get_base_context_data(**kwargs)
+        context.update(self.get_formset_context_data())
         return context
 
 
 class SiteCreateView(LoginRequiredMixin, SiteViewsMixin, CreateView):
 
     action_text = "New"
-
-    def get_context_data(self, **kwargs):
-        context = self.initialize_context_data(**kwargs)
-        context["action"] = self.action_text
-        return context
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -280,14 +268,7 @@ class SiteUpdateView(LoginRequiredMixin, SiteViewsMixin, UpdateView):
     action_text = "Edit"
 
     def get_context_data(self, **kwargs):
-        context = self.initialize_context_data(**kwargs)
-        context["action"] = self.action_text
-        context["delete_url"] = reverse(
-            "site_delete",
-            args=[
-                context["object"].id,
-            ],
-        )
+        context = super().get_context_data(**kwargs)
         context["fieldnotes"] = self.object.fieldnotes.order_by("date_submitted")
         context["equipment"] = self.object.equipment.all()
         return context

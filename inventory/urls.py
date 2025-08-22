@@ -29,9 +29,14 @@ urlpatterns = [
         name="equipment_add",
     ),
     path(
-        "inventory/edit/<int:pk>",
+        "equipment/edit/<int:pk>",
         views.EquipmentUpdateView.as_view(),
         name="equipment_edit",
+    ),
+    path(
+        "equipment/delete/<int:pk>/",
+        views.EquipmentDeleteView.as_view(),
+        name="equipment_delete",
     ),
     # Fieldnotes
     path("fieldnotes/", views.FieldNoteListView.as_view(), name="view_fieldnotes"),
