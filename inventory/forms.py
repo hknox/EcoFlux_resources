@@ -234,7 +234,7 @@ class EquipmentForm(forms.ModelForm):
 
         return helper
 
-    def __init__(self, *args, cancel_url=None, **kwargs):
+    def __init__(self, cancel_url=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.cancel_url = cancel_url
         self.helper = self.__init_FormHelper()

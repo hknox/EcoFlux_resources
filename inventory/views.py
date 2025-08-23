@@ -80,6 +80,14 @@ class SiteAssignmentMixin:
             form.fields["site"].widget.attrs["data-site-id"] = site_pk
         return form
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        site = self.request.GET.get("site")
+        if site:
+            kwargs["site_id"] = site
+
+        return kwargs
+
     def enable_site_editing(self):
         """
         Override in subclasses:
@@ -178,8 +186,6 @@ class EquipmentUpdateView(LoginRequiredMixin, EquipmentViewsMixin, UpdateView):
 
 
 class EquipmentDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
-    model = Equipment
-    success_url = reverse_lazy("view_equipment")
     success_message = "Inventory item %(instrument)s was deleted successfully!"
 
     def get_success_message(self, cleaned_data):
@@ -207,12 +213,6 @@ class FieldNoteViewsMixin(BaseViewMixin, SiteAssignmentMixin):
 class FieldNoteCreateView(LoginRequiredMixin, FieldNoteViewsMixin, CreateView):
 
     action_text = "New"
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["site_id"] = self.request.GET.get("site")
-
-        return kwargs
 
 
 class FieldNoteUpdateView(LoginRequiredMixin, FieldNoteViewsMixin, UpdateView):
