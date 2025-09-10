@@ -22,32 +22,31 @@
 
     <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}">
 
-    <!-- DOI formset header and Add button -->
-    <div class="d-flex justify-content-between align-items-center mt-2 mb-0 bg-primary">
-      <h5 class="mb-0 mt-0 me-1 ms-2 text-bg-primary">DOI records</h5>
-      <button type="button"
-              class="btn btn-info btn-sm add-form-row"
-              data-formset-prefix="{{ doi_formset.prefix }}">
-        <i class="bi bi-plus-circle"></i> Add a DOI record
-      </button>
+
+    <!-- DOIs Section -->
+    {% include "inventory/include/accordion_header.html" with section_id="doi" section_title="DOI Records" mt_3=True button_text="Add DOI Records" formset_prefix=doi_formset.prefix %}
+
+    <div id="doiCollapse"
+         class="accordion-collapse collapse"
+         aria-labelledby="doiHeading">
+      <div class="accordion-body">
+        {% if not doi_formset.forms %}
+        <div class="row mt-2">No DOI records for this site yet.</div>
+        {% endif %}
+        {% include "inventory/include/formset_block.html" with formset=doi_formset %}
+      </div>
     </div>
 
-    {% if not doi_formset.forms %}
-      <div class="row mt-2 ms-1">No DOI records for this site yet.</div>
-    {% endif %}
-
-    {% include "inventory/include/formset_block.html" with formset=doi_formset %}
-
-    <!-- These are only shown if we are editing an existing site -->
     {% if action == "Edit" %}
-      <!-- FieldNotes -->
-      <div class="d-flex justify-content-between align-items-center mt-2 mb-0 bg-primary">
-        <h5 class="mb-0 mt-0 me-1 ms-2 text-bg-primary">Field notes</h5>
-        <a href="{% url 'fieldnote_create' %}?next={{request.get_full_path}}&site_pk={{ site.id }}"
-           class="btn btn-info btn-sm">
-          <i class="bi bi-plus-circle"></i> Add a field note</a>
-      </div>
-      {% if fieldnotes %}
+
+    <!-- Field Notes Section -->
+    {% include "inventory/include/accordion_header.html" with section_id="fieldnotes" section_title="Field Notes" button_text="Add a field note" button_url=fieldnote_create_url mt_3=True %}
+
+    <div id="fieldnotesCollapse"
+         class="accordion-collapse collapse"
+         aria-labelledby="fieldnotesHeading">
+      <div class="accordion-body">
+        {% if fieldnotes %}
         <table class="table table-striped table-hover table-bordered mt-2">
           <thead>
             <th>Date submitted</th>
@@ -56,32 +55,36 @@
           </thead>
           <tbody>
             {% for note in fieldnotes %}
-              <tr>
-                <td>
-                  <a href="{% url 'fieldnote_edit' note.pk %}?next={{request.get_full_path}}">
-                    {{ note.date_submitted }}
-                  </a>
-                </td>
-                {% if note.summary %}
-                  <td>{{ note.summary }}</td>
-                {% else %}
-                  <td>{{ note.note|truncatechars:80 }}</td>
-                {% endif %}
-                <td>{{ note.submitter }}</td>
-              </tr>
+            <tr>
+              <td>
+                <a href="{% url 'fieldnote_edit' note.pk %}{{success_url}}">
+                  {{ note.date_visited }}
+                </a>
+              </td>
+              {% if note.summary %}
+              <td>{{ note.summary }}</td>
+              {% else %}
+              <td>{{ note.note|truncatechars:80 }}</td>
+              {% endif %}
+              <td>{{ note.submitter }}</td>
+            </tr>
             {% endfor %}
           </tbody>
         </table>
-      {% else %}
-        <div type="row" class="mt-2">No field notes for this site yet.</div>
-      {% endif %}
-      <!-- Equipment -->
-      <div class="d-flex justify-content-between align-items-center mt-2 mb-0 bg-primary">
-        <h5 class="mb-0 mt-0 me-1 ms-2 text-bg-primary">Equipment</h5>
-        <a href="{% url 'equipment_add' %}?next={{request.get_full_path}}&site_pk={{ site.id }}" class="btn btn-info btn-sm">
-          <i class="bi bi-plus-circle"></i> Add an item</a>
+        {% else %}
+        <div class="mt-2">No field notes for this site yet.</div>
+        {% endif %}
       </div>
-      {% if equipment %}
+    </div>
+
+    <!-- Equipment Section -->
+    {% include "inventory/include/accordion_header.html" with section_id="equipment" section_title="Equipment" button_text="Add new equipment" button_url=equipment_create_url mt_3=True %}
+
+    <div id="equipmentCollapse"
+         class="accordion-collapse collapse"
+         aria-labelledby="equipmentHeading">
+      <div class="accordion-body">
+        {% if equipment %}
         <table class="table table-striped table-hover table-bordered mt-2">
           <thead>
             <th>Instrument</th>
@@ -89,25 +92,28 @@
           </thead>
           <tbody>
             {% for item in equipment %}
-              <tr>
-                <td>
-                  <a href="{% url 'equipment_edit' item.pk %}?next={{request.get_full_path}}" class="">
+            <tr>
+              <td>
+                <a href="{% url 'equipment_edit' item.pk %}{{success_url}}" class="">
                   {{ item.instrument }}
-                  </a>
-                </td>
-                <td>{{ item.notes|truncatechars:80 }}</td>
-              </tr>
+                </a>
+              </td>
+              <td>{{ item.notes|truncatechars:80 }}</td>
+            </tr>
             {% endfor %}
           </tbody>
         </table>
-      {% else %}
-        <div type="row" class="mt-2">No equipment for this site yet.</div>
-      {% endif %}
+        {% else %}
+        <div class="mt-2">No equipment at this site yet.</div>
+        {% endif %}
+      </div>
+    </div>
     {% endif %}
 
+    {% include "inventory/include/messages.html" %}
 
     <!-- Save/Cancel/Delete buttons -->
-    {% include "inventory/save_cancel_delete.html" %}
+    {% include "inventory/include/save_cancel_delete.html" %}
 
   </form>
 

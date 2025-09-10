@@ -23,21 +23,37 @@
 
 
     <!-- History formset -->
-    <div class="d-flex justify-content-between align-items-center mt-2 mb-0 bg-primary">
-      <h5 class="mb-0 mt-0 me-1 ms-2 text-bg-primary">History</h5> -->
+    <div class="d-flex align-items-stretch accordion">
+      <button class="p-2 text-bg-info accordion-button collapsed flex-grow-1"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#historyCollapse"
+              aria-expanded="false"
+              aria-controls="historyCollapse">
+        History
+      </button>
       <button type="button"
-              class="btn btn-info btn-sm add-form-row"
+              class="btn btn-info d-flex align-items-center rounded-0 text-nowrap add-form-row"
               data-formset-prefix="{{ history_formset.prefix }}">
-        <i class="bi bi-plus-circle"></i> Add a History record
+        <i class="bi bi-plus-circle me-1"></i> Add a History record
       </button>
     </div>
-    {% if not history_formset.forms %}
-      <div type="row" class="mt-2">No history records yet.</div>
-    {% endif %}
-    {% include "inventory/include/formset_block.html" with formset=history_formset %}
+
+    <div id="historyCollapse"
+         class="accordion-collapse collapse"
+         aria-labelledby="historyHeading">
+      <div class="accordion-body">
+        {% if not history_formset.forms %}
+        <div type="row" class="mt-2">No history records yet.</div>
+        {% endif %}
+        {% include "inventory/include/formset_block.html" with formset=history_formset %}
+      </div>
+    </div>
+
+    {% include "inventory/include/messages.html" %}
 
     <!-- Save/Cancel/Delete buttons -->
-    {% include "inventory/save_cancel_delete.html" %}
+    {% include "inventory/include/save_cancel_delete.html" %}
 
   </form>
 

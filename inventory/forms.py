@@ -11,6 +11,8 @@ from crispy_forms.layout import (
     Row,
     Column,
     HTML,
+    Submit,
+    Div,
 )
 
 from .models import (
@@ -111,7 +113,7 @@ class FieldNoteForm(forms.ModelForm):
             "site",
             "note",
             "submitter",
-            "date_submitted",
+            "date_visited",
             "summary",
             "site_visitors",
         ]
@@ -134,7 +136,7 @@ class FieldNoteForm(forms.ModelForm):
                     css_class="col-md-4",
                     label="Submitted by",
                 ),
-                Column(Field("date_submitted", css_class="col-md-2 datepicker")),
+                Column(Field("date_visited", css_class="col-md-2 datepicker")),
                 css_class="mb-1",
             ),
             Row(
@@ -142,7 +144,7 @@ class FieldNoteForm(forms.ModelForm):
                 css_class="mb-1",
             ),
             Row(
-                Field("note", rows=20),
+                Field("note", rows=12),
                 css_class="mb-1",
             ),
             Row(
@@ -234,9 +236,15 @@ class EquipmentForm(forms.ModelForm):
 
         return helper
 
-    def __init__(self, cancel_url=None, *args, **kwargs):
+    def __init__(self, *args, site_id=None, cancel_url=None, **kwargs):
+        # def __init__(self, cancel_url=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.cancel_url = cancel_url
+        print("equip site_id", site_id)
+        if site_id:
+            self.fields["site"].initial = Site.objects.get(pk=site_id)
+            self.fields["site"].disabled = True
+        self.site_id = site_id
+        # TODO self.cancel_url = cancel_url
         self.helper = self.__init_FormHelper()
         self.fields["site"].empty_label = "--Select a site--"
         # TODO move this to a common mixin?
@@ -280,6 +288,14 @@ class DOIForm(forms.ModelForm):
         self.helper.form_tag = (
             False  # the <form> and Submit buttons are in the parent template
         )
+
+        # Adjust label class for better alignment with inputs
+        self.helper.label_class = (
+            "col-auto col-form-label me-2 d-inline-flex align-items-center mt-2"
+        )
+        self.helper.field_class = "col"
+        self.helper.form_class = "form-horizontal"
+
         self.helper.layout = Layout(
             Row(
                 Column(Field("label", wrapper_class="mb-0"), css_class="col-3"),
@@ -296,7 +312,7 @@ class DOIForm(forms.ModelForm):
                       </button>
                     """
                     ),
-                    css_class="col-auto d-flex mt-4 align-items-center",
+                    css_class="col-auto d-flex mt-0 pt-0 align-items-center",
                 ),
                 css_class="g-1 align-items-center",
             )
@@ -312,35 +328,45 @@ class HistoryForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
-        self.helper.form_tag = (
-            False  # the <form> and Submit buttons are in the parent template
+        self.helper.form_tag = False
+
+        # Adjust label class for better alignment with inputs
+        self.helper.label_class = (
+            "col-auto col-form-label me-2 d-inline-flex align-items-center mt-2"
         )
+        self.helper.field_class = "col"
+        self.helper.form_class = "form-horizontal"
+
         self.helper.layout = Layout(
             Row(
-                Column(
-                    Field("date", wrapper_class="mb-0", css_class="datepicker"),
+                Div(
+                    Field("date", wrapper_class="row g-0 align-items-center"),
                     css_class="col-3",
                 ),
-                Column(
-                    Field("note", wrapper_class="mb-0", rows=1),
+                Div(
+                    Field("note", wrapper_class="row g-0 align-items-center"),
+                    css_class="col",
                 ),
                 Column(
-                    Field("DELETE", type="hidden"),  # Hidden delete field
+                    Field("DELETE", type="hidden"),
                     HTML(
                         """
-                      <button type="button"
-                              class="btn btn-danger btn-sm remove-form-row"
-                              title=" Remove"
-                              data-confirm="Are you sure you want to remove this DOI record?">
-                        <i class="bi bi-trash"></i> Remove
-                      </button>
-                    """
+                        <button type="button"
+                                class="btn btn-danger btn-sm remove-form-row"
+                                title="Remove"
+                                data-confirm="Are you sure you want to remove this record?">
+                          <i class="bi bi-trash"></i> Remove
+                        </button>
+                        """
                     ),
-                    css_class="col-auto d-flex mt-4 align-items-center",
+                    css_class="col-auto d-flex align-items-start mt-n1 pt-0",
                 ),
-                css_class="mt-1 align-items-center",
+                css_class=" align-items-center g-2",
             )
         )
+
+        self.fields["date"].widget.attrs["class"] = "datepicker"
+        self.fields["note"].widget.attrs["rows"] = 1
 
 
 # Formsets

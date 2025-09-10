@@ -41,9 +41,9 @@ urlpatterns = [
     # Fieldnotes
     path("fieldnotes/", views.FieldNoteListView.as_view(), name="view_fieldnotes"),
     path(
-        "fieldnotes/create/",
+        "fieldnotes/add/",
         views.FieldNoteCreateView.as_view(),
-        name="fieldnote_create",
+        name="fieldnote_add",
     ),
     path(
         "fieldnotes/edit/<int:pk>",

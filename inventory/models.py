@@ -59,24 +59,35 @@ class History(models.Model):
 class FieldNote(models.Model):
     site = models.ForeignKey(Site, related_name="fieldnotes", on_delete=models.CASCADE)
     note = models.TextField()
-    date_submitted = models.DateField(default=now)
+    date_visited = models.DateField(default=now)
     summary = models.CharField(max_length=80, blank=True)
     submitter = models.CharField(max_length=50, blank=True)
     site_visitors = models.CharField(max_length=250, blank=True, default="")
 
 
 def site_photo_upload_path(instance, filename):
-    ext = filename.split(".")[-1]
-    new_filename = f"{uuid.uuid4().hex}.{ext}"
-    return os.path.join(settings.SITE_PHOTO_UPLOAD_SUBDIR, new_filename)
+    # Get the extension
+    ext = filename.split(".")[-1].lower()
+    # Generate a unique filename
+    unique_name = f"{uuid.uuid4()}.{ext}"
+    # Organize by site ID
+    path = os.path.join("site_photos", f"site_{instance.site_id}", unique_name)
+    print(f"upload to {path}")
+    return os.path.join("site_photos", f"site_{instance.site_id}", unique_name)
 
 
 class Photo(models.Model):
-    image = models.ImageField(upload_to=site_photo_upload_path)
-    caption = models.CharField(max_length=255, blank=True)
-    uploaded_at = models.DateField(default=now)
-    submitter = models.CharField(max_length=50, blank=True)
-    site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name="photos")
+    photo = models.ImageField(upload_to=site_photo_upload_path)
+    date_taken = models.DateField(blank=True, null=True)
+    taken_by = models.CharField(max_length=100, blank=True)
+    fieldnote = models.ForeignKey(
+        FieldNote, on_delete=models.CASCADE, related_name="photos"
+    )
+
+    # # OR:
+    # @property
+    # def date_taken(self):
+    #     return self.fieldnote.date
 
 
 # class Document(models.Model):

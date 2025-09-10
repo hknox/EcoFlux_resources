@@ -1,20 +1,29 @@
-# from django.contrib.auth.forms import password_validation
+from django import urls
 from django.db.models import Case, When, CharField, Count, F, Value
-from django.db.models.fields import return_None
 from django.db.models.functions import Lower, Concat
+from django.http import request
 from django.views.generic.list import ListView
-from django.views.generic.edit import UpdateView, CreateView, DeleteView
-from django.shortcuts import redirect, render  # get_object_or_404
+from django.views.generic.edit import (
+    UpdateView,
+    CreateView,
+    DeleteView,
+    FormView,
+)
+from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib.auth import logout
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy, reverse
 
 # from django.http import JsonResponse
 
-from inventory.models import Site, FieldNote, Equipment
+from pprint import pprint
+
+from inventory.models import Site, FieldNote, Equipment, Photo
 from .forms import (
     HistoryFormSet,
+    PhotoUploadForm,
     SiteForm,
     DOIFormSet,
     FieldNoteForm,
@@ -22,35 +31,64 @@ from .forms import (
 )
 
 
+# This URL parameter tells us where to go after creating or editing an
+# inventory item.
+SUCCESS_URL = "home"
+
+
 def EndOfInternet(request):
     return redirect("https://hmpg.net/")
 
 
-class BaseViewMixin:
-    """A base class to provide all the things that all Views should do
-    the same way.
+# ====== View mixins ======
+
+
+class URLsMixin:
+    """This class provide several ways to get the URL of the next
+    page, either from a URL parameter if provided or from
+    detault_success_url set by subclasses.
+
     """
 
-    # Must be set in subclasses
-    success_url = ""
-
     def get_success_url(self):
-        # "next" can be set in the template of a page you want to return to:
-        return self.request.GET.get("next", self.success_url)
+        return self.request.GET.get(SUCCESS_URL, self.default_success_url)
+
+    # CreateViews override get_success_url() which get_context_data()
+    # uses to get the URL for the cancel button during item creation.
+    # CreateVew.get_success_url() will fail during item creation
+    # because the created object doesn't yet exist in the database.
+    get_cancel_url = get_success_url
+
+    def get_create_success_url(self, edit_url):
+        """FieldnoteCreateView uses this after a fieldnote has been
+        created to enable adding photos without returning to the
+        referrer page."""
+        edit_url = reverse(edit_url, kwargs={"pk": self.object.pk})
+        # Save return urls until we've finished editing the new fieldnote.
+        next_url = self.request.GET.get(SUCCESS_URL, "")
+        next_url = f"?{SUCCESS_URL}={next_url}" if next_url else ""
+        return edit_url + next_url
+
+
+class ContextMixin:
+    """This class sets up the base context dict for Create, Update and
+    Delete views."""
 
     def get_base_context_data(self, **kwargs):
-        # super(),keys(): 'object', 'form', 'view', 'model' (eg 'fieldnote')
+        # super().keys(): 'object', 'form', 'view', 'model' (eg 'fieldnote')
         context = super().get_context_data(**kwargs)
         context["action"] = self.action_text
-        context["cancel_url"] = self.request.GET.get("next", self.cancel_url)
+        if isinstance(self, CreateView):
+            context["cancel_url"] = self.get_cancel_url()
         if isinstance(self, UpdateView):
             context["delete_url"] = reverse(
-                self.delete_url_name,
+                self.delete_url,
                 args=[
                     context["object"].id,
                 ],
             )
-
+            context["default_success_url"] = self.default_success_url
+            context["success_param"] = SUCCESS_URL
         return context
 
 
@@ -60,12 +98,16 @@ class SiteAssignmentMixin:
     submits when disabled.
     """
 
-    def get_initial(self):
-        initial = super().get_initial()
-        site_pk = self.request.GET.get("site_pk")
-        if site_pk:
-            initial["site"] = site_pk
-        return initial
+    # This determines whether the site can be changed after the object
+    # has been created
+    can_edit_site = False
+
+    # def get_initial(self):
+    #     initial = super().get_initial()
+    #     site_pk = self.request.GET.get("site_pk")
+    #     if site_pk:
+    #         initial["site"] = site_pk
+    #     return initial
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
@@ -82,7 +124,7 @@ class SiteAssignmentMixin:
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        site = self.request.GET.get("site")
+        site = self.request.GET.get("site_pk")
         if site:
             kwargs["site_id"] = site
 
@@ -94,21 +136,22 @@ class SiteAssignmentMixin:
         - Equipment: return True for editing
         - Others: return False for editing
         """
-        return False
+        return self.can_edit_site
 
 
 class FormsetMixin:
     """Mixin to manage issues around formsets.
 
-    The form_valid method is part of Django’s generic class-based view
-    workflow. If you override post() and handle all form and formset
-    logic there (including saving and redirecting), Django will not
-    call form_valid. Your logic in post() takes precedence.
+    The form_valid() method is part of Django’s generic class-based
+    view workflow. If you override post() and handle all form and
+    formset logic there (including saving and redirecting), Django
+    will not call form_valid. Your logic in post() takes precedence.
 
     When would you need form_valid? If you rely on the default CBV
     flow (don’t override post()), you would only need to override
     form_valid to add formset-handling logic after the parent form is
     saved.
+
     """
 
     def get_formset_context_data(self):
@@ -145,48 +188,64 @@ class FormsetMixin:
         # Store for use in get_context_data()
         self._form = form
         self._formset = formset
-        if form.is_valid() and formset.is_valid():
-            return self.form_valid(form, formset)
-        return self.render_to_response(self.get_context_data())
 
-    def form_valid(self, form, formset):
-        equipment = form.save()
-        formset.instance = equipment
+        if form.is_valid() and formset.is_valid():
+            return self.form_and_formset_valid(form, formset)
+        else:
+            return self.render_to_response(self.get_context_data())
+
+    def form_and_formset_valid(self, form, formset):
+        model_instance = form.save()
+        formset.instance = model_instance
         formset.save()
+        self.object = model_instance
         return redirect(self.get_success_url())
 
 
-class EquipmentViewsMixin(BaseViewMixin, FormsetMixin, SiteAssignmentMixin):
+# ====== Equipment views ======
+
+
+class EquipmentViewsMixin(URLsMixin, ContextMixin, FormsetMixin, SiteAssignmentMixin):
     model = Equipment
     form_class = EquipmentForm
     formset_class = HistoryFormSet
     formset_key = "history_formset"
-    success_url = reverse_lazy("view_equipment")
-    cancel_url = reverse_lazy("view_equipment")
-    delete_url_name = "equipment_delete"
+    default_success_url = reverse_lazy("view_equipment")
     template_name = "inventory/equipment_detail.html"
+    can_edit_site = True
 
     def get_context_data(self, **kwargs):
         context = self.get_base_context_data(**kwargs)
         context.update(self.get_formset_context_data())
         return context
 
-    def enable_site_editing(self):
-        return True  # Equipment can change site when editing
-
 
 class EquipmentCreateView(LoginRequiredMixin, EquipmentViewsMixin, CreateView):
 
     action_text = "New"
 
+    def form_valid(self, form):
+        # Store message before redirect
+        messages.success(
+            self.request,
+            "Equipment item created successfully. You can now add photos.",
+        )
+        response = super().form_valid(form)
+        return response
+
 
 class EquipmentUpdateView(LoginRequiredMixin, EquipmentViewsMixin, UpdateView):
 
     action_text = "Edit"
+    delete_url = "equipment_delete"
 
 
-class EquipmentDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
+class EquipmentDeleteView(
+    LoginRequiredMixin, SuccessMessageMixin, URLsMixin, DeleteView
+):
+    model = Equipment
     success_message = "Inventory item %(instrument)s was deleted successfully!"
+    default_success_url = reverse_lazy("view_equipment")
 
     def get_success_message(self, cleaned_data):
         return self.success_message % dict(
@@ -195,24 +254,39 @@ class EquipmentDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
         )
 
 
-class FieldNoteViewsMixin(BaseViewMixin, SiteAssignmentMixin):
+# ====== Fieldnote Views ======
+
+
+class FieldNoteViewsMixin(URLsMixin, ContextMixin, SiteAssignmentMixin):
     model = FieldNote
     form_class = FieldNoteForm
-    success_url = reverse_lazy("view_fieldnotes")
-    cancel_url = reverse_lazy("view_fieldnotes")
-    delete_url_name = "fieldnote_delete"
+    default_success_url = reverse_lazy("view_fieldnotes")
+    delete_url = "fieldnote_delete"
     template_name = "inventory/fieldnote_detail.html"
+    can_edit_site = False
 
     def get_context_data(self, **kwargs):
-        return self.get_base_context_data(**kwargs)
-
-    def enable_site_editing(self):
-        return False  # Keep disabled, but can change later if needed
+        context = self.get_base_context_data(**kwargs)
+        if isinstance(self, UpdateView):
+            context["photos"] = self.object.photos.all()
+        return context
 
 
 class FieldNoteCreateView(LoginRequiredMixin, FieldNoteViewsMixin, CreateView):
 
     action_text = "New"
+
+    def get_success_url(self):
+        return self.get_create_success_url("fieldnote_edit")
+
+    def form_valid(self, form):
+        # Store message before redirect
+        messages.success(
+            self.request,
+            "Fieldnote created successfully. You can now add photos.",
+        )
+        response = super().form_valid(form)
+        return response
 
 
 class FieldNoteUpdateView(LoginRequiredMixin, FieldNoteViewsMixin, UpdateView):
@@ -220,9 +294,11 @@ class FieldNoteUpdateView(LoginRequiredMixin, FieldNoteViewsMixin, UpdateView):
     action_text = "Edit"
 
 
-class FieldNoteDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
+class FieldNoteDeleteView(
+    LoginRequiredMixin, SuccessMessageMixin, URLsMixin, DeleteView
+):
     model = FieldNote
-    success_url = reverse_lazy("view_fieldnotes")
+    default_success_url = reverse_lazy("view_fieldnotes")
     success_message = (
         "Field note of %(date)s for site %(site)s was deleted successfully!"
     )
@@ -230,12 +306,15 @@ class FieldNoteDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
     def get_success_message(self, cleaned_data):
         return self.success_message % dict(
             cleaned_data,
-            date=self.object.date_submitted,
+            date=self.object.date_visited,
             site=self.object.site,
         )
 
 
-class SiteViewsMixin(BaseViewMixin, FormsetMixin):
+# ====== Site Views ======
+
+
+class SiteViewsMixin(URLsMixin, ContextMixin, FormsetMixin):
     """Base model for SiteViewCreate, SiteViewUpdate"""
 
     model = Site
@@ -243,9 +322,9 @@ class SiteViewsMixin(BaseViewMixin, FormsetMixin):
     formset_class = DOIFormSet
     formset_key = "doi_formset"
     template_name = "inventory/site_detail.html"
-    success_url = reverse_lazy("view_sites")
-    cancel_url = reverse_lazy("view_sites")
-    delete_url_name = "site_delete"
+    default_success_url = reverse_lazy("view_sites")
+    update_url_name = "site_edit"
+    delete_url = "site_delete"
 
     def get_context_data(self, **kwargs):
         context = self.get_base_context_data(**kwargs)
@@ -254,8 +333,19 @@ class SiteViewsMixin(BaseViewMixin, FormsetMixin):
 
 
 class SiteCreateView(LoginRequiredMixin, SiteViewsMixin, CreateView):
-
     action_text = "New"
+
+    def form_valid(self, form, formset):
+        response = super().form_valid(form, formset)
+        # Store message before redirect
+        messages.success(
+            self.request,
+            "Site created successfully. You can now add equipment and fieldnotes.",
+        )
+        return response
+
+    def get_success_url(self):
+        return reverse(self.update_url_name, kwargs={"pk": self.object.pk})
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -269,8 +359,19 @@ class SiteUpdateView(LoginRequiredMixin, SiteViewsMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["fieldnotes"] = self.object.fieldnotes.order_by("date_submitted")
+        context["fieldnotes"] = self.object.fieldnotes.order_by("date_visited")
         context["equipment"] = self.object.equipment.all()
+        # Add context for accordions in templates
+        # SUCCESS_URL serves to set page to return to after editing/deleting
+        context["success_url"] = (
+            f"?{SUCCESS_URL}={self.request.get_full_path()}&site_pk={self.object.id}"
+        )
+        context["fieldnote_create_url"] = (
+            reverse("fieldnote_add") + context["success_url"]
+        )
+        context["equipment_create_url"] = (
+            reverse("equipment_add") + context["success_url"]
+        )
         return context
 
     def get_form_kwargs(self):
@@ -279,9 +380,9 @@ class SiteUpdateView(LoginRequiredMixin, SiteViewsMixin, UpdateView):
         return kwargs
 
 
-class SiteDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
+class SiteDeleteView(LoginRequiredMixin, SuccessMessageMixin, URLsMixin, DeleteView):
     model = Site
-    success_url = reverse_lazy("view_sites")
+    default_success_url = reverse_lazy("view_sites")
     success_message = "Site %(code)s: %(name)s was deleted successfully!"
 
     def get_success_message(self, cleaned_data):
@@ -306,6 +407,9 @@ class SiteDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
     #     return super().post(request, *args, **kwargs)
 
 
+# ====== List Mixins ======
+
+
 class SortedListMixin(ListView):
     """Add persistent sort machinery to ListView.
 
@@ -313,7 +417,7 @@ class SortedListMixin(ListView):
     to control display of headers and data, eg:
 
     table_fields = [
-        {"name": "date_submitted", "label": "Date submitted"},
+        {"name": "date_visited", "label": "Date visitied"},
         {"name": "site", "label": "Site"},
         {"name": "display_summary", "label": # "Summary"},
     ]
@@ -363,10 +467,14 @@ class SortedListMixin(ListView):
         return queryset
 
 
+# ====== List Views ======
+
+
 class SiteListView(LoginRequiredMixin, SortedListMixin):
     model = Site
     paginate_by = 14
     template_name = "inventory/lists.html"
+
     context_object_name = "table_items"
     # Default sort order
     _sort_key = "code"
@@ -382,19 +490,21 @@ class SiteListView(LoginRequiredMixin, SortedListMixin):
     table_fields = [
         {"name": "code", "label": "Code"},
         {"name": "name", "label": "Name"},
-        {"name": "description", "label": "Description", "max_chars": 80},
+        {"name": "description", "label": "Description", "max_chars": 60},
         {"name": "gps_coordinates", "label": "GPS"},
         {"name": "dates_active", "label": "Active"},
-        {"name": "fieldnotes_count", "label": "# Fieldnotes"},
-        {"name": "equipment_count", "label": "# Equipment"},
+        {"name": "fieldnotes_count", "label": "Notes", "sortable": ""},
+        {"name": "equipment_count", "label": "Eqt", "sortable": ""},
+        # {"name": "photo_count", "label": "Photos", "sortable": ""},
     ]
 
     def get_queryset(self):
         # See https://docs.djangoproject.com/en/5.2/topics/db/aggregation/,
-        # "Combining multiple aggregations" for caveaats re annotate().
+        # "Combining multiple aggregations" for caveats re annotate().
         qs = Site.objects.annotate(
             fieldnotes_count=Count("fieldnotes", distinct=True),
             equipment_count=Count("equipment", distinct=True),
+            # photo_count=Count("photos", distinct=True),
             dates_active=Concat(
                 F("date_activated"),
                 Value(" - "),
@@ -414,7 +524,9 @@ class SiteListView(LoginRequiredMixin, SortedListMixin):
         context["filter_fields"] = self.filter_fields
         context["table_fields"] = self.table_fields
         context["reset_url"] = reverse("view_sites")
-        context["add_url"] = reverse("site_add")
+        context["add_url"] = (
+            reverse("site_add") + f"?{SUCCESS_URL}={reverse('view_sites')}"
+        )
         context["heading"] = "Sites"
         context["add_button"] = "Add New Site"
         context["edit_url"] = "site_edit"
@@ -429,10 +541,10 @@ class EquipmentListView(LoginRequiredMixin, SortedListMixin):
     paginate_by = 14
     context_object_name = "table_items"
     # Default sort order
-    _sort_key = "description"
+    _sort_key = "instrument"
 
     filter_fields = [
-        # {"name": "description", "label": "Description", "type": "text"},
+        # {"name": "instrument", "label": "Instrument", "type": "text"},
         # {"name": "serial_number", "label": "Serial number", "type": "text"},
         # {
         #     "name": "location",
@@ -497,7 +609,7 @@ class FieldNoteListView(LoginRequiredMixin, SortedListMixin):
     template_name = "inventory/lists.html"
     context_object_name = "table_items"
     # Default sort order
-    _sort_key = "date_submitted"
+    _sort_key = "date_visited"
     filter_fields = [
         # See SiteListView for ideas
     ]
@@ -505,10 +617,11 @@ class FieldNoteListView(LoginRequiredMixin, SortedListMixin):
     # If "sortable" is "no", don't offer sort arrows on the column header.
     # Use "max_chars" to truncate the data to max_chars number of characters.
     table_fields = [
-        {"name": "date_submitted", "label": "Date submitted"},
+        {"name": "date_visited", "label": "Date visited"},
         {"name": "site", "label": "Site"},
         {"name": "display_summary", "label": "Summary"},
         {"name": "submitter", "label": "Submitter"},
+        {"name": "photo_count", "label": "# Photos"},
     ]
 
     def get_queryset(self):
@@ -518,7 +631,7 @@ class FieldNoteListView(LoginRequiredMixin, SortedListMixin):
                 default="note",
                 output_field=CharField(),
             )
-        )
+        ).annotate(photo_count=Count("photos"))
         qs = self.apply_filters(qs)
         qs = self.apply_sort_parameters(qs)
 
@@ -530,7 +643,7 @@ class FieldNoteListView(LoginRequiredMixin, SortedListMixin):
         context["filter_fields"] = self.filter_fields
         context["table_fields"] = self.table_fields
         context["reset_url"] = reverse("view_fieldnotes")
-        context["add_url"] = reverse("fieldnote_create")
+        context["add_url"] = reverse("fieldnote_add")
         context["heading"] = "Field notes"
         context["add_button"] = "Add New Field note"
         context["edit_url"] = "fieldnote_edit"
@@ -539,32 +652,32 @@ class FieldNoteListView(LoginRequiredMixin, SortedListMixin):
         return context
 
 
-# def upload_photo_from_site(request, site_id):
-#     site = get_object_or_404(Site, id=site_id)
-#     if request.method == "POST":
-#         form = PhotoForm(request.POST, request.FILES)
-#         if form.is_valid():
-#             photo = form.save(commit=False)
-#             photo.site = site
-#             photo.save()
-#             return redirect("site_detail", site_id=site.id)
-#     else:
-#         form = PhotoForm()
-#     return render(request, "upload_photo.html", {"form": form, "site": site})
+class PhotoUploadView(LoginRequiredMixin, FormView):
+    template_name = "inventory/photo_upload.html"
+    form_class = PhotoUploadForm
 
+    def dispatch(self, request, *args, **kwargs):
+        self.fieldnote = get_object_or_404(FieldNote, pk=kwargs["fieldnote"])
+        return super().dispatch(request, *args, **kwargs)
 
-def upload_photo(request):
-    if request.method == "POST":
-        form = PhotoForm(request.POST, request.FILES)
-        if form.is_valid():
-            photo = form.save(commit=False)
-            photo.site = site
-            photo.save()
-            return redirect("site_detail", site_id=site.id)
-    else:
-        form = PhotoForm()
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["fieldnote"] = self.fieldnote
+        return context
 
-    return render(request, "upload_photo.html", {"form": form})
+    def form_valid(self, form):
+        photos = form.cleaned_data["photos"]
+        taken_by = form.cleaned_data.get("taken_by", "")
+        for f in photos:
+            Photo.objects.create(
+                fieldnote=self.fieldnote,
+                image=f,
+                taken_by=taken_by,
+            )
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy("fieldnote_edit", kwargs={"pk": self.fieldnote.pk})
 
 
 def logout_view(request):
