@@ -1,10 +1,10 @@
 {% load crispy_forms_tags %}
 
-<div id="{{ formset.prefix }}-formset" class="mt-0 mb-0">
+<div id="{{ formset.prefix }}-formset" class="mt-2 ms-2">
   {{ formset.management_form }}
 
   {% for form in formset %}
-    <div class="formset-row row align-items-center m-0">
+    <div class="formset-row row align-items-center mb-3">
       {% for hidden in form.hidden_fields %}
         {% if hidden.name != form.prefix|add:"-DELETE" %}
           {{ hidden }}
@@ -15,7 +15,7 @@
   {% endfor %}
 
   {# Hidden empty form template #}
-  <div class="formset-row row align-items-center m-0"
+  <div class="formset-row row align-items-center mb-3"
        id="{{ formset.prefix }}-empty-form"
        style="display: none;">
     {% for hidden in formset.empty_form.hidden_fields %}

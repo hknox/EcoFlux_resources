@@ -3,7 +3,6 @@ from django.forms import inlineformset_factory
 from django.forms.models import BaseInlineFormSet
 from django.core.exceptions import ValidationError
 
-
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import (
     Layout,
@@ -15,13 +14,7 @@ from crispy_forms.layout import (
     Div,
 )
 
-from .models import (
-    Equipment,
-    Site,
-    DOI,
-    FieldNote,
-    History,
-)
+from .models import Equipment, Site, DOI, FieldNote, History, Photo
 
 
 class SiteForm(forms.ModelForm):
@@ -82,7 +75,6 @@ class SiteForm(forms.ModelForm):
             )
         super().__init__(*args, **kwargs)
         self.existing_site = existing_site
-        self.cancel_url = cancel_url
         self.helper = self.__init_FormHelper()
         # TODO Are these useful?
         self.fields["name"].widget.attrs["size"] = self.fields["name"].max_length
@@ -163,7 +155,6 @@ class FieldNoteForm(forms.ModelForm):
             self.fields["site"].initial = Site.objects.get(pk=site_id)
             self.fields["site"].disabled = True
         self.site_id = site_id
-        self.cancel_url = cancel_url
         self.fields["site"].empty_label = "--Select a site--"
         self.helper = self.__init_FormHelper()
         # TODO move this to a common mixin?
@@ -239,12 +230,10 @@ class EquipmentForm(forms.ModelForm):
     def __init__(self, *args, site_id=None, cancel_url=None, **kwargs):
         # def __init__(self, cancel_url=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        print("equip site_id", site_id)
         if site_id:
             self.fields["site"].initial = Site.objects.get(pk=site_id)
             self.fields["site"].disabled = True
         self.site_id = site_id
-        # TODO self.cancel_url = cancel_url
         self.helper = self.__init_FormHelper()
         self.fields["site"].empty_label = "--Select a site--"
         # TODO move this to a common mixin?
@@ -261,16 +250,124 @@ class EquipmentForm(forms.ModelForm):
                 # field.help_text = ""
 
 
-# # photos
-# class PhotoForm(forms.ModelForm):
-#     class Meta:
-#         model = Photo
-#         fields = ["image", "caption"]
+# photos
+class MultiFileInput(forms.ClearableFileInput):
+    """Widget that allows selecting multiple files."""
+
+    allow_multiple_selected = True
 
 
-# PhotoFormSet = inlineformset_factory(
-#     Site, Photo, form=PhotoForm, extra=1, can_delete=True
-# )
+class MultiFileField(forms.FileField):
+    """
+    A FileField that accepts multiple files and returns them as a list.
+    """
+
+    # widget = MultiFileInput
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("widget", MultiFileInput())
+        super().__init__(*args, **kwargs)
+
+    def clean(self, data, initial=None):
+        single_file_clean = super().clean
+        if isinstance(data, (list, tuple)):
+            result = [single_file_clean(d, initial) for d in data]
+        else:
+            result = single_file_clean(data, initial)
+        return result
+
+
+class PhotoUploadForm(forms.Form):
+    taken_by = forms.CharField(required=False, label="Batch taken by")
+    date_taken = forms.DateField(
+        required=True,
+        label="Date batch taken",
+        widget=forms.TextInput(attrs={"type": "text", "class": "flatpickr"}),
+    )
+    photos = MultiFileField(
+        required=True,
+        label="",
+        help_text="You can select one or more image files.",
+        widget=MultiFileInput(attrs={"id": "id_photos", "style": "display:none;"}),
+    )
+
+    def __init__(self, *args, **kwargs):
+        initial_date = kwargs.pop("initial_date")
+        print("initial_date", initial_date)
+        super().__init__(*args, **kwargs)
+        if initial_date:
+            self.fields["date_taken"].initial = initial_date
+        print(self.fields["date_taken"].initial)
+        self.helper = FormHelper()
+        self.helper.form_method = "post"
+        self.helper.attrs = {"enctype": "multipart/form-data"}
+        self.helper.layout = Layout(
+            Row(
+                Column("taken_by", css_class="col-md-6"),
+                Column("date_taken", css_class="col-md-6"),
+                css_class="mb-3",
+            ),
+            Div(
+                HTML(
+                    """
+                    <div id="drop-zone" class="border border-secondary rounded p-5 text-center bg-light" style="cursor:pointer;">
+                        <p class="mb-0">Drag & drop photos here or click to select</p>
+                    </div>
+                    <div id="preview" class="d-flex flex-wrap mt-3"></div>
+                    """
+                ),
+                Field("photos"),  # hidden input triggered by JS
+                css_class="mb-3",
+            ),
+            Div(
+                Submit("submit", "Upload Photos", css_class="btn btn-primary"),
+                HTML(
+                    '<a href="{{ cancel_url }}" class="btn btn-secondary ms-2 btn-cancel">Cancel</a>'
+                ),
+                css_class="mt-3",
+            ),
+        )
+
+    def clean_photos(self):
+        files = self.files.getlist("photos")
+        print("clean photos")
+        print(files)
+        if not files:
+            raise forms.ValidationError("Please select at least one image file.")
+        for f in files:
+            if not f.content_type.startswith("image/"):
+                raise forms.ValidationError(f"'{f.name}' is not a valid image file.")
+        return files
+
+
+class PhotoForm(forms.ModelForm):
+    class Meta:
+        model = Photo
+        fields = ["date_taken", "taken_by"]
+
+    def __init_FormHelper(self):
+        helper = FormHelper()
+        helper.form_id = "id_photo_form"
+        helper.form_method = "POST"
+        helper.form_tag = False
+        helper.form_class = "track-unsaved form-class"
+        helper.label_class = (
+            "col-auto col-form-label text-end align-self-center py-0 pe-2 label-class"
+        )
+        helper.field_class = "col-auto field-class"
+        helper.layout = Layout(
+            Row(
+                Column(Field("taken_by"), css_class="col-md-6"),
+                Column(Field("date_taken"), css_class="col-md-6"),
+                css_class="mb-1",
+            ),
+        )
+        return helper
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = self.__init_FormHelper()
+        self.fields["date_taken"].widget.attrs["class"] = "datepicker"
 
 
 # DOI links

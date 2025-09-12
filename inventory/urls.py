@@ -1,4 +1,6 @@
 from django.urls import path
+from django.conf import settings
+from django.conf.urls.static import static
 
 from inventory import views
 
@@ -56,6 +58,21 @@ urlpatterns = [
         name="fieldnote_delete",
     ),
     # Photos
-    path("photos/", views.EndOfInternet, name="photos"),
-    path("photos/add", views.upload_photo, name="new_photo"),
+    path("photos/", views.PhotoListView.as_view(), name="view_photos"),
+    path(
+        "photos/add/<int:fieldnote>", views.PhotoUploadView.as_view(), name="photo_add"
+    ),
+    path(
+        "photos/edit/<int:pk>",
+        views.PhotoUpdateView.as_view(),
+        name="photo_edit",
+    ),
+    path(
+        "photos/delete/<int:pk>",
+        views.PhotoDeleteView.as_view(),
+        name="photo_delete",
+    ),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

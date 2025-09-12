@@ -5,13 +5,14 @@
 
 <div class="d-flex justify-content-between align-items-center">
   <h2 class="col-md-10">{{heading}}</h2>
-  <a href={{ add_url }} class="col-md-2 btn btn-success bi bi-plus-circle"></i>
+  <a href={{ add_url }} class="col-md btn btn-success bi bi-plus-circle"></i>
     {{add_button}}</a>
 </div>
 
 <div class="row">
-  <div class="col-md-10 mt-1">
-    {% if table_items %}
+  <!-- <div class="col-md-11 mt-1"> -->
+    <div class="mt-1">
+      {% if table_items %}
       {% include "inventory/include/sortable_table.html" with table_fields=table_fields table_items=table_items edit_url_name=edit_url %}
     {% else %}
       No {{heading|lower}} entered yet.
@@ -20,10 +21,13 @@
     {% include "inventory/include/messages.html" %}
   </div>
 
-  <div class="col-md-2">
+  <!-- Restore this <div> when uncommenting Filters -->
+  {% comment %}
+  <div class="col-md-1">
     <h4>Filters</h4>
     {% include "inventory/include/filters.html" with filter_fields=filter_fields reset_url=reset_url sort_param=True %}
   </div>
+  {% endcomment %}
 </div>
 
 {% endblock content %}

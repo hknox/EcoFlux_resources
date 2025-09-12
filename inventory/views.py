@@ -1,7 +1,5 @@
-from django import urls
 from django.db.models import Case, When, CharField, Count, F, Value
 from django.db.models.functions import Lower, Concat
-from django.http import request
 from django.views.generic.list import ListView
 from django.views.generic.edit import (
     UpdateView,
@@ -9,6 +7,7 @@ from django.views.generic.edit import (
     DeleteView,
     FormView,
 )
+from django.views.generic import TemplateView
 from django.shortcuts import redirect, render, get_object_or_404
 from django.contrib.auth import logout
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -28,16 +27,13 @@ from .forms import (
     DOIFormSet,
     FieldNoteForm,
     EquipmentForm,
+    PhotoForm,
 )
 
 
 # This URL parameter tells us where to go after creating or editing an
 # inventory item.
 SUCCESS_URL = "home"
-
-
-def EndOfInternet(request):
-    return redirect("https://hmpg.net/")
 
 
 # ====== View mixins ======
@@ -87,6 +83,7 @@ class ContextMixin:
                     context["object"].id,
                 ],
             )
+
             context["default_success_url"] = self.default_success_url
             context["success_param"] = SUCCESS_URL
         return context
@@ -202,6 +199,24 @@ class FormsetMixin:
         return redirect(self.get_success_url())
 
 
+class UnderConstructionMixin:
+    """
+    Mixin to override dispatch and always render an under-construction page.
+    Useful for temporarily disabling views during development.
+    """
+
+    under_construction_template = "inventory/under_construction.html"
+    under_construction_message = (
+        "This page is still being built. Please check back another time!"
+    )
+
+    def dispatch(self, request, *args, **kwargs):
+        return TemplateView.as_view(
+            template_name=self.under_construction_template,
+            extra_context={"message": self.under_construction_message},
+        )(request, *args, **kwargs)
+
+
 # ====== Equipment views ======
 
 
@@ -269,6 +284,11 @@ class FieldNoteViewsMixin(URLsMixin, ContextMixin, SiteAssignmentMixin):
         context = self.get_base_context_data(**kwargs)
         if isinstance(self, UpdateView):
             context["photos"] = self.object.photos.all()
+            context["success_url"] = f"?{SUCCESS_URL}={self.request.get_full_path()}"
+            context["photo_add_url"] = (
+                reverse("photo_add", args=[context["object"].id])
+                + context["success_url"]
+            )
         return context
 
 
@@ -405,6 +425,113 @@ class SiteDeleteView(LoginRequiredMixin, SuccessMessageMixin, URLsMixin, DeleteV
     #             location.get_absolute_url()
     #         )  # Or wherever your edit page is
     #     return super().post(request, *args, **kwargs)
+
+
+# ====== Photo Views ======
+
+
+class PhotoUploadView(LoginRequiredMixin, URLsMixin, FormView):
+    template_name = "inventory/photo_upload.html"
+    form_class = PhotoUploadForm
+    default_success_url = reverse_lazy("view_fieldnotes")
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        date_taken = self.fieldnote.date_visited
+        kwargs["initial_date"] = date_taken
+        print("photo upload kwargs")
+        pprint(kwargs)
+        return kwargs
+
+    def dispatch(self, request, *args, **kwargs):
+        self.fieldnote = get_object_or_404(FieldNote, pk=kwargs["fieldnote"])
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        print("PhotoUploadView.get_context_data()")
+        context = super().get_context_data(**kwargs)
+        context["fieldnote"] = self.fieldnote
+        context["cancel_url"] = self.get_success_url()
+
+        return context
+
+    def form_valid(self, form):
+        print("PhotoUploadView.form_valid()")
+        taken_by = form.cleaned_data.get("taken_by", "")
+        print(f"taken by: {taken_by}")
+        print("cleaned form:", form.cleaned_data)
+        photos = form.cleaned_data["photos"]
+        date_taken = form.cleaned_data["date_taken"]
+        print(f"photos: {photos}")
+        for f in photos:
+            Photo.objects.create(
+                fieldnote=self.fieldnote,
+                photo=f,
+                taken_by=taken_by,
+                date_taken=date_taken,
+            )
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        print("Form invalid called")
+        print("FILES:", self.request.FILES)
+        print("POST:", self.request.POST)
+        print("Form errors:", form.errors)
+        return super().form_invalid(form)
+
+
+class PhotoUpdateView(LoginRequiredMixin, URLsMixin, ContextMixin, UpdateView):
+
+    action_text = "Edit"
+    model = Photo
+    form_class = PhotoForm
+    template_name = "inventory/photo_detail.html"
+    default_success_url = reverse_lazy("view_photos")
+    delete_url = "photo_delete"
+
+    def get_context_data(self, **kwargs):
+        context = self.get_base_context_data(**kwargs)
+        # # Add context for accordions in templates
+        # # SUCCESS_URL serves to set page to return to after editing/deleting
+        # context["success_url"] = (
+        #     f"?{SUCCESS_URL}={self.request.get_full_path()}&site_pk={self.object.id}"
+        # )
+        # context["fieldnote_create_url"] = (
+        #     reverse("fieldnote_add") + context["success_url"]
+        # )
+        # context["equipment_create_url"] = (
+        #     reverse("equipment_add") + context["success_url"]
+        # )
+        pprint(context)
+        return context
+
+
+class PhotoDeleteView(LoginRequiredMixin, SuccessMessageMixin, URLsMixin, DeleteView):
+    model = Photo
+    default_success_url = reverse_lazy("view_photos")
+    success_message = "Photo of %(date)s for site %(site)s was deleted successfully!"
+
+    def get_success_message(self, cleaned_data):
+        pprint(
+            dict(
+                cleaned_data,
+                date=(
+                    self.object.date_taken
+                    if self.object.date_taken
+                    else self.object.fieldnote.date_visited
+                ),
+                site=self.object.fieldnote.site,
+            )
+        )
+        return self.success_message % dict(
+            cleaned_data,
+            date=(
+                self.object.date_taken
+                if self.object.date_taken
+                else self.object.fieldnote.date_visited
+            ),
+            site=self.object.fieldnote.site,
+        )
 
 
 # ====== List Mixins ======
@@ -652,32 +779,10 @@ class FieldNoteListView(LoginRequiredMixin, SortedListMixin):
         return context
 
 
-class PhotoUploadView(LoginRequiredMixin, FormView):
-    template_name = "inventory/photo_upload.html"
-    form_class = PhotoUploadForm
-
-    def dispatch(self, request, *args, **kwargs):
-        self.fieldnote = get_object_or_404(FieldNote, pk=kwargs["fieldnote"])
-        return super().dispatch(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["fieldnote"] = self.fieldnote
-        return context
-
-    def form_valid(self, form):
-        photos = form.cleaned_data["photos"]
-        taken_by = form.cleaned_data.get("taken_by", "")
-        for f in photos:
-            Photo.objects.create(
-                fieldnote=self.fieldnote,
-                image=f,
-                taken_by=taken_by,
-            )
-        return super().form_valid(form)
-
-    def get_success_url(self):
-        return reverse_lazy("fieldnote_edit", kwargs={"pk": self.fieldnote.pk})
+class PhotoListView(UnderConstructionMixin, ListView):
+    under_construction_message = (
+        "This photo listing page is still being built. Please check back another time!"
+    )
 
 
 def logout_view(request):

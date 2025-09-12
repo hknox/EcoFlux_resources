@@ -91,4 +91,30 @@ document.addEventListener('DOMContentLoaded', function () {
             e.returnValue = '';
         }
     });
+    // Protect file input widgets too (for photo uploading)
+    forms.forEach(form => {
+        const formName = form.getAttribute('data-form-name');
+
+        // Mark dirty when text inputs change
+        form.addEventListener('input', () => {
+            isFormDirty = true;
+            activeFormName = formName;
+        });
+
+        // Mark dirty when files are selected
+        const fileInputs = form.querySelectorAll('input[type="file"]');
+        fileInputs.forEach(fInput => {
+            fInput.addEventListener('change', () => {
+                if (fInput.files.length > 0) {
+                    isFormDirty = true;
+                    activeFormName = formName;
+                }
+            });
+        });
+
+        // Reset dirty flag on submit
+        form.addEventListener('submit', () => {
+            isFormDirty = false;
+        });
+    });
 });

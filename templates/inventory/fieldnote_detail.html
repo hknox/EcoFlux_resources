@@ -1,37 +1,63 @@
 {% extends "inventory/layout_base.html" %}
 
-<head>
-  {% load django_bootstrap5 %}
-  {% load crispy_forms_tags static %}
+{% load django_bootstrap5 %}
+{% load crispy_forms_tags static %}
 
-  {% block extra_css %}
-  {% endblock %}
+{% block extra_css %}
+{% endblock %}
 
-</head>
+{% block page_heading %} - {{action}} Fieldnote{% endblock %}
 
-<body>
-  {% block page_heading %} - {{action}} Fieldnote{% endblock %}
+{% block content %}
 
-  {% block content %}
+<form id="id_fieldnote_form" class = "mt-3 track-unsaved form-class"
+      data-form-name = "Fieldnote form" novalidate method="post">
 
-  <form id="id_fieldnote_form" class = "mt-3 track-unsaved form-class"
-        data-form-name = "Fieldnote form" novalidate method="post">
+  {% csrf_token %}
+  {% crispy form %}
 
-    {% csrf_token %}
-    {% crispy form %}
+  <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}">
 
-    <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}">
+  {% if action == "Edit" %}
+  <!-- Photos -->
+  {% include "inventory/include/accordion_header.html" with section_id="photos" section_title="Site photos" button_text="Add photo(s)" button_url=photo_add_url mt_3=True %}
 
-    <!-- Save/Cancel/Delete buttons -->
-    {% include "inventory/include/save_cancel_delete.html" %}
+  <!-- Collapsable photo gallery -->
+  <div id="photosCollapse"
+       class="accordion-collapse collapse"
+       aria-labelledby="photosHeading">
+    <div class="accordion-body">
+      <div class="row mt-2">
+        {% for photo in photos %}
+        <div class="col-md-3 mb-3">
+          <div class="card h-100 shadow-sm">
+            <img src="{{ photo.photo.url }}" class="card-img-top img-fluid" alt="{{ fieldnote.date_visited }}">
+            <div class="card-body">
+              <p class="card-text text-muted small">
+                <a href={% url "photo_edit"  photo.id %}{{ success_url }}>Taken {% if photo.date_taken %}{{ photo.date_taken }}{% else %}[unknown!]{% endif %} {% if photo.taken_by %}by {{photo.taken_by}}{% endif %}
+                </a>
+              </p>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div type="row" class="mt-2">No photos uploaded with this note yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
 
-  </form>
+  {% include "inventory/include/messages.html" %}
 
-  {% endblock content %}
+  <!-- Save/Cancel/Delete buttons -->
+  {% include "inventory/include/save_cancel_delete.html" %}
 
-  {% block extra_js %}
+</form>
 
-  {% include "inventory/include/flatpickr.html" %}
-  <script src="{% static 'js/delete_button.js' %}"></script>
-  {% endblock extra_js %}
-</body>
+{% endblock content %}
+
+{% block extra_js %}
+{% include "inventory/include/flatpickr.html" %}
+<script src="{% static 'js/delete_button.js' %}"></script>
+{% endblock extra_js %}

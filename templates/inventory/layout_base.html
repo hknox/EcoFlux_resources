@@ -34,7 +34,7 @@
 
   <body>
     <!-- Fixed Banner -->
-    <header class="sticky-top text-bg-primary text-white p-1 shadow-sm" >
+    <header class="sticky-top text-bg-primary text-white p-1 mb-2 shadow-sm" >
       <div class="p-1 container-fluid d-flex justify-content-between align-items-center">
         <!-- Logo -->
         <a href="{% url 'home' %}" class="d-flex align-items-center text-white text-decoration-none">
@@ -50,7 +50,7 @@
           <a href="{% url 'view_sites' %}" class="text-white me-3">Sites</a>
           <a href="{% url 'view_equipment' %}" class="text-white me-3">Equipment</a>
           <a href="{% url 'view_fieldnotes' %}" class="text-white me-3">Field notes</a>
-          <a href="{% url 'photos' %}" class="text-white me-3">Photos</a>
+          <a href="{% url 'view_photos' %}" class="text-white me-3">Photos</a>
           {% if user.is_superuser %}
           <a href="{% url 'admin:index' %}"
              class="text-white me-3">User Admin</a>
@@ -124,6 +124,7 @@
       const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
           return new bootstrap.Tooltip(tooltipTriggerEl);
       });
+
     </script>
     <!-- Flatpickr JS -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>

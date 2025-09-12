@@ -1,0 +1,80 @@
+{% extends "inventory/layout_base.html" %}
+{% load crispy_forms_tags %}
+
+{% block page_heading %} - Fieldnote photos{% endblock %}
+
+{% block content %}
+
+
+    <h2>Upload a batch of photos for visit to {{ fieldnote.site.name }} on {{ fieldnote.date_visited }}</h2>
+
+    <form method="post" enctype="multipart/form-data" data-form-name="Photo Upload">
+
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}">
+
+      {% crispy form %}
+
+    </form>
+
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('id_photos'); // crispy renders it with this id
+    const preview = document.getElementById('preview');
+
+    // Click anywhere in the drop zone opens file picker
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    // Highlight when dragging
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('bg-primary-subtle');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('bg-primary-subtle');
+    });
+
+    // Handle drop
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        fileInput.files = e.dataTransfer.files;
+        previewFiles(fileInput.files);
+        dropZone.classList.remove('bg-primary-subtle');
+    });
+
+    // Handle normal selection
+    fileInput.addEventListener('change', () => {
+        previewFiles(fileInput.files);
+    });
+
+    function previewFiles(files) {
+        preview.innerHTML = '';
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const col = document.createElement('div');
+                col.className = 'col-6 col-md-3';
+                col.innerHTML = `
+                  <div class="card shadow-sm">
+                    <img src="${e.target.result}" class="card-img-top" style="object-fit: cover; height: 150px;">
+                    <div class="card-body p-2 text-truncate small">${file.name}</div>
+                  </div>
+                `;
+                preview.appendChild(col);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    flatpickr(".flatpickr", { dateFormat: "Y-m-d" });
+});
+
+</script>
+{% endblock extra_js %}
