@@ -23,6 +23,8 @@ Download the HTML documentation [[https://media.djangoproject.com/docs/django-do
 ** [[file://~hank/Documents/Programming/Explore_Django/RiffMates][RiffMates Tutorial]]
 
 * [[https://learning.oreilly.com/library/view/django-in-action/9781633438163/?sso_link=yes&sso_link_from=mcgill-university][Django in Action (McGill)]]
+* [[https://codezup.com/mastering-file-uploads-media-management-django-applications/][File uploads & media management including photos]]
+* [[https://pillow.readthedocs.io/][Pillow docs]]
 * [[https://docs.djangoproject.com/en/5.1/topics/install/#database-installation][Database selection and config]]
 * [[https://developer.mozilla.org/en-US/docs/Learn_web_development][Mozilla web development course]]
 * [[www.w3schools.com][W3Schools intro-excellent site]]
