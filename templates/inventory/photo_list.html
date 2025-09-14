@@ -1,0 +1,55 @@
+{% extends "inventory/layout_base.html" %}
+
+{% block content %}
+  <h2>Photo Library</h2>
+
+  <div class="accordion" id="photoAccordion">
+    {% for site in sites %}
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="heading{{ site.id }}">
+          <button class="text-bg-info accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ site.id }}" aria-expanded="false" aria-controls="collapse{{ site.id }}">
+            Site {{ site.name }}
+          </button>
+        </h2>
+        <div id="collapse{{ site.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ site.id }}" data-bs-parent="#photoAccordion">
+          <div class="accordion-body">
+            {% if site.fieldnotes.all %}
+              {% for fieldnote in site.fieldnotes.all %}
+                {% if fieldnote.photos.all %}
+                  <h5 class="mt-3">
+                    Visit on {{ fieldnote.date_visited }}
+                    {% if fieldnote.summary %} – {{ fieldnote.summary }}{% endif %}
+                  </h5>
+                  <div class="row row-cols-2 row-cols-md-3 g-3">
+                    {% for photo in fieldnote.photos.all %}
+                      <div class="col">
+                        <div class="card h-100">
+                          <a href="{{ photo.photo.url }}" target="_blank">
+                            <img src="{{ photo.photo.url }}" class="card-img-top img-fluid" alt="">
+                          </a>
+                          <div class="card-body p-2">
+                            <h6 class="card-title mb-1">
+                              {{ photo.date_taken|default:"(no date)" }}
+                            </h6>
+                            <small class="text-muted">
+                              {% if photo.taken_by %}by {{ photo.taken_by }}{% endif %}
+                            </small>
+                          </div>
+                        </div>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              {% endfor %}
+            {% else %}
+              <p class="text-muted">No fieldnotes for this site yet.</p>
+            {% endif %}
+
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <p class="text-muted">No sites available.</p>
+    {% endfor %}
+  </div>
+{% endblock %}

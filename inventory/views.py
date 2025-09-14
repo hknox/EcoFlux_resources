@@ -779,23 +779,21 @@ class FieldNoteListView(LoginRequiredMixin, SortedListMixin):
         return context
 
 
-class PhotoListView(UnderConstructionMixin, ListView):
-    under_construction_message = (
-        "This photo listing page is still being built. Please check back another time!"
-    )
+class PhotoListView(LoginRequiredMixin, ListView):
+    model = Site
+    template_name = "inventory/photo_list.html"
+    context_object_name = "sites"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        return context
+
+    def get_queryset(self):
+        return Site.objects.prefetch_related("fieldnotes__photos").order_by(
+            "name"
+        )  # optional, for consistency
 
 
 def logout_view(request):
     logout(request)
-
-
-def test_html(request):
-    class User:
-        def __init__(self):
-            self.is_authenticated = True
-            self.username = "HTML Tester"
-            self.is_superuser = True
-
-    print("well well, test_html")
-    context = {"user": User(), "heading": "Photos"}
-    return render(request, "inventory/photos.html", context)
