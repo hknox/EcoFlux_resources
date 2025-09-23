@@ -16,11 +16,11 @@ ALLOWED_HOSTS = [
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": os.environ.get("DB_NAME", "default_name"),
-        "USER": os.environ.get("DB_USER", "default_user"),
-        "PASSWORD": os.environ.get("DB_PASSWORD", "default_pass"),
-        "HOST": os.environ.get("DB_HOST", "localhost"),
-        "PORT": os.environ.get("DB_PORT", "3306"),
+        "NAME": config("DB_NAME", default="default_name"),
+        "USER": config("DB_USER", default="default_user"),
+        "PASSWORD": config("DB_PASSWORD", default="default_pass"),
+        "HOST": config("DB_HOST", default="localhost"),
+        "PORT": config("DB_PORT", default="3306"),
     }
 }
 
