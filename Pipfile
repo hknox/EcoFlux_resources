@@ -12,6 +12,7 @@ django-crispy-forms = "*"
 crispy-bootstrap5 = "*"
 mysqlclient = "*"
 python-decouple = "*"
+python-dotenv = "*"
 
 [dev-packages]
 pylsp-rope = "*"
