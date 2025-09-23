@@ -10,6 +10,10 @@ ALLOWED_HOSTS = [
     "grandwazoo.ddns.net",
 ]
 
+ADMINS = [
+    ("Hank", "hank.knox@mcgill.ca"),
+]
+
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
@@ -32,17 +36,12 @@ STATIC_URL = "/ecoflux/static/"
 STATICFILES_DIRS = (BASE_DIR / "static",)
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
 # Account Management
 # Add this to default account managemeent
 LOGIN_URL = "/ecoflux/accounts/login/"
 
-
 # Photo uploads
-MEDIA_URL = "/ecoflux/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = "/ecoflux/media/"
 # SITE_PHOTO_UPLOAD_SUBDIR = "site_photos/"
+# DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
