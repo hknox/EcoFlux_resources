@@ -10,3 +10,4 @@ db.sqlite*
 /notes.org
 /inventory/inventory_code.org
 /wip.org
+/django_logs.log
