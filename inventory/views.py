@@ -635,7 +635,11 @@ class SiteListView(LoginRequiredMixin, SortedListMixin):
             dates_active=Concat(
                 F("date_activated"),
                 Value(" - "),
-                (F("date_retired") if F("date_retired") == "" else Value("[ongoing]")),
+                Case(
+                    When(date_retired__isnull=False, then=F("date_retired")),
+                    default=Value("[ongoing]"),
+                    output_field=CharField(),
+                ),
                 output_field=CharField(),
             ),
         )
