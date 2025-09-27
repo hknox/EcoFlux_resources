@@ -30,7 +30,7 @@
     {% for item in table_items %}
     <tr>
       {% for field in table_fields %}
-        {% with max_chars=field.max_chars|default:default_max_chars %}
+        {% with max_chars=field.max_chars %}
           {% with field_value=item|get_field_display:field.name|truncatechars:max_chars %}
             <td>
               {% if forloop.first %}

@@ -34,7 +34,7 @@ from .forms import (
 # This URL parameter tells us where to go after creating or editing an
 # inventory item.
 SUCCESS_URL = "home"
-
+DEFAULT_MAX_CHARS = 50
 
 # ====== View mixins ======
 
@@ -544,9 +544,9 @@ class SortedListMixin(ListView):
     to control display of headers and data, eg:
 
     table_fields = [
-        {"name": "date_visited", "label": "Date visitied"},
-        {"name": "site", "label": "Site"},
-        {"name": "display_summary", "label": # "Summary"},
+        {"name": "date_visited", "label": "Date visitied", "max_chars": DEFAULT_MAX_CHARS, "sortable": "yes"},
+        {"name": "site", "label": "Site", "max_chars": DEFAULT_MAX_CHARS, "sortable": "no"},
+        {"name": "display_summary", "label": "Summary", "max_chars": DEFAULT_MAX_CHARS, "sortable": "no"},
     ]
 
     use extra keys for more control:
@@ -556,7 +556,6 @@ class SortedListMixin(ListView):
 
     lookup_default = "icontains"
     # Default maximum field width
-    _default_max_chars = 50
 
     def apply_filters(self, queryset):
         for field_filter in self.filter_fields:
@@ -615,13 +614,48 @@ class SiteListView(LoginRequiredMixin, SortedListMixin):
     # If "sortable" is "no", don't offer sort arrows on the column header.
     # Use "max_chars" to truncate the data to max_chars number of characters.
     table_fields = [
-        {"name": "code", "label": "Code"},
-        {"name": "name", "label": "Name"},
-        {"name": "description", "label": "Description", "max_chars": 60},
-        {"name": "gps_coordinates", "label": "GPS"},
-        {"name": "dates_active", "label": "Active"},
-        {"name": "fieldnotes_count", "label": "Notes", "sortable": ""},
-        {"name": "equipment_count", "label": "Eqt", "sortable": ""},
+        {
+            "name": "code",
+            "label": "Code",
+            "max_chars": DEFAULT_MAX_CHARS,
+            "sortable": "yes",
+        },
+        {
+            "name": "name",
+            "label": "Name",
+            "max_chars": DEFAULT_MAX_CHARS,
+            "sortable": "yes",
+        },
+        {
+            "name": "description",
+            "label": "Description",
+            "max_chars": 60,
+            "sortable": "yes",
+        },
+        {
+            "name": "gps_coordinates",
+            "label": "GPS",
+            "max_chars": DEFAULT_MAX_CHARS,
+            "sortable": "yes",
+        },
+        {
+            "name": "dates_active",
+            "label": "Active",
+            "max_chars": DEFAULT_MAX_CHARS,
+            "sortable": "yes",
+        },
+        {
+            "name": "fieldnotes_count",
+            "label": "Notes",
+            "max_chars": DEFAULT_MAX_CHARS,
+            "sortable": "yes",
+        },
+        {
+            "name": "equipment_count",
+            "label": "Eqt",
+            "max_chars": DEFAULT_MAX_CHARS,
+            "sortable": "yes",
+        },
         # {"name": "photo_count", "label": "Photos", "sortable": ""},
     ]
 
@@ -661,7 +695,6 @@ class SiteListView(LoginRequiredMixin, SortedListMixin):
         context["heading"] = "Sites"
         context["add_button"] = "Add New Site"
         context["edit_url"] = "site_edit"
-        context["default_max_chars"] = self._default_max_chars
 
         return context
 
@@ -702,11 +735,31 @@ class EquipmentListView(LoginRequiredMixin, SortedListMixin):
         # # },
     ]
     table_fields = [
-        {"name": "instrument", "label": "Instrument"},
-        {"name": "serial_number", "label": "Serial number", "sortable": "no"},
-        {"name": "site", "label": "Location"},
+        {
+            "name": "instrument",
+            "label": "Instrument",
+            "max_chars": DEFAULT_MAX_CHARS,
+            "sortable": "yes",
+        },
+        {
+            "name": "serial_number",
+            "label": "Serial number",
+            "max_chars": DEFAULT_MAX_CHARS,
+            "sortable": "no",
+        },
+        {
+            "name": "site",
+            "label": "Location",
+            "max_chars": DEFAULT_MAX_CHARS,
+            "sortable": "yes",
+        },
         {"name": "notes", "label": "Notes", "max_chars": 80, "sortable": "no"},
-        {"name": "history_count", "label": "# History records", "sortable": "no"},
+        {
+            "name": "history_count",
+            "label": "# History records",
+            "max_chars": DEFAULT_MAX_CHARS,
+            "sortable": "no",
+        },
     ]
 
     def get_queryset(self):
@@ -729,7 +782,6 @@ class EquipmentListView(LoginRequiredMixin, SortedListMixin):
         context["add_url"] = reverse("equipment_add")
         context["edit_url"] = "equipment_edit"
         context["reset_url"] = reverse("view_equipment")
-        context["default_max_chars"] = self._default_max_chars
 
         return context
 
@@ -748,11 +800,36 @@ class FieldNoteListView(LoginRequiredMixin, SortedListMixin):
     # If "sortable" is "no", don't offer sort arrows on the column header.
     # Use "max_chars" to truncate the data to max_chars number of characters.
     table_fields = [
-        {"name": "date_visited", "label": "Date visited"},
-        {"name": "site", "label": "Site"},
-        {"name": "display_summary", "label": "Summary"},
-        {"name": "submitter", "label": "Submitter"},
-        {"name": "photo_count", "label": "# Photos"},
+        {
+            "name": "date_visited",
+            "label": "Date visited",
+            "max_chars": DEFAULT_MAX_CHARS,
+            "sortable": "no",
+        },
+        {
+            "name": "site",
+            "label": "Site",
+            "max_chars": DEFAULT_MAX_CHARS,
+            "sortable": "no",
+        },
+        {
+            "name": "display_summary",
+            "label": "Summary",
+            "max_chars": DEFAULT_MAX_CHARS,
+            "sortable": "no",
+        },
+        {
+            "name": "submitter",
+            "label": "Submitter",
+            "max_chars": DEFAULT_MAX_CHARS,
+            "sortable": "no",
+        },
+        {
+            "name": "photo_count",
+            "label": "# Photos",
+            "max_chars": DEFAULT_MAX_CHARS,
+            "sortable": "no",
+        },
     ]
 
     def get_queryset(self):
@@ -778,7 +855,6 @@ class FieldNoteListView(LoginRequiredMixin, SortedListMixin):
         context["heading"] = "Field notes"
         context["add_button"] = "Add New Field note"
         context["edit_url"] = "fieldnote_edit"
-        context["default_max_chars"] = self._default_max_chars
 
         return context
 
