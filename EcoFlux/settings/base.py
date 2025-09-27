@@ -152,13 +152,22 @@ LOG_DIR = os.path.join(BASE_DIR, "logs")
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    "formatters": {
+        "with_datetime": {
+            "format": "{asctime} {message}",
+            "style": "{",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+    },
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
+            "formatter": "with_datetime",
         },
         "file": {
             "class": "logging.FileHandler",
             "filename": os.path.join(LOG_DIR, "django_logs.log"),
+            "formatter": "with_datetime",
         },
     },
     "loggers": {
@@ -169,12 +178,12 @@ LOGGING = {
         },
         "django": {
             "handlers": ["console", "file"],
-            "level": "INFO",
+            "level": "WARN",
             "propagate": False,
         },
     },
     "root": {
         "handlers": ["console", "file"],
-        "level": "DEBUG",
+        "level": "INFO",
     },
 }
