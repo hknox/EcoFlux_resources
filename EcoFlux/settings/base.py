@@ -15,6 +15,7 @@ See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 from pathlib import Path
 from decouple import config
+import os.path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -146,6 +147,8 @@ CRISPY_FAIL_SILENTLY = not DEBUG
 DJANGO_SETTINGS_MODULE = config("DJANGO_SETTINGS_MODULE")
 
 # Logging
+LOG_DIR = os.path.join(BASE_DIR, "logs")
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -155,7 +158,7 @@ LOGGING = {
         },
         "file": {
             "class": "logging.FileHandler",
-            "filename": "django_logs.log",
+            "filename": os.path.join(LOG_DIR, "django_logs.log"),
         },
     },
     "loggers": {
@@ -166,7 +169,7 @@ LOGGING = {
         },
         "django": {
             "handlers": ["console", "file"],
-            "level": "DEBUG",
+            "level": "INFO",
             "propagate": False,
         },
     },
