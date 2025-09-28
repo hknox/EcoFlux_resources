@@ -1,3 +1,7 @@
+from pprint import pprint
+import logging
+from datetime import datetime
+
 from django.db.models import Case, When, CharField, Count, F, Value
 from django.db.models.functions import Lower, Concat
 from django.views.generic.list import ListView
@@ -17,8 +21,6 @@ from django.urls import reverse_lazy, reverse
 
 # from django.http import JsonResponse
 
-from pprint import pprint
-
 from inventory.models import Site, FieldNote, Equipment, Photo
 from .forms import (
     HistoryFormSet,
@@ -30,11 +32,12 @@ from .forms import (
     PhotoForm,
 )
 
-
 # This URL parameter tells us where to go after creating or editing an
 # inventory item.
 SUCCESS_URL = "home"
 DEFAULT_MAX_CHARS = 50
+
+logger = logging.getLogger("inventory")
 
 # ====== View mixins ======
 
@@ -239,13 +242,12 @@ class EquipmentCreateView(LoginRequiredMixin, EquipmentViewsMixin, CreateView):
 
     action_text = "New"
 
-    def form_valid(self, form):
+    def form_and_formset_valid(self, form, formset):
         # Store message before redirect
-        messages.success(
-            self.request,
-            "Equipment item created successfully. You can now add photos.",
+        response = super().form_and_formset_valid(form, formset)
+        logger.info(
+            f"User {self.request.user} successfully created equipment, {self.object.instrument}."
         )
-        response = super().form_valid(form)
         return response
 
 
@@ -254,6 +256,14 @@ class EquipmentUpdateView(LoginRequiredMixin, EquipmentViewsMixin, UpdateView):
     action_text = "Edit"
     delete_url = "equipment_delete"
 
+    def form_and_formset_valid(self, form, formset):
+        # Store message before redirect
+        response = super().form_and_formset_valid(form, formset)
+        logger.info(
+            f"User {self.request.user} successfully updated equipment, {self.object.instrument}."
+        )
+        return response
+
 
 class EquipmentDeleteView(
     LoginRequiredMixin, SuccessMessageMixin, URLsMixin, DeleteView
@@ -261,6 +271,14 @@ class EquipmentDeleteView(
     model = Equipment
     success_message = "Inventory item %(instrument)s was deleted successfully!"
     default_success_url = reverse_lazy("view_equipment")
+
+    def form_valid(self, form):
+        # Store message before redirect
+        response = super().form_valid(form)
+        logger.info(
+            f"User {self.request.user} successfully deleted equipment, {self.object.instrument}."
+        )
+        return response
 
     def get_success_message(self, cleaned_data):
         return self.success_message % dict(
@@ -306,12 +324,22 @@ class FieldNoteCreateView(LoginRequiredMixin, FieldNoteViewsMixin, CreateView):
             "Fieldnote created successfully. You can now add photos.",
         )
         response = super().form_valid(form)
+        logger.info(
+            f"User {self.request.user} successfully created fieldnote for site, {self.object.site}."
+        )
         return response
 
 
 class FieldNoteUpdateView(LoginRequiredMixin, FieldNoteViewsMixin, UpdateView):
 
     action_text = "Edit"
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        logger.info(
+            f"User {self.request.user} successfully updated fieldnote of {self.object.date_visited} for site {self.object.site}."
+        )
+        return response
 
 
 class FieldNoteDeleteView(
@@ -322,6 +350,13 @@ class FieldNoteDeleteView(
     success_message = (
         "Field note of %(date)s for site %(site)s was deleted successfully!"
     )
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        logger.info(
+            f"User {self.request.user} successfully deleted fieldnote of {self.object.date_visited} for site {self.object.site}."
+        )
+        return response
 
     def get_success_message(self, cleaned_data):
         return self.success_message % dict(
@@ -355,12 +390,15 @@ class SiteViewsMixin(URLsMixin, ContextMixin, FormsetMixin):
 class SiteCreateView(LoginRequiredMixin, SiteViewsMixin, CreateView):
     action_text = "New"
 
-    def form_valid(self, form, formset):
-        response = super().form_valid(form, formset)
+    def form_and_formset_valid(self, form, formset):
+        response = super().form_and_formset_valid(form, formset)
         # Store message before redirect
         messages.success(
             self.request,
             "Site created successfully. You can now add equipment and fieldnotes.",
+        )
+        logger.info(
+            f"User {self.request.user} successfully created site, {self.object}."
         )
         return response
 
@@ -399,6 +437,13 @@ class SiteUpdateView(LoginRequiredMixin, SiteViewsMixin, UpdateView):
         kwargs["existing_site"] = True
         return kwargs
 
+    def form_and_formset_valid(self, form, formset):
+        response = super().form_and_formset_valid(form, formset)
+        logger.info(
+            f"User {self.request.user} successfully updated site, {self.object}."
+        )
+        return response
+
 
 class SiteDeleteView(LoginRequiredMixin, SuccessMessageMixin, URLsMixin, DeleteView):
     model = Site
@@ -411,6 +456,14 @@ class SiteDeleteView(LoginRequiredMixin, SuccessMessageMixin, URLsMixin, DeleteV
             code=self.object.code,
             name=self.object.name,
         )
+
+    def form_valid(self, form):
+        # Store message before redirect
+        response = super().form_valid(form)
+        logger.info(
+            f"User {self.request.user} successfully deleted site, {self.object}."
+        )
+        return response
 
     # Can eventually use this to protect agains deleting a location
     # holding inventory items:
@@ -439,8 +492,6 @@ class PhotoUploadView(LoginRequiredMixin, URLsMixin, FormView):
         kwargs = super().get_form_kwargs()
         date_taken = self.fieldnote.date_visited
         kwargs["initial_date"] = date_taken
-        print("photo upload kwargs")
-        pprint(kwargs)
         return kwargs
 
     def dispatch(self, request, *args, **kwargs):
@@ -502,7 +553,6 @@ class PhotoUpdateView(LoginRequiredMixin, URLsMixin, ContextMixin, UpdateView):
         # context["equipment_create_url"] = (
         #     reverse("equipment_add") + context["success_url"]
         # )
-        pprint(context)
         return context
 
 
@@ -512,17 +562,6 @@ class PhotoDeleteView(LoginRequiredMixin, SuccessMessageMixin, URLsMixin, Delete
     success_message = "Photo of %(date)s for site %(site)s was deleted successfully!"
 
     def get_success_message(self, cleaned_data):
-        pprint(
-            dict(
-                cleaned_data,
-                date=(
-                    self.object.date_taken
-                    if self.object.date_taken
-                    else self.object.fieldnote.date_visited
-                ),
-                site=self.object.fieldnote.site,
-            )
-        )
         return self.success_message % dict(
             cleaned_data,
             date=(

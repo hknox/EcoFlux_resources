@@ -182,6 +182,7 @@ LOGGING = {
             "propagate": False,
         },
     },
+    # Fallback logger
     "root": {
         "handlers": ["console", "file"],
         "level": "INFO",
