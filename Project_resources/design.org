@@ -1,5 +1,7 @@
 Design and planning notes.
 
+
+
 * Questions to sort
 ** Do we need or want side panels for navigation or filtering?
 Maybe just a (right-side) panel for filtering on the appropriate
@@ -120,29 +122,6 @@ many(or one)-to-many users-to-items
 
 * Delete sites? (Need to rethink cascading deletes)
 
-
-
-* Basic planning
-initial landing is login page:
-  header: show project name, actions (edit items, locations, users (if
-          have the right credentials), user name, profile button?
-          logout
-          help button?
-  body: maybe a default view of the item database
-  footer? maybe a copyright notice, credits
-
-edit items:
-  display with options to: filter by description (regex)
-                           sort by any field (asc, desc)
-  add new item
-  edit existing item
-edit locations:
-edit maintenance records
-edit users:
-
-logout action returns to initial landing page
-** Looks
-background colour: lightish green: #57e389
 
 
 

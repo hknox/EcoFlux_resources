@@ -7,6 +7,14 @@ Useful links to documentation.
 ** [[https://www.codementor.io/@chirilovadrian360/managing-the-ui-in-django-29fbj6oglf][Approaches to managing the UI]]
 ** [[https://www.geeksforgeeks.org/websites-apps/principles-of-web-design/][Principles of web design]]
 
+* Mermaid
+[[https://mermaid.js.org/][Mermaid site]]
+[[https://learning.oreilly.com/library/view/creating-software-with/9798888650219/f_0005.xhtml][Creating Software with Modern Diagramming Techniques]]
+[[https://learning.oreilly.com/library/view/the-official-guide/9781801078023/][The Official Guide to Mermaid]]
+[[https://github.com/mermaid-js/mermaid-cli][Mermaid-cli]]
+
+[[https://github.com/arnm/ob-mermaid][Org-Mode Mermaid integration]]
+[[https://emacstil.com/til/2021/09/19/org-mermaid/][Org Mode + Mermaid]]
 
 * Django
 ** [[https://docs.djangoproject.com/][Django documentation]]
