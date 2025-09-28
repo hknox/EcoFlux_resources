@@ -19,7 +19,7 @@ def log_user_login(sender, request, user, **kwargs):
     # logger.info
     logger.info(
         f"Successful login: User {user.username} "
-        f"logged in from IP {request.META.get('REMOTE_ADDR')}"
+        f"logged in from IP {request.META.get('REMOTE_ADDR')}."
     )
 
 
@@ -29,7 +29,7 @@ def log_user_logout(sender, request, user, **kwargs):
     Log successful user logout with relevant details
     """
     # logger.info
-    logger.info(f"Successful logout: User {user.username} ")
+    logger.info(f"Successful logout: User {user.username}.")
 
 
 @receiver(user_login_failed)
@@ -38,6 +38,4 @@ def log_user_failed_login(sender, request, **kwargs):
     Log failed user login with relevant details
     """
     # logger.info
-    logger.debug(
-        f"Failed login " f"attempted from IP {request.META.get('REMOTE_ADDR')}"
-    )
+    logger.debug(f"Failed login attempted from IP {request.META.get('REMOTE_ADDR')}.")

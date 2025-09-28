@@ -499,7 +499,6 @@ class PhotoUploadView(LoginRequiredMixin, URLsMixin, FormView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        print("PhotoUploadView.get_context_data()")
         context = super().get_context_data(**kwargs)
         context["fieldnote"] = self.fieldnote
         context["cancel_url"] = self.get_success_url()
@@ -507,13 +506,11 @@ class PhotoUploadView(LoginRequiredMixin, URLsMixin, FormView):
         return context
 
     def form_valid(self, form):
-        print("PhotoUploadView.form_valid()")
         taken_by = form.cleaned_data.get("taken_by", "")
-        print(f"taken by: {taken_by}")
-        print("cleaned form:", form.cleaned_data)
-        photos = form.cleaned_data["photos"]
         date_taken = form.cleaned_data["date_taken"]
-        print(f"photos: {photos}")
+        photos = form.cleaned_data["photos"]
+        num_photos = len(photos)
+
         for f in photos:
             Photo.objects.create(
                 fieldnote=self.fieldnote,
@@ -521,6 +518,10 @@ class PhotoUploadView(LoginRequiredMixin, URLsMixin, FormView):
                 taken_by=taken_by,
                 date_taken=date_taken,
             )
+        logger.info(
+            f"User {self.request.user} uploaded {num_photos} photos taken at site {self.fieldnote.site} on {date_taken} by {taken_by}."
+        )
+
         return super().form_valid(form)
 
     def form_invalid(self, form):
@@ -539,6 +540,13 @@ class PhotoUpdateView(LoginRequiredMixin, URLsMixin, ContextMixin, UpdateView):
     template_name = "inventory/photo_detail.html"
     default_success_url = reverse_lazy("view_photos")
     delete_url = "photo_delete"
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        logger.info(
+            f"User {self.request.user} successfully updated a photo taken at {self.object.fieldnote.site} on {self.object.date_taken} by {self.object.taken_by}."
+        )
+        return response
 
     def get_context_data(self, **kwargs):
         context = self.get_base_context_data(**kwargs)
@@ -560,6 +568,13 @@ class PhotoDeleteView(LoginRequiredMixin, SuccessMessageMixin, URLsMixin, Delete
     model = Photo
     default_success_url = reverse_lazy("view_photos")
     success_message = "Photo of %(date)s for site %(site)s was deleted successfully!"
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        logger.info(
+            f"User {self.request.user} successfully deleted a photo taken at {self.object.fieldnote.site} on {self.object.date_taken} by {self.object.taken_by}."
+        )
+        return response
 
     def get_success_message(self, cleaned_data):
         return self.success_message % dict(
