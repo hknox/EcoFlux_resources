@@ -55,7 +55,8 @@ Download the HTML documentation [[https://media.djangoproject.com/docs/django-do
   [[https://tailwindcss.com/][Tailwind styling]]
   [[https://django-tailwind.readthedocs.io/en/latest/][Tailwind-readthedocs]]
 
-
+* [[https://github.com/Dronte/pyright-remote][Pyright remote]]
+* [[https://github.com/nvm-sh/nvm][NVM]]
 
 
 
