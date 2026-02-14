@@ -652,7 +652,7 @@ class SortedListMixin(ListView):
 
 class SiteListView(LoginRequiredMixin, SortedListMixin):
     model = Site
-    paginate_by = 14
+    # paginate_by = 14
     template_name = "inventory/lists.html"
 
     context_object_name = "table_items"
@@ -756,7 +756,7 @@ class SiteListView(LoginRequiredMixin, SortedListMixin):
 class EquipmentListView(LoginRequiredMixin, SortedListMixin):
     model = Equipment
     template_name = "inventory/lists.html"
-    paginate_by = 14
+    # paginate_by = 14
     context_object_name = "table_items"
     # Default sort order
     _sort_key = "instrument"
@@ -842,7 +842,7 @@ class EquipmentListView(LoginRequiredMixin, SortedListMixin):
 
 class FieldNoteListView(LoginRequiredMixin, SortedListMixin):
     model = FieldNote
-    paginate_by = 14
+    # paginate_by = 14
     template_name = "inventory/lists.html"
     context_object_name = "table_items"
     # Default sort order
