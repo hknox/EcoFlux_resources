@@ -11,3 +11,5 @@ db.sqlite*
 /inventory/inventory_code.org
 /wip.org
 /django_logs.log
+/logs/
+/media/
