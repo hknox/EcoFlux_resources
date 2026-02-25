@@ -858,31 +858,31 @@ class FieldNoteListView(LoginRequiredMixin, SortedListMixin):
             "name": "date_visited",
             "label": "Date visited",
             "max_chars": DEFAULT_MAX_CHARS,
-            "sortable": "no",
+            "sortable": "yes",
         },
         {
             "name": "site",
             "label": "Site",
             "max_chars": DEFAULT_MAX_CHARS,
-            "sortable": "no",
+            "sortable": "yes",
         },
         {
             "name": "display_summary",
             "label": "Summary",
             "max_chars": DEFAULT_MAX_CHARS,
-            "sortable": "no",
+            "sortable": "yes",
         },
         {
             "name": "submitter",
             "label": "Submitter",
             "max_chars": DEFAULT_MAX_CHARS,
-            "sortable": "no",
+            "sortable": "yes",
         },
         {
             "name": "photo_count",
             "label": "# Photos",
             "max_chars": DEFAULT_MAX_CHARS,
-            "sortable": "no",
+            "sortable": "yes",
         },
     ]
 
