@@ -317,14 +317,12 @@ class PhotoUploadForm(forms.Form):
                 css_class="mb-3",
             ),
             Div(
-                HTML(
-                    """
+                HTML("""
                     <div id="drop-zone" class="border border-secondary rounded p-5 text-center bg-light" style="cursor:pointer;">
                         <p class="mb-0">Drag & drop photos here or click to select</p>
                     </div>
                     <div id="preview" class="d-flex flex-wrap mt-3"></div>
-                    """
-                ),
+                    """),
                 Field("photos"),  # hidden input triggered by JS
                 css_class="mb-3",
             ),
@@ -408,16 +406,14 @@ class DOIForm(forms.ModelForm):
                 Column(Field("doi_link", wrapper_class="mb-0"), css_class="col-7"),
                 Column(
                     Field("DELETE", type="hidden"),  # Hidden delete field
-                    HTML(
-                        """
+                    HTML("""
                       <button type="button"
                               class="btn btn-danger btn-sm remove-form-row"
                               title=" Remove"
                               data-confirm="Are you sure you want to remove this DOI record?">
                         <i class="bi bi-trash"></i> Remove
                       </button>
-                    """
-                    ),
+                    """),
                     css_class="col-auto d-flex mt-0 pt-0 align-items-center",
                 ),
                 css_class="g-1 align-items-center",
@@ -455,16 +451,14 @@ class HistoryForm(forms.ModelForm):
                 ),
                 Column(
                     Field("DELETE", type="hidden"),
-                    HTML(
-                        """
+                    HTML("""
                         <button type="button"
                                 class="btn btn-danger btn-sm remove-form-row"
                                 title="Remove"
                                 data-confirm="Are you sure you want to remove this record?">
                           <i class="bi bi-trash"></i> Remove
                         </button>
-                        """
-                    ),
+                        """),
                     css_class="col-auto d-flex align-items-start mt-n1 pt-0",
                 ),
                 css_class=" align-items-center g-2",
