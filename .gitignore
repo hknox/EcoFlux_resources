@@ -11,5 +11,10 @@ db.sqlite*
 /inventory/inventory_code.org
 /wip.org
 /django_logs.log
+/Live_data/
+/old-working.sqlite3
 /logs/
 /media/
+/eslint.config.mjs
+/node_modules/
+packa*json

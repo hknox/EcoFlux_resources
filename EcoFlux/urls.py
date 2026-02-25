@@ -32,6 +32,7 @@ urlpatterns = [
     path("accounts/", include("django.contrib.auth.urls")),  # for authentication
     path("admin/", admin.site.urls),  # Django's built-in admin interface
     path(home_url, include("inventory.urls")),
+    path("tinymce/", include("tinymce.urls")),
 ]
 
 if settings.DEBUG:

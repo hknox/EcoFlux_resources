@@ -13,6 +13,7 @@ from crispy_forms.layout import (
     Submit,
     Div,
 )
+from tinymce.widgets import TinyMCE
 
 from .models import Equipment, Site, DOI, FieldNote, History, Photo
 
@@ -109,6 +110,14 @@ class FieldNoteForm(forms.ModelForm):
             "summary",
             "site_visitors",
         ]
+        widgets = {
+            "note": TinyMCE(
+                attrs={
+                    "cols": 80,
+                    "rows": 20,
+                }
+            )
+        }
 
     def __init_FormHelper(self):
         helper = FormHelper()

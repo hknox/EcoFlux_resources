@@ -25,7 +25,43 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Intercept clicks on links and buttons that navigate away
+  // Track changes in TinyMCE editors
+  // console.log('form_protect.js loaded');
+  // console.log('Checking for tinymce:', window.tinymce);
+
+  if (window.tinymce) {
+    // console.log('TinyMCE found');
+
+    // Handle editors that are already initialized
+    tinymce.get().forEach(function(editor) {
+      // console.log('Found existing editor:', editor.id);
+      editor.on('change', function() {
+        // console.log('TinyMCE content changed:', editor.id);
+        isFormDirty = true;
+        const textarea = editor.getElement();
+        const form = textarea.closest('form[data-form-name]');
+        if (form) {
+          activeFormName = form.getAttribute('data-form-name');
+        }
+      });
+    });
+
+    // Also handle editors that get added later
+    tinymce.on('addeditor', function(e) {
+      // console.log('TinyMCE editor added:', e.editor.id);
+      const editor = e.editor;
+      editor.on('change', function() {
+        // console.log('TinyMCE content changed:', editor.id);
+        isFormDirty = true;
+        const textarea = editor.getElement();
+        const form = textarea.closest('form[data-form-name]');
+        if (form) {
+          activeFormName = form.getAttribute('data-form-name');
+        }
+      });
+    });
+  }
+  // Intercept clicks on links and buttons that navigate away
     document.querySelectorAll('a, button').forEach(link => {
         link.addEventListener('click', function (e) {
             const href = link.getAttribute('href');

@@ -33,8 +33,8 @@ DATABASES = {
 
 # Override .base.STATIC_URL = "static/"
 STATIC_URL = "/ecoflux/static/"
-STATICFILES_DIRS = (BASE_DIR / "static",)
-STATIC_ROOT = BASE_DIR / "staticfiles"
+# STATICFILES_DIRS = (BASE_DIR / "static",)
+# STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Account Management
 # Add this to default account managemeent
