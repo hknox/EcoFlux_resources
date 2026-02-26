@@ -32,7 +32,10 @@ DATABASES = {
 
 # Override .base.STATIC_URL = "static/"
 STATIC_URL = "/ecoflux/static/"
-# STATICFILES_DIRS = (BASE_DIR / "static",)
+# TINYMCE_PATH = os.path.dirname(tinymce.__file__)
+# STATICFILES_DIRS.append(
+#      os.path.join(TINYMCE_PATH, "static"),
+# )
 # STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Account Management

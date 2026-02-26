@@ -121,11 +121,7 @@ STATIC_URL = "static/"
 # use the collectstatic or findstatic management command or use the
 # static file serving view. it should be set to a list of strings
 # that contain full paths to your additional files directory(ies).
-TINYMCE_PATH = os.path.dirname(tinymce.__file__)
-STATICFILES_DIRS = (
-    BASE_DIR / "static",
-    os.path.join(TINYMCE_PATH, "static"),
-)
+STATICFILES_DIRS = (BASE_DIR / "static",)
 # The absolute path to the directory where collectstatic will collect
 # static files for deployment:
 STATIC_ROOT = BASE_DIR / "staticfiles"
