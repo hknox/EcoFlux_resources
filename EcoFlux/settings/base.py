@@ -16,6 +16,7 @@ See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 from pathlib import Path
 from decouple import config
 import os.path
+
 import tinymce
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -78,7 +79,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "EcoFlux.wsgi.application"
 
-
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
@@ -101,28 +101,55 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
 LANGUAGE_CODE = "en-us"
-
 TIME_ZONE = "UTC"
-
 USE_I18N = True
-
 USE_TZ = True
 
 MESSAGE_STORAGE = "django.contrib.messages.storage.session.SessionStorage"
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
 
+# STATIC FILES (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/6,0/howto/static-files/
 
-TINYMCE_PATH = os.path.dirname(tinymce.__file__)
-
+# URL to use when referring to static files located in STATIC_ROOT. If
+# not None, this will be used as the base path for asset definitions
+# (the Media class) and the staticfiles app. It must end in a slash if
+# set to a non-empty value
 STATIC_URL = "static/"
+# This setting defines the additional locations the staticfiles app
+# will traverse if the FileSystemFinder finder is enabled, e.g. if you
+# use the collectstatic or findstatic management command or use the
+# static file serving view. it should be set to a list of strings
+# that contain full paths to your additional files directory(ies).
+TINYMCE_PATH = os.path.dirname(tinymce.__file__)
 STATICFILES_DIRS = (
     BASE_DIR / "static",
     os.path.join(TINYMCE_PATH, "static"),
 )
+# The absolute path to the directory where collectstatic will collect
+# static files for deployment:
 STATIC_ROOT = BASE_DIR / "staticfiles"
-# Default primary key field type
+# STATICFILES_FINDERS¶
+# Default:
+# [
+#     "django.contrib.staticfiles.finders.FileSystemFinder",
+#     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
+# ]
+# The list of finder backends that know how to find static files in
+# various locations.
+
+# The default will find files stored in the STATICFILES_DIRS setting
+# (using django.contrib.staticfiles.finders.FileSystemFinder) and in a
+# static subdirectory of each app (using
+# django.contrib.staticfiles.finders.AppDirectoriesFinder). If
+# multiple files with the same name are present, the first file that
+# is found will be used.
+
+# One finder is disabled by default:
+# django.contrib.staticfiles.finders.DefaultStorageFinder. If added to
+# your STATICFILES_FINDERS setting, it will look for static files in
+# the default file storage as defined by the default key in the
+# STORAGES setting. Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -159,7 +186,8 @@ TINYMCE_DEFAULT_CONFIG = {
     "width": "100%",
     "menubar": False,
     "plugins": "lists  code, advlist",
-    "toolbar": "blocks bold italic underline |  forecolor backcolor | bullist numlist indent outdent | code",
+    "toolbar": "blocks bold italic underline |  forecolor backcolor "
+    + "| bullist numlist indent outdent",
     "branding": False,
     "statusbar": True,
     "elementpath": False,

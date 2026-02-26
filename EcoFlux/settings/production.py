@@ -3,7 +3,6 @@
 """Load common settings"""
 from .base import *
 
-# Override .base default:
 ALLOWED_HOSTS = [
     "localhost",
     "127.0.0.1",
@@ -29,7 +28,7 @@ DATABASES = {
 }
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
+# https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 # Override .base.STATIC_URL = "static/"
 STATIC_URL = "/ecoflux/static/"

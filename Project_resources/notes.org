@@ -1,8 +1,29 @@
 Various notes and reminders to myself.
 
+* Backups
+** grandwazoo program files
+The borg backup script is in /usr/local/libexec/backup_ecoflux.sh.
+Borg backup passphrase: ecoflux_blake2
+Set up backup_ecoflux.service, backup_ecoflux.timer in /etc/systemd/system.
+Backs up to /media/BorgBackup/EcoFlux/.
+put the backup file into a systemd timer:
+[[https://www.thelinuxvault.net/blog/how-to-schedule-tasks-with-systemd-timers-in-linux/][examples here]]
+[[https://www.freedesktop.org/software/systemd/man/latest/systemd.timer.html][freedesktop man page for timers]]
+[[https://wiki.archlinux.org/title/Systemd/Timers][Arch Linux docs]]
+** live data
+To get live data from grandwazoo to sunvillage:
+- on grandwazoo and ship to joesgarage, do:
+mariadb-dump -u ecoflux -p ecoflux > ecoflux_data_[date].sql ([[https://mariadb.com/docs/server/clients-and-utilities/backup-restore-and-import-clients/mariadb-dump][mariadb dump docs]])
+use scp to copy to JoesGarage
+[[https://github.com/francescozanoni/tutorials/blob/master/mysql_to_sqlite.md][Convert Mysql to sqlite]]
+Then load into sqlite db.
+scp all of /srv/ecoflux/media to local /media/ dir.
+
+
 * Sara's sites
 [[https://carbonique.ca/en/data.html][Carbonique]]
 [[https://ecoflux-lab.github.io/Data.html][EcoFlux main site]]
+
 
 * [[https://chatgpt.com/c/687295f7-4304-8001-b080-4f2e315195eb][ChatGPT discussions]]
 

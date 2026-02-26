@@ -18,3 +18,4 @@ db.sqlite*
 /eslint.config.mjs
 /node_modules/
 packa*json
+/staticfiles/
