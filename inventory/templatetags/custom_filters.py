@@ -6,6 +6,9 @@ logger = logging.getLogger("inventory")
 
 register = template.Library()
 
+# The longest HTML tag I expect to find in fieldnote.note
+MAX_TAG_LENGTH = 9
+
 
 @register.filter
 def get_field_display(obj, field_name):
@@ -34,13 +37,15 @@ def generate_summary(text, max_chars=200):
             # No more possible tags to excise
             break
         j = text.find(">", i)
-        # HTML tags will typically not be longer than 9 chars
-        if j - i <= 9:
+        # HTML tags will typically not be longer than MAX_TAG_LENGTH chars
+        if j - i <= MAX_TAG_LENGTH:
             # Excise this tag
             text = text[:i] + text[j + 1 :]
             i = text.find("<")
         else:
             # Log a warning if we find someting longer
-            logger.warning(f"Unexpectedly long tag: {text[i: j+ 1]}")
+            logger.warning(
+                f"Unexpectedly long tag: {text[i: j+ 1]}, length: {j - i} expected max: {MAX_TAG_LENGTH}"
+            )
             i = text.find("<", i + 1)
     return text[:max_chars]
