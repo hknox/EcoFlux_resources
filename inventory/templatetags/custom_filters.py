@@ -36,16 +36,19 @@ def generate_summary(text, max_chars=200):
         if i < 0:
             # No more possible tags to excise
             break
-        j = text.find(">", i)
+        # tags can have attributes after a space, before the closing >
+        j_bracket = text.find(">", i)
+        j_space = text.find(" ", i)
+        j = min(j_bracket, len(text) if j_space < 0 else j_space)
         # HTML tags will typically not be longer than MAX_TAG_LENGTH chars
         if j - i <= MAX_TAG_LENGTH:
             # Excise this tag
             text = text[:i] + text[j + 1 :]
             i = text.find("<")
         else:
-            # Log a warning if we find someting longer
+            # Log a warning if we find someting longer.
             logger.warning(
-                f"Unexpectedly long tag: {text[i: j+ 1]}, length: {j - i} expected max: {MAX_TAG_LENGTH}"
+                f"Unexpectedly long tag: {text[i: j + 1]}, length: {j - i} expected max: {MAX_TAG_LENGTH}"
             )
             i = text.find("<", i + 1)
     return text[:max_chars]
