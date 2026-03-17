@@ -638,10 +638,8 @@ class SortedListMixin(ListView):
         field_list = [field["name"] for field in self.table_fields]
         if sort.lstrip("-") in field_list:
             if sort.startswith("-"):
-                print(f"BB-de: {sort}, {sort[1:]}")
                 queryset = queryset.order_by(Lower(sort[1:]).desc())
             else:
-                print(f"BB-as: {sort}")
                 queryset = queryset.order_by(Lower(sort))
 
         return queryset

@@ -1,27 +1,39 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
   <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     {% load django_bootstrap5 %}
     {% bootstrap_css %}
 
+    {% load static %}
+
     <!-- Bootstrap Icons CDN -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+    />
     <!-- Font Awesome CDN -->
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.6.0/css/all.min.css"
       integrity="sha256-5eIC48iZUHmSlSUz9XtjRyK2mzQkHScZY1WdMaoz74E="
-      crossorigin="anonymous">
+      crossorigin="anonymous"
+    />
     <!-- Flatpickr CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/material_blue.css">
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://npmcdn.com/flatpickr/dist/themes/material_blue.css"
+    />
     <!-- Turn off crispy-forms asterisks for required fields -->
     <style>
       .asteriskField {
-          display: none;
+        display: none;
       }
     </style>
 
@@ -32,41 +44,60 @@
     {% endblock %}
 
     {# This can be overridden: #}
-    <title>{% block title %}EcoFlux{% endblock %}</title>
+    <title> {% block title %}EcoFlux{% endblock %} </title>
   </head>
 
   <body>
     <!-- Fixed Banner -->
-    <header class="sticky-top text-bg-primary text-white p-1 mb-2 shadow-sm" >
-      <div class="p-1 container-fluid d-flex justify-content-between align-items-center">
+    <header class="sticky-top text-bg-primary text-white p-1 mb-2 shadow-sm">
+      <div
+        class="p-1 container-fluid d-flex justify-content-between align-items-center"
+      >
         <!-- Logo -->
-        <a href="{% url 'home' %}" class="d-flex align-items-center text-white text-decoration-none">
-          <img src="{% static 'images/C-3_C-2.png' %}"
-               alt="EcoFlux Logo" class="me-3 py-2 img-fluid"
-               style="width: 60px">
-          <span class="fs-2 fw-bold">EcoFlux Inventory{% block page_heading %}{% endblock %}</span>
+        <a
+          href="{% url 'home' %}"
+          class="d-flex align-items-center text-white text-decoration-none"
+        >
+          <img
+            src="{% static 'images/C-3_C-2.png' %}"
+            alt="EcoFlux Logo"
+            class="me-3 py-2 img-fluid"
+            style="width: 60px"
+          />
+          <span class="fs-2 fw-bold"
+            >EcoFlux Inventory{% block page_heading %}{% endblock %}</span
+          >
         </a>
         <!-- Conditional Links (Collapsible for Mobile)-->
         <nav class="d-flex align-items-center">
           {% if user.is_authenticated %}
           <span class="me-3">Hello, <strong>{{user.username}}</strong>!</span>
           <a href="{% url 'view_sites' %}" class="text-white me-3">Sites</a>
-          <a href="{% url 'view_equipment' %}" class="text-white me-3">Equipment</a>
-          <a href="{% url 'view_fieldnotes' %}" class="text-white me-3">Field notes</a>
+          <a href="{% url 'view_equipment' %}" class="text-white me-3"
+            >Equipment</a
+          >
+          <a href="{% url 'view_fieldnotes' %}" class="text-white me-3"
+            >Field notes</a
+          >
           <a href="{% url 'view_photos' %}" class="text-white me-3">Photos</a>
           {% if user.is_superuser %}
-          <a href="{% url 'admin:index' %}"
-             class="text-white me-3">User Admin</a>
+          <a href="{% url 'admin:index' %}" class="text-white me-3"
+            >User Admin</a
+          >
           {% endif %}
           <!-- Logout Form Styled as a Button -->
-          <form id="logout-form"
-                method="post"
-                action="{% url 'logout' %}"
-                class="d-inline;">
+          <form
+            id="logout-form"
+            method="post"
+            action="{% url 'logout' %}"
+            class="d-inline;"
+          >
             {% csrf_token %}
-            <button type="submit"
-                    class="btn btn-light btn-sm text-primary
-                           fw-bold mb-1">Logout
+            <button
+              type="submit"
+              class="btn btn-light btn-sm text-primary fw-bold mb-1"
+            >
+              Logout
             </button>
           </form>
           {% endif %}
@@ -76,8 +107,7 @@
 
     <!-- Main Content -->
     <main class="container-fluid flex-grow-1">
-        {% block content %}
-        {% endblock %}
+      {% block content %} {% endblock %}
     </main>
 
     <!-- <\!-- Footer -\-> -->
@@ -88,36 +118,64 @@
     <!-- </footer> -->
 
     <!-- Unsaved changes modal -->
-    <div class="modal fade" id="unsavedChangesModal" tabindex="-1" aria-hidden="true">
+    <div
+      class="modal fade"
+      id="unsavedChangesModal"
+      tabindex="-1"
+      aria-hidden="true"
+    >
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header bg-warning">
             <h5 class="modal-title">Unsaved Changes</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <div class="modal-body">
             <p id="unsavedChangesMessage"></p>
           </div>
           <div class="modal-footer">
-            <button type="button" id="stayOnPageBtn" class="btn btn-secondary" data-bs-dismiss="modal">Stay on Page</button>
-            <button type="button" id="leaveWithoutSavingBtn" class="btn btn-danger">Leave Without Saving</button>
-            <button type="button" id="saveAndContinueBtn" class="btn btn-primary">Save and Continue</button>
+            <button
+              type="button"
+              id="stayOnPageBtn"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Stay on Page
+            </button>
+            <button
+              type="button"
+              id="leaveWithoutSavingBtn"
+              class="btn btn-danger"
+            >
+              Leave Without Saving
+            </button>
+            <button
+              type="button"
+              id="saveAndContinueBtn"
+              class="btn btn-primary"
+            >
+              Save and Continue
+            </button>
           </div>
         </div>
       </div>
     </div>
 
-
     {% bootstrap_javascript %}
-
-    {% load static %}
     <!-- Inventory app JavaScript -->
     <script src="{% static 'js/form_protect.js' %}"></script>
     <!-- For Bootstrap tooltips -->
     <script>
       // for older browsers (pre-2015):
       // const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggl
-      const tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+      const tooltipTriggerList = Array.from(
+        document.querySelectorAll('[data-bs-toggle="tooltip"]'),
+      );
       /*
       Each HTML element, tooltipTriggerEl, should have a 'title'
       attribute that will be used as the tooltip. If you don't need to
@@ -125,15 +183,13 @@
       assignment of the mapped tooltopTriggerList to the tooltipList
       array. */
       const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-          return new bootstrap.Tooltip(tooltipTriggerEl);
+        return new bootstrap.Tooltip(tooltipTriggerEl);
       });
-
     </script>
     <!-- Flatpickr JS -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
     {% block extra_js %}
     {% endblock %}
-
   </body>
 </html>

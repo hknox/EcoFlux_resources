@@ -302,11 +302,9 @@ class PhotoUploadForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         initial_date = kwargs.pop("initial_date")
-        print("initial_date", initial_date)
         super().__init__(*args, **kwargs)
         if initial_date:
             self.fields["date_taken"].initial = initial_date
-        print(self.fields["date_taken"].initial)
         self.helper = FormHelper()
         self.helper.form_method = "post"
         self.helper.attrs = {"enctype": "multipart/form-data"}
