@@ -326,8 +326,6 @@ class PhotoUploadForm(forms.Form):
 
     def clean_photos(self):
         files = self.files.getlist("photos")
-        print("clean photos")
-        print(files)
         if not files:
             raise forms.ValidationError("Please select at least one image file.")
         for f in files:

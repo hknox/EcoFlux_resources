@@ -43,7 +43,7 @@ def generate_summary(text, max_chars=200):
         # HTML tags will typically not be longer than MAX_TAG_LENGTH chars
         if j - i <= MAX_TAG_LENGTH:
             # Excise this tag
-            text = text[:i] + text[j + 1 :]
+            text = text[:i] + text[j_bracket + 1 :]
             i = text.find("<")
         else:
             # Log a warning if we find someting longer.

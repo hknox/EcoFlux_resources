@@ -51,39 +51,29 @@
     <!-- Fixed Banner -->
     <header class="sticky-top text-bg-primary text-white p-1 mb-2 shadow-sm">
       <div
-        class="p-1 container-fluid d-flex justify-content-between align-items-center"
+        class="container-fluid d-flex justify-content-between align-items-center"
       >
         <!-- Logo -->
-        <a
-          href="{% url 'home' %}"
-          class="d-flex align-items-center text-white text-decoration-none"
-        >
+        <a href="{% url 'home' %}" class="d-flex align-items-center text-white text-decoration-none">
           <img
             src="{% static 'images/C-3_C-2.png' %}"
             alt="EcoFlux Logo"
-            class="me-3 py-2 img-fluid"
-            style="width: 60px"
-          />
-          <span class="fs-2 fw-bold"
-            >EcoFlux Inventory{% block page_heading %}{% endblock %}</span
-          >
+            class="me-2 py-2 img-fluid"
+            style="width: 60px" />
+          <span class="fs-2 fw-bold">
+            EcoFlux Inventory{% block page_heading %}{% endblock %}
+          </span>
         </a>
         <!-- Conditional Links (Collapsible for Mobile)-->
         <nav class="d-flex align-items-center">
           {% if user.is_authenticated %}
-          <span class="me-3">Hello, <strong>{{user.username}}</strong>!</span>
+          <span class="me-3">Hello, <strong>{{user.username|capfirst}}</strong>!</span>
           <a href="{% url 'view_sites' %}" class="text-white me-3">Sites</a>
-          <a href="{% url 'view_equipment' %}" class="text-white me-3"
-            >Equipment</a
-          >
-          <a href="{% url 'view_fieldnotes' %}" class="text-white me-3"
-            >Field notes</a
-          >
+          <a href="{% url 'view_equipment' %}" class="text-white me-3" >Equipment</a>
+          <a href="{% url 'view_fieldnotes' %}" class="text-white me-3">Field notes</a>
           <a href="{% url 'view_photos' %}" class="text-white me-3">Photos</a>
           {% if user.is_superuser %}
-          <a href="{% url 'admin:index' %}" class="text-white me-3"
-            >User Admin</a
-          >
+          <a href="{% url 'admin:index' %}" class="text-white me-3">User Admin</a>
           {% endif %}
           <!-- Logout Form Styled as a Button -->
           <form
@@ -96,8 +86,7 @@
             <button
               type="submit"
               class="btn btn-light btn-sm text-primary fw-bold mb-1"
-            >
-              Logout
+            > Logout
             </button>
           </form>
           {% endif %}
@@ -111,9 +100,9 @@
     </main>
 
     <!-- <\!-- Footer -\-> -->
-    <!-- <footer class="bg-primary text-white py-3 mt-5 fixed-bottom"> -->
+    <!-- <footer class="bg-primary text-white  mt-3 fixed-bottom"> -->
     <!--   <div class="container text-center"> -->
-    <!--     <p class="mb-0">&copy; 2025 Hank Knox. All rights reserved.</p> -->
+    <!--     <p class="mb-0">&copy; 2025-2026 Hank Knox. All rights reserved.</p> -->
     <!--   </div> -->
     <!-- </footer> -->
 

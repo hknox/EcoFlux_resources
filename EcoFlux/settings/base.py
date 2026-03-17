@@ -122,7 +122,7 @@ STATICFILES_DIRS = (BASE_DIR / "static",)
 # The absolute path to the directory where collectstatic will collect
 # static files for deployment:
 STATIC_ROOT = BASE_DIR / "staticfiles"
-# STATICFILES_FINDERS¶
+# STATICFILES_FINDERS
 # Default:
 # [
 #     "django.contrib.staticfiles.finders.FileSystemFinder",

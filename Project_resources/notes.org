@@ -167,7 +167,9 @@ mysqldump -u username -p source_db | mariadb -u username -p testing_ecoflux
 Maybe better to dump to a file then load from the file:
 mysqldump -u username -p source_db > datadump.sql
 mariadb -u username -p testing_ecoflux < datadump.sql
-**
+** uninstall django-tinymce
+** get current git branch
+** collectstatic
 * Deployment
 [[https://absolutecodeworks.com/django-web-application-crud-sample-using-mariadb][Example setup for deployment]]
 ** Managing credentials, devel vs prod settings

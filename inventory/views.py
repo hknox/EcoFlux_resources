@@ -136,13 +136,6 @@ class SiteAssignmentMixin:
     # has been created
     can_edit_site = False
 
-    # def get_initial(self):
-    #     initial = super().get_initial()
-    #     site_pk = self.request.GET.get("site_pk")
-    #     if site_pk:
-    #         initial["site"] = site_pk
-    #     return initial
-
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
         # self.object is None on Create
@@ -643,7 +636,6 @@ class SortedListMixin(ListView):
     """
 
     lookup_default = "icontains"
-    # Default maximum field width
 
     def apply_filters(self, queryset):
         for field_filter in self.filter_fields:
@@ -684,7 +676,6 @@ class SortedListMixin(ListView):
 
 class SiteListView(LoginRequiredMixin, SortedListMixin):
     model = Site
-    # paginate_by = 14
     template_name = "inventory/lists.html"
 
     context_object_name = "table_items"
@@ -788,7 +779,6 @@ class SiteListView(LoginRequiredMixin, SortedListMixin):
 class EquipmentListView(LoginRequiredMixin, SortedListMixin):
     model = Equipment
     template_name = "inventory/lists.html"
-    # paginate_by = 14
     context_object_name = "table_items"
     # Default sort order
     _sort_key = "instrument"
@@ -874,7 +864,6 @@ class EquipmentListView(LoginRequiredMixin, SortedListMixin):
 
 class FieldNoteListView(LoginRequiredMixin, SortedListMixin):
     model = FieldNote
-    # paginate_by = 14
     template_name = "inventory/lists.html"
     context_object_name = "table_items"
     # Default sort order

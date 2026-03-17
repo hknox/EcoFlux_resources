@@ -5,6 +5,7 @@ test.py
 *Lab_Invent*
 *obsolete*
 site_test*
+*~
 *#
 db.sqlite*
 /notes.org
@@ -19,3 +20,4 @@ db.sqlite*
 /node_modules/
 packa*json
 /staticfiles/
+static/js/tinymce/*
