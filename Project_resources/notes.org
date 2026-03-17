@@ -159,6 +159,15 @@ allows you to manage changes independently.
 When you have stable changes in development, merge them into production.
 
 
+* Testing deployment
+** Get current data to a test db:
+[create testing_ecoflux, grant privileges to user ecoflux]
+mysqldump -u username -p source_db | mariadb -u username -p testing_ecoflux
+
+Maybe better to dump to a file then load from the file:
+mysqldump -u username -p source_db > datadump.sql
+mariadb -u username -p testing_ecoflux < datadump.sql
+**
 * Deployment
 [[https://absolutecodeworks.com/django-web-application-crud-sample-using-mariadb][Example setup for deployment]]
 ** Managing credentials, devel vs prod settings
@@ -293,7 +302,7 @@ Let me know if you want a starter `settings` layout scaffold or a `.envrc` templ
 
 
 ** Database
-*** Using MariaDb on grandwazoo as a test case.
+*** Using MariaD on grandwazoo as a test case.
 [[https://www.digitalocean.com/community/tutorials/how-to-use-mysql-or-mariadb-with-your-django-application-on-ubuntu-14-04][
 Using MariaDB with Django app]]
 

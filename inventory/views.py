@@ -1,7 +1,7 @@
-from pprint import pprint
 import logging
-from datetime import datetime
+import os
 
+from django.http import JsonResponse
 from django.db.models import Case, When, CharField, Count, F, Value
 from django.db.models.functions import Lower, Concat
 from django.views.generic.list import ListView
@@ -12,14 +12,15 @@ from django.views.generic.edit import (
     FormView,
 )
 from django.views.generic import TemplateView
-from django.shortcuts import redirect, render, get_object_or_404
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.clickjacking import xframe_options_sameorigin
+from django.shortcuts import redirect, get_object_or_404, render
 from django.contrib.auth import logout
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
 from django.urls import reverse_lazy, reverse
-
-# from django.http import JsonResponse
 
 from inventory.models import Site, FieldNote, Equipment, Photo
 from .forms import (
@@ -38,6 +39,39 @@ SUCCESS_URL = "home"
 DEFAULT_MAX_CHARS = 50
 
 logger = logging.getLogger("inventory")
+
+# ====== Utility view functions ======
+
+
+@login_required
+@require_http_methods(["GET"])
+def tinymce_get_images(request):
+    """Return a list of images associated with a specific fieldnote"""
+    fieldnote_id = request.GET.get("fieldnote_id")
+    if not fieldnote_id:
+        return JsonResponse({"error": "fieldnote_id required"}, status=400)
+
+    fieldnote = FieldNote.objects.get(id=fieldnote_id)
+    images = []
+    for photo in fieldnote.photos.all():
+        url = photo.photo.url
+        images.append(
+            {
+                "title": os.path.basename(url),
+                "value": url,
+            }
+        )
+
+    return JsonResponse(images, safe=False)
+
+
+@login_required
+# without this, browsers will not open the filepicker
+@xframe_options_sameorigin
+def image_picker_dialogue(request):
+    """Render the custom image picker dialog"""
+    return render(request, "inventory/image_picker_dialogue.html")
+
 
 # ====== View mixins ======
 

@@ -8,56 +8,114 @@
 
 {% block page_heading %} - {{action}} Fieldnote{% endblock %}
 
+{% block head_js %}
+    <!-- This uses Tiny Cloud -->
+    <!-- <script src="https://cdn.tiny.cloud/1/9c0gbyf3bxmxaijs000y7riwfaeh6bm3ezxvfrs6yd84j0hn/tinymce/8/tinymce.min.js" -->
+    <!--         referrerpolicy="origin" crossorigin="anonymous"> -->
+    <!-- </script> -->
+    <!-- Initialize self-hosted tinymce -->
+    <script src="{% static 'js/tinymce/tinymce.min.js' %}"></script>
+{% endblock %}
+
 {% block content %}
 
-<form id="id_fieldnote_form" class = "mt-3 track-unsaved form-class"
-      data-form-name = "Fieldnote form" novalidate method="post">
+    <script src="{% static 'js/delete_button.js' %}"></script>
 
-  {% csrf_token %}
-  {% crispy form %}
+    <script>
+      tinymce.init({
+        selector: 'textarea#id_note',
+        height: 700,
+        width: '100%',
+        plugins: 'lists code advlist image',
+        toolbar: 'blocks bold italic underline | forecolor backcolor | bullist numlist indent outdent | customImage',
+        menubar: false,
+        branding: false,
+        statusbar: true,
+        elementpath: false,
+        resize: true,
+        setup: function (editor) {
+          editor.ui.registry.addButton('customImage', {
+            icon: 'image',
+            tooltip: 'Insert image',
+            onAction: function () {
+              const fieldnoteId = "{{ fieldnote.id }}";
 
-  <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}">
+              editor.windowManager.openUrl({
+                title: 'Select Image',
+                url: `{% url "image_picker_dialogue" %}?fieldnote_id=${fieldnoteId}`,
+                width: 600,
+                height: 900,
 
-  {% if action == "Edit" %}
-  <!-- Photos -->
-  {% include "inventory/include/accordion_header.html" with section_id="photos" section_title="Site photos" button_text="Add photo(s)" button_url=photo_add_url mt_3=True %}
+                onMessage: (api, message) => {
+                  if (message.mceAction === 'imageSelected') {
+                    editor.insertContent(
+                      `<img src="${message.imageUrl}" width="200" />`
+                    );
+                    api.close();
+                  }
+                }
+              });
+            }
+          });
 
-  <!-- Collapsable photo gallery -->
-  <div id="photosCollapse"
-       class="accordion-collapse collapse"
-       aria-labelledby="photosHeading">
-    <div class="accordion-body">
-      <div class="row mt-2">
-        {% for photo in photos %}
-        <div class="col-md-3 mb-3">
-          <div class="card h-100 shadow-sm">
-            <img src="{{ photo.photo.url }}" class="card-img-top img-fluid" alt="{{ fieldnote.date_visited }}">
-            <div class="card-body">
-              <p class="card-text text-muted small">
-                <a href={% url "photo_edit"  photo.id %}{{ success_url }}>Taken {% if photo.date_taken %}{{ photo.date_taken }}{% else %}[unknown!]{% endif %} {% if photo.taken_by %}by {{photo.taken_by}}{% endif %}
-                </a>
-              </p>
+        },
+        content_style: `
+          img {
+            max-width: 100%;
+            height: auto;
+          }`
+        ,
+        license_key: 'gpl'
+      });
+
+    </script>
+
+    <form id="id_fieldnote_form" class="mt-3 track-unsaved form-class"
+          data-form-name="Fieldnote form" novalidate method="post">
+
+      {% csrf_token %}
+      {% crispy form %}
+
+      <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}">
+
+      {% if action == "Edit" %}
+      <!-- Photos -->
+      {% include "inventory/include/accordion_header.html" with section_id="photos" section_title="Site photos" button_text="Add photo(s)" button_url=photo_add_url mt_3=True %}
+
+      <!-- Collapsable photo gallery -->
+      <div id="photosCollapse"
+           class="accordion-collapse collapse"
+           aria-labelledby="photosHeading">
+        <div class="accordion-body">
+          <div class="row mt-2">
+            {% for photo in photos %}
+            <div class="col-md-3 mb-3">
+              <div class="card h-100 shadow-sm">
+                <img src="{{ photo.photo.url }}" class="card-img-top img-fluid" alt="{{ fieldnote.date_visited }}">
+                <div class="card-body">
+                  <p class="card-text text-muted small">
+                    <a href={% url "photo_edit"  photo.id %}{{ success_url }}>Taken {% if photo.date_taken %}{{ photo.date_taken }}{% else %}[unknown!]{% endif %} {% if photo.taken_by %}by {{photo.taken_by}}{% endif %}
+                    </a>
+                  </p>
+                </div>
+              </div>
             </div>
+            {% empty %}
+            <div type="row" class="mt-2">No photos uploaded with this note yet.</div>
+            {% endfor %}
           </div>
         </div>
-        {% empty %}
-        <div type="row" class="mt-2">No photos uploaded with this note yet.</div>
-        {% endfor %}
       </div>
-    </div>
-  </div>
-  {% endif %}
+      {% endif %}
 
-  {% include "inventory/include/messages.html" %}
+      {% include "inventory/include/messages.html" %}
 
-  <!-- Save/Cancel/Delete buttons -->
-  {% include "inventory/include/save_cancel_delete.html" %}
-
-</form>
+      <!-- Save/Cancel/Delete buttons -->
+      {% include "inventory/include/save_cancel_delete.html" %}
+    </form>
 
 {% endblock content %}
 
 {% block extra_js %}
-{% include "inventory/include/flatpickr.html" %}
-<script src="{% static 'js/delete_button.js' %}"></script>
+    {% include "inventory/include/flatpickr.html" %}
 {% endblock extra_js %}

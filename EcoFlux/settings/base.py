@@ -17,8 +17,6 @@ from pathlib import Path
 from decouple import config
 import os.path
 
-import tinymce
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -45,7 +43,6 @@ INSTALLED_APPS = [
     "inventory",
     "crispy_forms",
     "crispy_bootstrap5",
-    "tinymce",
 ]
 
 MIDDLEWARE = [
@@ -175,26 +172,6 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 CRISPY_FAIL_SILENTLY = not DEBUG
 
 DJANGO_SETTINGS_MODULE = config("DJANGO_SETTINGS_MODULE")
-
-# TinyMCE config
-TINYMCE_DEFAULT_CONFIG = {
-    "height": 360,
-    "width": "100%",
-    "menubar": False,
-    "plugins": "lists  code, advlist",
-    "toolbar": "blocks bold italic underline |  forecolor backcolor "
-    + "| bullist numlist indent outdent",
-    "branding": False,
-    "statusbar": True,
-    "elementpath": False,
-    "resize": True,
-    "license_key": "gpl",
-    # "image_upload_url": "/upload-image/",  # You'll need to set this up
-    # "relative_urls": False,
-    # "remove_script_host": False,
-}
-TINYMCE_COMPRESSOR = False
-
 
 # Logging
 LOG_DIR = os.path.join(BASE_DIR, "logs")

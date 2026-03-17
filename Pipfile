@@ -13,7 +13,6 @@ crispy-bootstrap5 = "*"
 mysqlclient = "*"
 python-decouple = "*"
 python-dotenv = "*"
-django-tinymce = "*"
 
 [dev-packages]
 pylsp-rope = "*"

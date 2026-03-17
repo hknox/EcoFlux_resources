@@ -32,7 +32,13 @@ urlpatterns = [
     path("accounts/", include("django.contrib.auth.urls")),  # for authentication
     path("admin/", admin.site.urls),  # Django's built-in admin interface
     path(home_url, include("inventory.urls")),
-    path("tinymce/", include("tinymce.urls")),
+    # For TinyMCE editor image insert
+    path("api/tinymce/images/", views.tinymce_get_images, name="tinymce_get_images"),
+    path(
+        "api/tinymce/picker/",
+        views.image_picker_dialogue,
+        name="image_picker_dialogue",
+    ),
 ]
 
 if settings.DEBUG:
