@@ -72,7 +72,9 @@ def site_photo_upload_path(instance, filename):
     unique_name = f"{uuid.uuid4()}.{ext}"
     # Organize by site ID
     site_id = instance.fieldnote.site.id
-    return os.path.join("site_photos", f"site_{site_id}", unique_name)
+    return os.path.join(
+        settings.SITE_PHOTO_UPLOAD_SUBDIR, f"site_{site_id}", unique_name
+    )
 
 
 class Photo(models.Model):

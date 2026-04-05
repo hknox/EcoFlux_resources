@@ -14,20 +14,20 @@ See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 """
 
 from pathlib import Path
-from decouple import config
+from decouple import config, Csv
 import os.path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", False, cast=bool)
 
-ALLOWED_HOSTS = [
-    "localhost",
-]
+ADMINS = config("ADMINS", default="", cast=Csv())
+
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default=[], cast=Csv())
 
 # Application definition
 
@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "django.contrib.admindocs",
     "django.contrib.staticfiles",
     "django_bootstrap5",
+    "maintenance_mode",
     "inventory",
     "crispy_forms",
     "crispy_bootstrap5",
@@ -53,6 +54,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "maintenance_mode.middleware.MaintenanceModeMiddleware",
 ]
 
 ROOT_URLCONF = "EcoFlux.urls"
@@ -75,6 +77,17 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "EcoFlux.wsgi.application"
+
+DATABASES = {
+    "default": {
+        "ENGINE": config("DB_ENGINE"),
+        "NAME": config("DB_NAME", default=""),
+        "USER": config("DB_USER", default=""),
+        "PASSWORD": config("DB_PASSWORD", default=""),
+        "HOST": config("DB_HOST", default=""),
+        "PORT": config("DB_PORT", default=""),
+    },
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -112,7 +125,7 @@ MESSAGE_STORAGE = "django.contrib.messages.storage.session.SessionStorage"
 # not None, this will be used as the base path for asset definitions
 # (the Media class) and the staticfiles app. It must end in a slash if
 # set to a non-empty value
-STATIC_URL = "static/"
+STATIC_URL = config("STATIC_URL", "static/")
 # This setting defines the additional locations the staticfiles app
 # will traverse if the FileSystemFinder finder is enabled, e.g. if you
 # use the collectstatic or findstatic management command or use the
@@ -148,6 +161,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Account Management
+LOGIN_URL = config("LOGIN_URL", "/accounts/login")
 LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"
 # EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
@@ -161,9 +175,10 @@ EMAIL_USE_SSL = config("EMAIL_USE_SSL", default=False, cast=bool)
 SESSION_COOKIE_AGE = 259200
 
 # Photo uploads
+MEDIA_URL = config("MEDIA_URL", default="/media/")
 MEDIA_ROOT = BASE_DIR / "media"
-MEDIA_URL = "/media/"
 SITE_PHOTO_UPLOAD_SUBDIR = "site_photos/"
+SITE_DOCUMENT_UPLOAD_SUBDIR = "documents/"
 DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
 
 # crispy-forms
@@ -217,3 +232,15 @@ LOGGING = {
         "level": "INFO",
     },
 }
+
+# MAINTENANCE mode variables, see
+# https://github.com/fabiocaccamo/django-maintenance-mode
+MAINTENANCE_MODE = config("MAINTENANCE_MODE", default=False, cast=bool)
+MAINTENANCE_MODE_LOGOUT_AUTHENTICATED_USER = config(
+    "MAINTENANCE_LOGOUT", default=False, cast=bool
+)
+MAINTENANCE_MODE_IGNORE_SUPERUSE = config(
+    "MAINTENANCE_MODE_IGNORE_SUPERUSER", default=False, cast=bool
+)
+MAINTENANCE_MODE_GET_CONTEXT = "inventory.maintenance_testing.get_context_data"
+MAINTENANCE_MODE_TEMPLATE = "inventory/under_construction.html"

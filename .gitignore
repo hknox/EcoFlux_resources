@@ -21,3 +21,5 @@ db.sqlite*
 packa*json
 /staticfiles/
 static/js/tinymce/*
+/Assets/*.png
+/EcoFlux/settings/test_env.py
