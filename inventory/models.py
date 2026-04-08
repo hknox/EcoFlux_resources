@@ -85,10 +85,6 @@ class Photo(models.Model):
         FieldNote, on_delete=models.CASCADE, related_name="photos"
     )
 
-    # # OR:
-    # @property
-    # def date_taken(self):
-    #     return self.fieldnote.date
 
 
 # class Document(models.Model):
