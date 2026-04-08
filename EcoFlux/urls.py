@@ -23,7 +23,7 @@ from django.conf import settings
 from inventory import views
 
 # grandwazoo.ddns.net adds "ecoflux/" automatically via Apache config.
-if settings.DJANGO_SETTINGS_MODULE.endswith("production"):
+if settings.IN_PRODUCTION:
     home_url = ""
 else:
     home_url = "ecoflux/"
