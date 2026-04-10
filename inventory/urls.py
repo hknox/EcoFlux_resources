@@ -72,4 +72,16 @@ urlpatterns = [
         views.PhotoDeleteView.as_view(),
         name="photo_delete",
     ),
+    # Documents
+    path("documents/add/", views.DocumentUploadView.as_view(), name="document_add"),
+    path(
+        "documents/edit/<int:pk>",
+        views.DocumentUpdateView.as_view(),
+        name="document_edit",
+    ),
+    path(
+        "documents/delete/<int:pk>",
+        views.DocumentDeleteView.as_view(),
+        name="document_delete",
+    ),
 ]

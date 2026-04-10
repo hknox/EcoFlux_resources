@@ -61,6 +61,17 @@ scp all of /srv/ecoflux/media to local /media/ dir.
 Let me know if you’d like a `.gitignore` template or a typical migration folder structure explanation.
 
 
+* GenericForeignKeys
+Used to associate Documents with Equipment, Fieldnote or Site. From
+Duck.AI, the fields of a model which implement Generic Foreign Keys
+are:
+ContentType	        Stores which model type (Equipment, Site, or Fieldnote) the document relates to
+object_id	        Stores the primary key of that specific object
+GenericForeignKey	Not a real database field—it's a convenience accessor that combines the above two to let you access the actual related object
+
+-- Important: GenericForeignKey is not a database field! Only
+content_type and object_id are actual database columns. --
+
 * [[https://www.freecodecamp.org/news/how-to-change-your-django-secret-key-without-breaking-your-app][﻿How to replace SECRET_KEY, development and deployment]]
 ```
 from django.core.management.utils import get_random_secret_key

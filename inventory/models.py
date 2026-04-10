@@ -5,11 +5,33 @@ import os
 import uuid
 
 from django.db import models
-from django.conf import settings
 from django.utils.timezone import now
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.conf import settings
 
 
-class Site(models.Model):
+class GetDocumentMixin:
+    """Mixin providing helper class for objects that can be related to
+    Documents.
+
+    It provides 2 equivalent ways to get related documents."""
+
+    def get_documents(self):
+        """Return all documents associated with an object of this class."""
+
+        return Document.objects.filter(
+            content_type=ContentType.objects.get_for_model(self.__class__),
+            object_id=self.id,
+        )
+
+    @property
+    def documents(self):
+
+        return self.get_documents()
+
+
+class Site(models.Model, GetDocumentMixin):
     name = models.CharField(max_length=50)  # , help_text="Site name")
     code = models.CharField(max_length=10)  # , help_text="Short code for internal use")
     amp = models.CharField(
@@ -33,7 +55,7 @@ class DOI(models.Model):
     site = models.ForeignKey(Site, on_delete=models.CASCADE, related_name="doi_records")
 
 
-class Equipment(models.Model):
+class Equipment(models.Model, GetDocumentMixin):
     instrument = models.CharField(max_length=75)
     manufacturer = models.CharField(max_length=75, blank=True)
     model_number = models.CharField(max_length=75, blank=True)
@@ -56,7 +78,7 @@ class History(models.Model):
     )
 
 
-class FieldNote(models.Model):
+class FieldNote(models.Model, GetDocumentMixin):
     site = models.ForeignKey(Site, related_name="fieldnotes", on_delete=models.CASCADE)
     note = models.TextField()
     date_visited = models.DateField(default=now)
@@ -86,10 +108,26 @@ class Photo(models.Model):
     )
 
 
+class Document(models.Model):
+    # Generic relation fields
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    # Important: GenericForeignKey is not a database field! Only
+    # content_type and object_id are actual database columns.
+    content_object = GenericForeignKey("content_type", "object_id")
 
-# class Document(models.Model):
-#     date_uploaded = models.DateField(default=now)
-#     submitter = models.CharField(max_length=50, blank=True)
-#     file = models.FileField(
-#         verbose_name="equipment_document", name="document", upload_to=""
-#     )
+    date_uploaded = models.DateField(default=now)
+    submitter = models.CharField(max_length=50, blank=True, null=True)
+    date_received = models.DateField()
+    summary = models.CharField(max_length=80)
+    file = models.FileField(
+        verbose_name="document",
+        upload_to=settings.SITE_DOCUMENT_UPLOAD_SUBDIR,
+        blank=False,
+        null=False,
+    )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["content_type", "object_id"]),
+        ]

@@ -1,0 +1,26 @@
+<div id="documentsCollapse" class="accordion-collapse collapse" aria-labelledby="documentsHeading">
+    <div class="accordion-body">
+        {% if documents %}
+        <table class="table table-striped table-hover table-bordered mt-2">
+            <thead>
+                <th>Date received</th>
+                <th>Summary</th>
+            </thead>
+            <tbody>
+                {% for doc in documents %}
+                <tr>
+                    <td>
+                        <a href="{% url 'document_edit' doc.pk %}{{return_url}}">
+                            {{ doc.date_received }}
+                        </a>
+                    </td>
+                    <td>{{ doc.summary|truncatechars:80 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="mt-2">No documents for this {{content_type}} yet.</div>
+        {% endif %}
+    </div>
+</div>

@@ -1,0 +1,75 @@
+{% extends "inventory/layout_base.html" %}
+
+{% load crispy_forms_tags %}
+
+{% block page_heading %} - Document{% endblock %}
+
+{% block content %}
+<h2>Upload a PDF document</h2>
+
+<form
+  method="post"
+  enctype="multipart/form-data"
+  data-form-name="Document Upload"
+>
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}" />
+
+    {% crispy form %}
+</form>
+
+{% endblock content %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const dropZone = document.getElementById("drop-zone");
+  const fileInput = document.getElementById("id_document");
+
+  // Click anywhere in the drop zone opens file picker
+  dropZone.addEventListener("click", () => fileInput.click());
+
+  // Highlight when dragging
+  dropZone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropZone.classList.add("bg-primary-subtle");
+  });
+
+  dropZone.addEventListener("dragleave", () => {
+    dropZone.classList.remove("bg-primary-subtle");
+  });
+
+  // Handle drop
+  dropZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    fileInput.files = e.dataTransfer.files;
+    previewFiles(fileInput.files);
+    dropZone.classList.remove("bg-primary-subtle");
+  });
+
+  // Handle normal selection
+  fileInput.addEventListener("change", () => {
+    previewFiles(fileInput.files);
+  });
+
+  function previewFiles(files) {
+    if (files.length > 0) {
+      const file = files[0];
+      const fileSize = (file.size / 1024).toFixed(2);
+      dropZone.innerHTML = `
+          <div class="text-center">
+              <div class="fs-1">✓</div>
+              <p class="mb-1"><strong>${file.name}</strong></p>
+              <p class="mb-0 text-muted small">${fileSize} KB</p>
+              <p class="mb-0 text-muted small mt-2">Click to change file</p>
+          </div>
+      `;
+    }
+  }
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+  flatpickr(".flatpickr", { dateFormat: "Y-m-d" });
+});
+</script>
+{% endblock extra_js %}

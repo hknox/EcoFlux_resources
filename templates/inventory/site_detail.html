@@ -31,7 +31,7 @@
          aria-labelledby="doiHeading">
       <div class="accordion-body">
         {% if not doi_formset.forms %}
-        <div class="row mt-2">No DOI records for this site yet.</div>
+        <div class="mt-2">No DOI records for this site yet.</div>
         {% endif %}
         {% include "inventory/include/formset_block.html" with formset=doi_formset %}
       </div>
@@ -109,6 +109,11 @@
       </div>
     </div>
     {% endif %}
+
+      <!-- Documents -->
+      {% include "inventory/include/accordion_header.html" with section_id="documents" section_title="Documents" button_text="Add a document" button_url=document_create_url mt_3=True %}
+
+      {% include "inventory/include/documents_accordion_body.html" with documents=documents document_edit_url="document_edit" return_url=return_url %}
 
     {% include "inventory/include/messages.html" %}
 

@@ -1,3 +1,5 @@
+from pprint import pprint
+
 from django import forms
 from django.forms import inlineformset_factory
 from django.forms.models import BaseInlineFormSet
@@ -14,7 +16,7 @@ from crispy_forms.layout import (
     Div,
 )
 
-from .models import Equipment, Site, DOI, FieldNote, History, Photo
+from .models import Equipment, Site, DOI, FieldNote, History, Photo, Document
 
 
 class SiteForm(forms.ModelForm):
@@ -250,6 +252,148 @@ class EquipmentForm(forms.ModelForm):
                 # field.help_text = ""
 
 
+# documents
+class DocumentUploadForm(forms.ModelForm):
+    class Meta:
+        model = Document
+        fields = [
+            "submitter",
+            "date_uploaded",
+            "date_received",
+            "summary",
+            "file",
+        ]
+        labels = {
+            "submitter": "Submitted by",
+            "summary": "Short descriptive summary",
+            "file": "Document",
+        }
+        widgets = {
+            "date_uploaded": forms.DateInput(
+                attrs={"placeholder": "Select a date", "class": "flatpickr"}
+            ),
+            "date_received": forms.DateInput(attrs={"class": "flatpickr"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = "post"
+        self.helper.attrs = {"enctype": "multipart/form-data"}
+        self.helper.layout = Layout(
+            Row(
+                Column("submitter", css_class="col-md-6"),
+                Column("date_uploaded", css_class="col-md-3"),
+            ),
+            Div(
+                HTML(
+                    """ <div id="drop-zone" class="border border-secondary rounded p-5 text-center bg-light" style="cursor:pointer;">
+                    <p class="mb-0">Drag & drop a PDF document here or click to select one</p>
+                    </div>
+                    <input type="file" name="file" id="id_document" style="display:none;" accept="application/pdf,.pdf">
+                    """
+                ),
+                css_class="mb-3",
+            ),
+            Row(
+                Column("summary", css_class="col-md-6"),
+                Column("date_received", css_class="col-md-3"),
+            ),
+            Div(
+                Submit("submit", "Upload Document", css_class="btn btn-primary"),
+                HTML(
+                    '<a href="{{ cancel_url }}" class="btn btn-secondary ms-2 btn-cancel">Cancel</a>'
+                ),
+                css_class="mt-3",
+            ),
+        )
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        file = cleaned_data.get("file")
+        if not file:
+            raise forms.ValidationError("Please select a file to upload.")
+
+        return cleaned_data
+
+
+class DocumentForm(forms.ModelForm):
+    class Meta:
+        model = Document
+        fields = ["date_received", "summary"]
+
+    def __init_FormHelper(self):
+        helper = FormHelper()
+        helper.form_id = "id_document_form"
+        helper.form_method = "POST"
+        helper.form_tag = False
+        helper.form_class = "track-unsaved form-class"
+        helper.label_class = (
+            "col-auto col-form-label text-end align-self-center py-0 pe-2 label-class"
+        )
+        helper.field_class = "col-auto field-class"
+        helper.layout = Layout(
+            Row(
+                Column(Field("date_received"), css_class="col-md-4"),
+                Column(
+                    Field("summary"),
+                ),
+                css_class="mb-1",
+            ),
+        )
+        return helper
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = self.__init_FormHelper()
+        self.fields["date_received"].widget.attrs["class"] = "datepicker"
+
+
+# DOI links
+class DOIForm(forms.ModelForm):
+    class Meta:
+        model = DOI
+        fields = ["label", "doi_link"]
+        labels = {
+            "doi_link": "DOI link",
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_tag = (
+            False  # the <form> and Submit buttons are in the parent template
+        )
+
+        # Adjust label class for better alignment with inputs
+        self.helper.label_class = (
+            "col-auto col-form-label me-2 d-inline-flex align-items-center mt-2"
+        )
+        self.helper.field_class = "col"
+        self.helper.form_class = "form-horizontal"
+
+        self.helper.layout = Layout(
+            Row(
+                Column(Field("label", wrapper_class="mb-0"), css_class="col-3"),
+                Column(Field("doi_link", wrapper_class="mb-0"), css_class="col-7"),
+                Column(
+                    Field("DELETE", type="hidden"),  # Hidden delete field
+                    HTML("""
+                      <button type="button"
+                              class="btn btn-danger btn-sm remove-form-row"
+                              title=" Remove"
+                              data-confirm="Are you sure you want to remove this DOI record?">
+                        <i class="bi bi-trash"></i> Remove
+                      </button>
+                    """),
+                    css_class="col-auto d-flex mt-0 pt-0 align-items-center",
+                ),
+                css_class="g-1 align-items-center",
+            )
+        )
+
+
 # photos
 class MultiFileInput(forms.ClearableFileInput):
     """Widget that allows selecting multiple files."""
@@ -269,6 +413,10 @@ class MultiFileField(forms.FileField):
         super().__init__(*args, **kwargs)
 
     def clean(self, data, initial=None):
+        if not data:
+            print("no files")
+            raise forms.ValidationError("Please select at least one image file.")
+
         single_file_clean = super().clean
         if isinstance(data, (list, tuple)):
             result = [single_file_clean(d, initial) for d in data]
@@ -278,24 +426,38 @@ class MultiFileField(forms.FileField):
 
 
 class PhotoUploadForm(forms.Form):
-    taken_by = forms.CharField(required=False, label="Batch taken by")
+    taken_by = forms.CharField(
+        required=False,
+        label="Batch taken by",
+        max_length=100,
+    )
     date_taken = forms.DateField(
         required=True,
         label="Date batch taken",
-        widget=forms.TextInput(attrs={"type": "text", "class": "flatpickr"}),
+        widget=forms.DateInput(
+            attrs={
+                "placeholder": "Select a date",
+                "class": "flatpickr",
+            }
+        ),
     )
     photos = MultiFileField(
         required=True,
         label="",
         help_text="You can select one or more image files.",
-        widget=MultiFileInput(attrs={"id": "id_photos", "style": "display:none;"}),
+        widget=MultiFileInput(
+            attrs={
+                "id": "id_photos",
+                "required": True,
+                "style": "display:none;",
+                "accept": "image/*,.jpg,.jpeg,.png",
+            }
+        ),
     )
 
     def __init__(self, *args, **kwargs):
-        initial_date = kwargs.pop("initial_date")
         super().__init__(*args, **kwargs)
-        if initial_date:
-            self.fields["date_taken"].initial = initial_date
+
         self.helper = FormHelper()
         self.helper.form_method = "post"
         self.helper.attrs = {"enctype": "multipart/form-data"}
@@ -311,8 +473,9 @@ class PhotoUploadForm(forms.Form):
                         <p class="mb-0">Drag & drop photos here or click to select</p>
                     </div>
                     <div id="preview" class="d-flex flex-wrap mt-3"></div>
-                    """),
-                Field("photos"),  # hidden input triggered by JS
+                """),
+                # hidden input triggered by JS:
+                "photos",  # simpler than Field("photos");
                 css_class="mb-3",
             ),
             Div(
@@ -325,12 +488,15 @@ class PhotoUploadForm(forms.Form):
         )
 
     def clean_photos(self):
+        print("clean photos")
         files = self.files.getlist("photos")
+
         if not files:
             raise forms.ValidationError("Please select at least one image file.")
         for f in files:
             if not f.content_type.startswith("image/"):
                 raise forms.ValidationError(f"'{f.name}' is not a valid image file.")
+
         return files
 
 

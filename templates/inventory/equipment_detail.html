@@ -49,6 +49,11 @@
         </div>
       </div>
 
+      <!-- Documents -->
+      {% include "inventory/include/accordion_header.html" with section_id="documents" section_title="Documents" button_text="Add a document" button_url=document_create_url mt_3=True %}
+
+      {% include "inventory/include/documents_accordion_body.html" with documents=documents document_edit_url="document_edit" return_url=return_url %}
+
       {% include "inventory/include/messages.html" %}
       <!-- Save/Cancel/Delete buttons -->
       {% include "inventory/include/save_cancel_delete.html" %}
