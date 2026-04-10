@@ -14,11 +14,14 @@ put the backup file into a systemd timer:
 To get live data from grandwazoo to sunvillage:
 - on grandwazoo and ship to joesgarage, do:
 mariadb-dump -u ecoflux -p ecoflux > ecoflux_data_[date].sql ([[https://mariadb.com/docs/server/clients-and-utilities/backup-restore-and-import-clients/mariadb-dump][mariadb dump docs]])
-use scp to copy to JoesGarage
+use scp to copy to JoesGarage:
+scp hank@grandwazoo.ddns.net:/srv/ecoflux/[filename] .
 [[https://github.com/francescozanoni/tutorials/blob/master/mysql_to_sqlite.md][Convert Mysql to sqlite]]
-Then load into sqlite db.
-scp all of /srv/ecoflux/media to local /media/ dir.
+Then load into sqlite db:
 
+Get media/ files:
+scp all of /srv/ecoflux/media to local /media/ dir.
+(or use rsync?)
 
 * Sara's sites
 [[https://carbonique.ca/en/data.html][Carbonique]]
@@ -67,7 +70,6 @@ Goes into .env
 
 
 * How to manage settings.py for development and deployment
-Fix base urls.py in prod for MEDIA
 
 [[https://pypi.org/project/python-decouple/#python-decouple-strict-separation-of-settings-from-code][Use decouple]]
 
@@ -80,14 +82,11 @@ Django project, such as `settings.py`, while using Git, you can follow
 these best practices:
 
 ** DONE Use Environment Variables
-
 Instead of hardcoding sensitive information or environment-specific
 settings in `settings.py`, use environment variables. This allows you
 to keep your settings flexible and secure.
-
 *** DONE Install `python-decouple`
 *** DONE Create a `.env` file
-
 In your project root, create a `.env` file to store your environment
 variables.
 *** DONE Modify `settings.py`
@@ -100,44 +99,48 @@ variables.
    DATABASE_URL = config('DATABASE_URL')
    ```
 *** DONE Add `.env` to `.gitignore`
-** DONE Create a Base Settings File
 
-You can create a base settings file and then extend it for different
-environments.
+** DONE Environment variable matrix
+All of these should be set in .env and picked up in settings.py:
 
-*** Create a `settings` directory
-Inside your Django project, create a directory named `settings`.
-
-*** Create `base.py`
-This file will contain common settings.
-   ```python
-   # settings/base.py
-   DEBUG = False
-   ALLOWED_HOSTS = []
-   ```
-*** Create `development.py` and `production.py`
-
-These files will import from `base.py` and override specific settings.
-
-   ```python
-   # settings/development.py
-   from .base import *
-
-   DEBUG = True
-   ALLOWED_HOSTS = ['localhost', '127.0.0.1']
-   ```
-
-   ```python
-   # settings/production.py
-   from .base import *
-
-   ALLOWED_HOSTS = ['yourdomain.com']
-   ```
-*** Set the `DJANGO_SETTINGS_MODULE`
-When running your application, specify which settings file to use.
-   ```bash
-   export DJANGO_SETTINGS_MODULE=myproject.settings.development
-   ```
+|------------------------------------+--------------------+----------------+--------------------------|
+| setting                            | [[https://github.com/django/django/blob/main/django/conf/global_settings.py][defaults]]           | devel          | prod                     |
+|------------------------------------+--------------------+----------------+--------------------------|
+| DJANGO_SETTINGS_MODULE/not setting | must set!          | TBA            | same as devel?           |
+|------------------------------------+--------------------+----------------+--------------------------|
+| SECRET_KEY                         | ""                 | must set       | must set                 |
+| DEBUG                              | False              | True           | False                    |
+|------------------------------------+--------------------+----------------+--------------------------|
+| EMAIL_HOST                         | "localhost"        | specific       | videotron                |
+| EMAIL_PORT                         | 25                 | specific       | videotron                |
+| EMAIL_HOST_USER                    | ""                 | specific       | videotron                |
+| EMAIL_HOST_PASSWORD                | ""                 | specific       | videotron                |
+| EMAIL_USE_SSL                      | False              | specific       | videotron                |
+|------------------------------------+--------------------+----------------+--------------------------|
+| MAINTENANCE_MODE                   | None               | settable       | settable                 |
+| MAINTENANCE_LOGOUT                 | False              | settable       | settable                 |
+| MAINTENANCE_MODE_IGNORE_SUPERUSER  | False              | settable       | settable                 |
+|------------------------------------+--------------------+----------------+--------------------------|
+| MEDIA_URL                          | ""                 | /media/        | specific                 |
+| LOGIN_URL                          | "/accounts/login/" | default        | specific                 |
+| STATIC_URL                         | None               | static/        | specific                 |
+|------------------------------------+--------------------+----------------+--------------------------|
+| ADMINS                             | []                 | []             | specifc                  |
+| ALLOWED_HOSTS                      | []                 | ["localhost",] | specific                 |
+|------------------------------------+--------------------+----------------+--------------------------|
+| DATABASES                          | {} (dummy backend) |                |                          |
+| ENGINE                             |                    | (sqlite)       | (mariadb)                |
+|------------------------------------+--------------------+----------------+--------------------------|
+| DB_ENGINE                          | not Django         | "...sqlite3"   | "..mysql"                |
+| DB_NAME                            | not Django         | "db.sqlite3"   | specific                 |
+| DB_USER                            | not Django         | ""             | specific                 |
+| DB_PASSWORD                        | not Django         | ""             | specific                 |
+| DB_HOST                            | not Django         | ""             | specific                 |
+| DB_PORT                            | not Django         | ""             | specific                 |
+|------------------------------------+--------------------+----------------+--------------------------|
+| FORCE_SCRIPT_NAME                  | None               | None           | /ecoflux                 |
+| WSGI_APPLICATION                   | None               | None           | EcoFlux.wsgi.application |
+|------------------------------------+--------------------+----------------+--------------------------|
 
 ** DEFERRED Use Git Branches
 
