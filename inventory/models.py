@@ -16,6 +16,11 @@ from inventory.media_processing.media_paths import (
     image_thumbnail_upload_path,
 )
 from inventory.media_processing.thumbnails import (
+    generate_image_thumbnail,
+    generate_pdf_thumbnail,
+    generate_thumbnail_name,
+)
+
 
 class GetDocumentMixin:
     """Mixin providing helper class for objects that can be related to
@@ -35,6 +40,19 @@ class GetDocumentMixin:
     def documents(self):
 
         return self.get_documents()
+
+
+class ThumbnailMixin:
+    """Mixin providing a save() method for classes that produce
+    thumbnails for larger images or PDF files."""
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+
+        if is_new and not self.thumbnail:
+            self.generate_thumbnail()
+            super().save(update_fields=["thumbnail"])
 
 
 class Site(models.Model, GetDocumentMixin):
@@ -93,17 +111,28 @@ class FieldNote(models.Model, GetDocumentMixin):
     site_visitors = models.CharField(max_length=250, blank=True, default="")
 
 
-class Photo(models.Model):
-    photo = models.ImageField(upload_to=site_photo_upload_path)
+class Photo(ThumbnailMixin, models.Model):
     photo = models.ImageField(upload_to=site_photo_upload_path, blank=False, null=False)
     date_taken = models.DateField(blank=True, null=True)
     taken_by = models.CharField(max_length=100, blank=True)
     fieldnote = models.ForeignKey(
         FieldNote, on_delete=models.CASCADE, related_name="photos"
     )
+    thumbnail = models.ImageField(
+        verbose_name="thumbnail",
+        upload_to=image_thumbnail_upload_path,
+        blank=True,
+        null=True,
+    )
+
+    def generate_thumbnail(self):
+        if self.photo and not self.thumbnail:
+            thumb = generate_image_thumbnail(self.photo)
+            unique_name = generate_thumbnail_name(self.photo.name)
+            self.thumbnail.save(unique_name, thumb, save=False)
 
 
-class Document(models.Model):
+class Document(ThumbnailMixin, models.Model):
     # Generic relation fields
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
@@ -115,6 +144,12 @@ class Document(models.Model):
     submitter = models.CharField(max_length=50, blank=True, null=True)
     date_received = models.DateField()
     summary = models.CharField(max_length=80)
+    thumbnail = models.ImageField(
+        verbose_name="thumbnail",
+        upload_to=document_thumbnail_upload_path,
+        blank=True,
+        null=True,
+    )
     file = models.FileField(
         verbose_name="document",
         upload_to=document_upload_path,
@@ -126,3 +161,9 @@ class Document(models.Model):
         indexes = [
             models.Index(fields=["content_type", "object_id"]),
         ]
+
+    def generate_thumbnail(self):
+        if self.file and not self.thumbnail:
+            thumb = generate_pdf_thumbnail(self.file)
+            unique_name = generate_thumbnail_name(self.file.name)
+            self.thumbnail.save(unique_name, thumb, save=False)

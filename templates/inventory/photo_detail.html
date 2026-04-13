@@ -21,7 +21,7 @@
   <div class="mb-3 text-center">
     {% if photo.photo %}
     <a href="{{ photo.photo.url }}" target="_blank">
-      <img src="{{ photo.photo.url }}"
+      <img src="{{ photo.thumbnail.url }}"
         alt="{{ photo }}"
         class="img-fluid rounded shadow-sm"
         style="max-height: 400px; object-fit: contain;">

@@ -91,7 +91,7 @@
             {% for photo in photos %}
             <div class="col-md-3 mb-3">
               <div class="card h-100 shadow-sm">
-                <img src="{{ photo.photo.url }}" class="card-img-top img-fluid" alt="{{ fieldnote.date_visited }}">
+                <img src="{{ photo.thumbnail.url }}" class="card-img-top img-fluid" alt="{{ fieldnote.date_visited }}">
                 <div class="card-body">
                   <p class="card-text text-muted small">
                     <a href={% url "photo_edit"  photo.id %}{{ success_url }}>Taken {% if photo.date_taken %}{{ photo.date_taken }}{% else %}[unknown!]{% endif %} {% if photo.taken_by %}by {{photo.taken_by}}{% endif %}
