@@ -1,5 +1,3 @@
-from pprint import pprint
-
 from django import forms
 from django.forms import inlineformset_factory
 from django.forms.models import BaseInlineFormSet
@@ -414,7 +412,6 @@ class MultiFileField(forms.FileField):
 
     def clean(self, data, initial=None):
         if not data:
-            print("no files")
             raise forms.ValidationError("Please select at least one image file.")
 
         single_file_clean = super().clean
@@ -488,7 +485,6 @@ class PhotoUploadForm(forms.Form):
         )
 
     def clean_photos(self):
-        print("clean photos")
         files = self.files.getlist("photos")
 
         if not files:

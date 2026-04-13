@@ -72,6 +72,7 @@ GenericForeignKey	Not a real database field—it's a convenience accessor that c
 -- Important: GenericForeignKey is not a database field! Only
 content_type and object_id are actual database columns. --
 
+
 * [[https://www.freecodecamp.org/news/how-to-change-your-django-secret-key-without-breaking-your-app][﻿How to replace SECRET_KEY, development and deployment]]
 ```
 from django.core.management.utils import get_random_secret_key

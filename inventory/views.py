@@ -621,6 +621,8 @@ class PhotoDeleteView(LoginRequiredMixin, SuccessMessageMixin, URLsMixin, Delete
 
     def form_valid(self, form):
         response = super().form_valid(form)
+        # delete the associated image file
+        self.object.photo.delete(save=False)
         logger.info(
             f"User {self.request.user} successfully deleted a photo taken at {self.object.fieldnote.site} on {self.object.date_taken} by {self.object.taken_by}."
         )
@@ -639,41 +641,6 @@ class PhotoDeleteView(LoginRequiredMixin, SuccessMessageMixin, URLsMixin, Delete
 
 
 # ====== Document Views ======
-
-
-# class DocumentViewsMixin(URLsMixin, ContextMixin, SiteAssignmentMixin):
-#     """Handles specific generic associations for documents; used to
-#     associate a document with one of Equipment, Fieldnote or Site.
-
-#     TODO: Could be a more flexible GenericAssociationMixin if ever
-#     there are data types that can be associated with other generic
-#     data types.
-
-#     """
-
-#     model = Document
-#     form_class = EquipmentForm
-#     # formset_class = HistoryFormSet
-#     # formset_key = "history_formset"
-#     default_success_url = reverse_lazy("view_equipment")
-#     template_name = "inventory/equipment_detail.html"
-#     # can_edit_site = True
-
-#     def get_form(self, form_class=None):
-#         form = super().get_form(form_class)
-#         #
-#         # set the appropriate class
-#         # get the related ID
-
-#         return form
-
-#     def get_form_kwargs(self):
-#         kwargs = super().get_form_kwargs()
-#         site = self.request.GET.get("site_pk")
-#         if site:
-#             kwargs["site_id"] = site
-
-#         return kwargs
 
 
 class DocumentUploadView(LoginRequiredMixin, URLsMixin, FormView):
@@ -702,11 +669,6 @@ class DocumentUploadView(LoginRequiredMixin, URLsMixin, FormView):
 
         return context
 
-    # def dispatch(self, request, *args, **kwargs):
-    #     print("dispatch")
-    #     self.fieldnote = get_object_or_404(FieldNote, pk=kwargs["fieldnote"])
-    #     return super().dispatch(request, *args, **kwargs)
-
     def form_valid(self, form):
         obj = form.save(commit=False)
         # Sort out the generic foreign key for this document: site_pk,
@@ -729,6 +691,9 @@ class DocumentUploadView(LoginRequiredMixin, URLsMixin, FormView):
                 f"Requested an unknown relationship for a document: {self.request.get_full_path()}"
             )
         obj.save()
+        logger.info(
+            f"User {self.request.user} uploaded a document received on {obj.date_received} ({obj.summary})."
+        )
 
         return super().form_valid(form)
 
@@ -775,6 +740,8 @@ class DocumentDeleteView(
 
     def form_valid(self, form):
         response = super().form_valid(form)
+        # delete the associated file
+        self.object.file.delete(save=False)
         logger.info(
             f"User {self.request.user} successfully deleted a document received on {self.object.date_received}: {self.object.summary}."
         )

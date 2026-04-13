@@ -176,11 +176,12 @@ EMAIL_USE_SSL = config("EMAIL_USE_SSL", default=False, cast=bool)
 
 SESSION_COOKIE_AGE = 259200
 
-# Photo uploads
+# Media uploads
 MEDIA_URL = config("MEDIA_URL", default="/media/")
 MEDIA_ROOT = BASE_DIR / "media"
-SITE_PHOTO_UPLOAD_SUBDIR = "site_photos/"
-SITE_DOCUMENT_UPLOAD_SUBDIR = "documents/"
+PHOTO_UPLOAD_SUBDIR = "site_photos/"
+DOCUMENT_UPLOAD_SUBDIR = "documents/"
+MEDIA_THUMBNAIL_SUBDIR = "thumbnails/"
 DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
 
 # crispy-forms
@@ -241,7 +242,7 @@ MAINTENANCE_MODE = config("MAINTENANCE_MODE", default=False, cast=bool)
 MAINTENANCE_MODE_LOGOUT_AUTHENTICATED_USER = config(
     "MAINTENANCE_LOGOUT", default=False, cast=bool
 )
-MAINTENANCE_MODE_IGNORE_SUPERUSE = config(
+MAINTENANCE_MODE_IGNORE_SUPERUSER = config(
     "MAINTENANCE_MODE_IGNORE_SUPERUSER", default=False, cast=bool
 )
 MAINTENANCE_MODE_GET_CONTEXT = "inventory.maintenance_testing.get_context_data"

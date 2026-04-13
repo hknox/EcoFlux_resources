@@ -2,7 +2,6 @@
 # https://docs.djangoproject.com/en/5.2/topics/db/models/, look for
 # help_text
 import os
-import uuid
 
 from django.db import models
 from django.utils.timezone import now
@@ -10,6 +9,13 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
 
+from inventory.media_processing.media_paths import (
+    site_photo_upload_path,
+    document_upload_path,
+    document_thumbnail_upload_path,
+    image_thumbnail_upload_path,
+)
+from inventory.media_processing.thumbnails import (
 
 class GetDocumentMixin:
     """Mixin providing helper class for objects that can be related to
@@ -87,20 +93,9 @@ class FieldNote(models.Model, GetDocumentMixin):
     site_visitors = models.CharField(max_length=250, blank=True, default="")
 
 
-def site_photo_upload_path(instance, filename):
-    # Get the extension
-    ext = filename.split(".")[-1].lower()
-    # Generate a unique filename
-    unique_name = f"{uuid.uuid4()}.{ext}"
-    # Organize by site ID
-    site_id = instance.fieldnote.site.id
-    return os.path.join(
-        settings.SITE_PHOTO_UPLOAD_SUBDIR, f"site_{site_id}", unique_name
-    )
-
-
 class Photo(models.Model):
     photo = models.ImageField(upload_to=site_photo_upload_path)
+    photo = models.ImageField(upload_to=site_photo_upload_path, blank=False, null=False)
     date_taken = models.DateField(blank=True, null=True)
     taken_by = models.CharField(max_length=100, blank=True)
     fieldnote = models.ForeignKey(
@@ -122,7 +117,7 @@ class Document(models.Model):
     summary = models.CharField(max_length=80)
     file = models.FileField(
         verbose_name="document",
-        upload_to=settings.SITE_DOCUMENT_UPLOAD_SUBDIR,
+        upload_to=document_upload_path,
         blank=False,
         null=False,
     )
