@@ -1,17 +1,21 @@
 {% extends "inventory/layout_base.html" %}
 {% load querystring custom_filters %}
 
+{% block page_heading %} - {{heading}}<a href={{ add_url }} class="btn btn-success bi bi-plus-circle"></>
+        {{add_button}}</a>
+{% endblock %}
+
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center">
-  <h2 class="col-md-10">{{heading}}</h2>
-  <a href={{ add_url }} class="col-md btn btn-success bi bi-plus-circle"></>
-    {{add_button}}</a>
-</div>
+<!-- <div class="d-flex justify-content-between align-items-center"> -->
+    <!-- <h2 class="col-md-10">{{heading}}</h2> -->
+    <!-- <a href={{ add_url }} class="col-md btn btn-lg btn-success bi bi-plus-circle"></>
+         {{add_button}}</a> -->
+<!-- </div> -->
 
 <div class="row">
   <!-- <div class="col-md-11 mt-1"> -->
-    <div class="mt-1">
+    <div class="mt-0">
       {% if table_items %}
       {% include "inventory/include/sortable_table.html" with table_fields=table_fields table_items=table_items edit_url_name=edit_url %}
     {% else %}

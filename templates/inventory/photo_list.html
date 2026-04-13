@@ -1,7 +1,9 @@
 {% extends "inventory/layout_base.html" %}
 
+{% block page_heading %} - Photo Library{% endblock %}
+
 {% block content %}
-  <h2>Photo Library</h2>
+<!-- <h2>Photo Library</h2> -->
 
   <div class="accordion" id="photoAccordion">
     {% for site in sites %}
@@ -25,7 +27,8 @@
                       <div class="col">
                         <div class="card h-100">
                           <a href="{{ photo.photo.url }}" target="_blank">
-                            <img src="{{ photo.thumbnail.url }}" class="card-img-top img-fluid" alt="">
+                              <img src="{{ photo.thumbnail.url }}" class="img-thumbnail" style="max-height=80px;" alt="">
+                              <!-- <img src="{{ photo.thumbnail.url }}" class="card-img-top img-fluid" alt=""> -->
                           </a>
                           <div class="card-body p-2">
                             <h6 class="card-title mb-1">

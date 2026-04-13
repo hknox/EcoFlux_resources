@@ -176,13 +176,11 @@ class Document(ThumbnailMixin, models.Model):
         obj = self.content_object
         if not obj:
             return "—"
-        print(str(obj))
         return str(obj)
 
     def context_object_url(self):
         obj = self.content_object
         if not obj:
             return None
-        print(str(obj))
         return None
         return reverse(f"{obj._meta.model_name}_detail", args=[obj.pk])

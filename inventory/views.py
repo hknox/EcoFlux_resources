@@ -725,7 +725,6 @@ class DocumentUpdateView(LoginRequiredMixin, URLsMixin, ContextMixin, UpdateView
 
     def get_context_data(self, **kwargs):
         context = self.get_base_context_data(**kwargs)
-        pprint(context)
 
         return context
 
@@ -970,12 +969,12 @@ class EquipmentListView(LoginRequiredMixin, SortedListMixin):
             "sortable": "yes",
         },
         {"name": "notes", "label": "Notes", "max_chars": 80, "sortable": "no"},
-        {
-            "name": "history_count",
-            "label": "# History records",
-            "max_chars": DEFAULT_MAX_CHARS,
-            "sortable": "no",
-        },
+        # {
+        #     "name": "history_count",
+        #     "label": "# History records",
+        #     "max_chars": DEFAULT_MAX_CHARS,
+        #     "sortable": "no",
+        # },
     ]
 
     def get_queryset(self):
@@ -1068,7 +1067,7 @@ class FieldNoteListView(LoginRequiredMixin, SortedListMixin):
         context["reset_url"] = reverse("view_fieldnotes")
         context["add_url"] = reverse("fieldnote_add")
         context["heading"] = "Field notes"
-        context["add_button"] = "Add New Field note"
+        context["add_button"] = "Add Field note"
         context["edit_url"] = "fieldnote_edit"
 
         return context
