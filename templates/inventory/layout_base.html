@@ -72,6 +72,7 @@
           <a href="{% url 'view_equipment' %}" class="text-white me-3" >Equipment</a>
           <a href="{% url 'view_fieldnotes' %}" class="text-white me-3">Field notes</a>
           <a href="{% url 'view_photos' %}" class="text-white me-3">Photos</a>
+          <a href="{% url 'view_documents' %}" class="text-white me-3">Documents</a>
           {% if user.is_superuser %}
           <a href="{% url 'admin:index' %}" class="text-white me-3">User Admin</a>
           {% endif %}

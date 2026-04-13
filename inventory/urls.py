@@ -84,4 +84,5 @@ urlpatterns = [
         views.DocumentDeleteView.as_view(),
         name="document_delete",
     ),
+    path("documents/", views.DocumentListView.as_view(), name="view_documents"),
 ]

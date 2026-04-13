@@ -4,6 +4,7 @@
 import os
 
 from django.db import models
+from django.urls import reverse
 from django.utils.timezone import now
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -110,6 +111,9 @@ class FieldNote(models.Model, GetDocumentMixin):
     submitter = models.CharField(max_length=50, blank=True)
     site_visitors = models.CharField(max_length=250, blank=True, default="")
 
+    def __str__(self):
+        return f"Visit to {site} on {date_visited}"
+
 
 class Photo(ThumbnailMixin, models.Model):
     photo = models.ImageField(upload_to=site_photo_upload_path, blank=False, null=False)
@@ -167,3 +171,18 @@ class Document(ThumbnailMixin, models.Model):
             thumb = generate_pdf_thumbnail(self.file)
             unique_name = generate_thumbnail_name(self.file.name)
             self.thumbnail.save(unique_name, thumb, save=False)
+
+    def context_object_display(self):
+        obj = self.content_object
+        if not obj:
+            return "—"
+        print(str(obj))
+        return str(obj)
+
+    def context_object_url(self):
+        obj = self.content_object
+        if not obj:
+            return None
+        print(str(obj))
+        return None
+        return reverse(f"{obj._meta.model_name}_detail", args=[obj.pk])

@@ -1090,5 +1090,24 @@ class PhotoListView(LoginRequiredMixin, ListView):
         )  # optional, for consistency
 
 
+class DocumentListView(LoginRequiredMixin, ListView):
+    model = Document
+    template_name = "inventory/document_list.html"
+    context_object_name = "documents"
+    paginate_by = 50  # strongly recommended
+
+    # def get_context_data(self, **kwargs):
+    #     context = super().get_context_data(**kwargs)
+    #     pprint(f"Doc list: {context}")
+    #     return context
+
+    def get_queryset(self):
+        return Document.objects.select_related(
+            "content_type"
+        ).order_by(  # small optimization
+            "date_received"
+        )
+
+
 def logout_view(request):
     logout(request)
