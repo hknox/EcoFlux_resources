@@ -6,7 +6,7 @@ import os
 from django.db import models
 from django.urls import reverse
 from django.utils.timezone import now
-from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
 
@@ -87,6 +87,7 @@ class Equipment(models.Model, GetDocumentMixin):
     serial_number = models.CharField(max_length=50, blank=True)
     date_purchased = models.DateField()
     notes = models.TextField(blank=True)
+    document = GenericRelation("Document")
     site = models.ForeignKey(
         Site, on_delete=models.SET_NULL, null=True, blank=True, related_name="equipment"
     )
@@ -112,7 +113,7 @@ class FieldNote(models.Model, GetDocumentMixin):
     site_visitors = models.CharField(max_length=250, blank=True, default="")
 
     def __str__(self):
-        return f"Visit to {site} on {date_visited}"
+        return f"Visit to {self.site} on {self.date_visited}"
 
 
 class Photo(ThumbnailMixin, models.Model):
@@ -143,6 +144,11 @@ class Document(ThumbnailMixin, models.Model):
     # Important: GenericForeignKey is not a database field! Only
     # content_type and object_id are actual database columns.
     content_object = GenericForeignKey("content_type", "object_id")
+    object_description = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+    )
 
     date_uploaded = models.DateField(default=now)
     submitter = models.CharField(max_length=50, blank=True, null=True)
@@ -165,6 +171,10 @@ class Document(ThumbnailMixin, models.Model):
         indexes = [
             models.Index(fields=["content_type", "object_id"]),
         ]
+
+    def save(self, *args, **kwargs):
+        self.object_description = f"{self.content_object}"
+        super().save(*args, **kwargs)
 
     def generate_thumbnail(self):
         if self.file and not self.thumbnail:

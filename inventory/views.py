@@ -1089,23 +1089,59 @@ class PhotoListView(LoginRequiredMixin, ListView):
         )  # optional, for consistency
 
 
-class DocumentListView(LoginRequiredMixin, ListView):
+class DocumentListView(LoginRequiredMixin, SortedListMixin):
     model = Document
-    template_name = "inventory/document_list.html"
-    context_object_name = "documents"
-    paginate_by = 50  # strongly recommended
+    template_name = "inventory/lists.html"
+    context_object_name = "table_items"
+    _sort_key = "date_received"  # default sort key
 
-    # def get_context_data(self, **kwargs):
-    #     context = super().get_context_data(**kwargs)
-    #     pprint(f"Doc list: {context}")
-    #     return context
+    filter_fields = [
+        # {"name": "code", "label": "Code"},
+        # This one needs to account for int type, and maybe < or >
+        # {"name": "item_count", "label": "Items"},
+    ]
+    # This gets passed to the template to control display of headers and data:
+    # If "sortable" is "no", don't offer sort arrows on the column header.
+    # Use "max_chars" to truncate the data to max_chars number of characters.
+    table_fields = [
+        {
+            "name": "date_received",
+            "label": "Date Received",
+            "max_chars": DEFAULT_MAX_CHARS,
+            "sortable": "yes",
+        },
+        {
+            "name": "summary",
+            "label": "Summary",
+            "max_chars": DEFAULT_MAX_CHARS,
+            "sortable": "yes",
+        },
+        {
+            "name": "object_description",
+            "label": "Related to",
+            "max_chars": 80,
+            "sortable": "yes",
+        },
+    ]
 
     def get_queryset(self):
-        return Document.objects.select_related(
-            "content_type"
-        ).order_by(  # small optimization
-            "date_received"
-        )
+        qs = Document.objects.select_related("content_type")
+        qs = self.apply_filters(qs)
+        qs = self.apply_sort_parameters(qs)
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["sort"] = self._sort_key
+        context["filter_fields"] = self.filter_fields
+        context["table_fields"] = self.table_fields
+        context["reset_url"] = reverse("view_documents")
+        context["heading"] = "Document Library"
+        context["edit_url"] = "document_edit"
+
+        return context
 
 
 def logout_view(request):
