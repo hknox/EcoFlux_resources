@@ -623,6 +623,7 @@ class PhotoDeleteView(LoginRequiredMixin, SuccessMessageMixin, URLsMixin, Delete
         response = super().form_valid(form)
         # delete the associated image file
         self.object.photo.delete(save=False)
+        self.object.thumbnail.delete(save=False)
         logger.info(
             f"User {self.request.user} successfully deleted a photo taken at {self.object.fieldnote.site} on {self.object.date_taken} by {self.object.taken_by}."
         )
@@ -741,6 +742,7 @@ class DocumentDeleteView(
         response = super().form_valid(form)
         # delete the associated file
         self.object.file.delete(save=False)
+        self.object.thumbnail.delete(save=False)
         logger.info(
             f"User {self.request.user} successfully deleted a document received on {self.object.date_received}: {self.object.summary}."
         )
