@@ -78,43 +78,55 @@
 
       <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}">
 
-      {% if action == "Edit" %}
-      <!-- Photos -->
-      {% include "inventory/include/accordion_header.html" with section_id="photos" section_title="Site photos" button_text="Add photo(s)" button_url=photo_add_url mt_3=True %}
+      <!-- accordion sections - outermost wrapper -->
+      <div class="accordion" id="mainAccordion">
 
-      <!-- Collapsible photo gallery -->
-      <div id="photosCollapse"
-           class="accordion-collapse collapse"
-           aria-labelledby="photosHeading">
-        <div class="accordion-body">
-          <div class="row mt-2">
-            {% for photo in photos %}
-            <div class="col-md-3 mb-3">
-              <div class="card h-100 shadow-sm">
-                <img src="{{ photo.thumbnail.url }}" class="card-img-top img-fluid" alt="{{ fieldnote.date_visited }}">
-                <div class="card-body">
-                  <p class="card-text text-muted small">
-                    <a href={% url "photo_edit"  photo.id %}{{ success_url }}>Taken {% if photo.date_taken %}{{ photo.date_taken }}{% else %}[unknown!]{% endif %} {% if photo.taken_by %}by {{photo.taken_by}}{% endif %}
-                    </a>
-                  </p>
+        {% if action == "Edit" %}
+
+        <!-- Photos -->
+        {% include "inventory/include/accordion_header.html" with section_id="photos" section_title="Site photos" button_text="Add photo(s)" button_url=photo_add_url mt_3=True %}
+
+        <!-- Collapsible photo gallery -->
+        <div class="accordion-item mb-1">
+          <div id="photosCollapse"
+               class="accordion-collapse collapse"
+               data-bs-parent ="#mainAccordion"
+               aria-labelledby="photosHeading">
+            <div class="accordion-body m-0 p-0">
+              <div class="row mt-2">
+                {% for photo in photos %}
+                <div class="col-md-3 mb-3">
+                  <div class="card h-100 shadow-sm">
+                    <img src="{{ photo.thumbnail.url }}" class="card-img-top img-fluid" alt="{{ fieldnote.date_visited }}">
+                    <div class="card-body">
+                      <p class="card-text text-muted small">
+                        <a href={% url "photo_edit"  photo.id %}{{ success_url }}>Taken {% if photo.date_taken %}{{ photo.date_taken }}{% else %}[unknown!]{% endif %} {% if photo.taken_by %}by {{photo.taken_by}}{% endif %}
+                        </a>
+                      </p>
+                    </div>
+                  </div>
                 </div>
+                {% empty %}
+                <div type="row" class="mt-2">No photos uploaded with this note yet.</div>
+                {% endfor %}
               </div>
             </div>
-            {% empty %}
-            <div type="row" class="mt-2">No photos uploaded with this note yet.</div>
-            {% endfor %}
           </div>
         </div>
+        <!-- Documents -->
+        <div class="accordion-item mb-1">
+          {% include "inventory/include/accordion_header.html" with section_id="documents" section_title="Documents" button_text="Add a document" button_url=document_create_url mt_3=True %}
+          <div id="documentsCollapse" class="accordion-collapse collapse" data-bs-parent="#mainAccordion">
+            {% include "inventory/include/documents_accordion_body.html" with documents=documents document_edit_url="document_edit" return_url=return_url %}
+          </div>
+        </div>
+
+        <!-- end of  if action == "Edit" -->
+        {% endif %}
+      <!-- End of accordion sections -->
       </div>
-      {% endif %}
 
       {% include "inventory/include/messages.html" %}
-
-      <!-- Documents -->
-      {% include "inventory/include/accordion_header.html" with section_id="documents" section_title="Documents" button_text="Add a document" button_url=document_create_url mt_3=True %}
-
-      {% include "inventory/include/documents_accordion_body.html" with documents=documents document_edit_url="document_edit" return_url=return_url %}
-
       <!-- Save/Cancel/Delete buttons -->
       {% include "inventory/include/save_cancel_delete.html" %}
     </form>
