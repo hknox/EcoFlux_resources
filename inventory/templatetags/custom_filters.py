@@ -29,7 +29,9 @@ def get_item(dictionary, key):
 def generate_summary(text, max_chars=200):
     """Custom filter to strip HTML tags from a text string.
 
-    Truncates the summary to length max_chars"""
+    Truncates the summary to length max_chars.
+
+    NB there is a built-in Django filter for this!"""
     text = text.split("<br>")[0]
     i = text.find("<")
     while True:

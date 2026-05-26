@@ -3,13 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="author"  content="Hank Knox using Django + Bootstrap5 + Crispy-forms" />
+    <meta name="description" content="EcoFlux Inventory web app" />
+
     {% load django_bootstrap5 %}
     {% bootstrap_css %}
 
     {% load static %}
 
     <!-- Favicon -->
-    <link rel="shortcut icon" href={% static "images/favicon.ico" %} type="image/x-icon">
+    <link rel="icon" href={% static "images/favicon.ico" %} type="image/x-icon">
     <!-- Bootstrap Icons CDN -->
     <link
       rel="stylesheet"
@@ -46,7 +49,7 @@
     {% endblock %}
 
     {# This can be overridden: #}
-    <title> {% block title %}EcoFlux{% endblock %} </title>
+    <title> {% block title %}EcoFlux Inventory{% endblock %} </title>
   </head>
 
   <body>
@@ -111,10 +114,13 @@
     <!-- </footer> -->
 
     <!-- Unsaved changes modal -->
+    <!-- See https://getbootstrap.com/docs/5.3/components/modal/#how-it-works -->
     <div
       class="modal fade"
       id="unsavedChangesModal"
       tabindex="-1"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
       aria-hidden="true"
     >
       <div class="modal-dialog modal-dialog-centered">
@@ -160,8 +166,6 @@
     </div>
 
     {% bootstrap_javascript %}
-    <!-- Inventory app JavaScript -->
-    <script src="{% static 'js/form_protect.js' %}"></script>
     <!-- For Bootstrap tooltips -->
     <script>
       // for older browsers (pre-2015):
@@ -182,7 +186,13 @@
     <!-- Flatpickr JS -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
+    <!-- Inventory app form exit protection
+         NB important: formset_add.js must load AFTER form_protect.js,
+         e.g. in extra_js block-->
+    <script src="{% static 'js/form_protect.js' %}"></script>
+
     {% block extra_js %}
     {% endblock %}
+
   </body>
 </html>

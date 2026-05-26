@@ -771,7 +771,7 @@ class SortedListMixin(ListView):
         {"name": "display_summary", "label": "Summary", "max_chars": DEFAULT_MAX_CHARS, "sortable": "no"},
     ]
 
-    use extra keys for more control:
+    use these keys for more control:
     - "sortable": if "no", don't offer sort arrows on the column header.
     - "max_chars": truncate the data to max_chars number of characters.
     """
@@ -847,7 +847,7 @@ class SiteListView(LoginRequiredMixin, SortedListMixin):
         {
             "name": "description",
             "label": "Description",
-            "max_chars": 60,
+            "max_chars": 80,
             "sortable": "yes",
         },
         {

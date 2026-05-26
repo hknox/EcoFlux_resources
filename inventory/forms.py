@@ -37,7 +37,6 @@ class SiteForm(forms.ModelForm):
         helper.form_id = "id_site_form"
         helper.form_method = "POST"
         helper.form_tag = False
-        helper.form_class = "track-unsaved form-class"
         helper.label_class = (
             "col-auto col-form-label text-end align-self-center py-0 pe-2 label-class"
         )
@@ -115,7 +114,6 @@ class FieldNoteForm(forms.ModelForm):
         helper.form_id = "id_fieldnote_form"
         helper.form_method = "POST"
         helper.form_tag = False
-        helper.form_class = "track-unsaved form-class"
         helper.label_class = (
             "col-auto col-form-label text-end align-self-center py-0 pe-2 label-class"
         )
@@ -190,7 +188,6 @@ class EquipmentForm(forms.ModelForm):
         helper.form_id = "id_equipment_form"
         helper.form_method = "POST"
         helper.form_tag = False
-        helper.form_class = "track-unsaved form-class"
         helper.label_class = (
             "col-auto col-form-label text-end align-self-center py-0 pe-2 label-class"
         )
@@ -326,7 +323,6 @@ class DocumentForm(forms.ModelForm):
         helper.form_id = "id_document_form"
         helper.form_method = "POST"
         helper.form_tag = False
-        helper.form_class = "track-unsaved form-class"
         helper.label_class = (
             "col-auto col-form-label text-end align-self-center py-0 pe-2 label-class"
         )
@@ -506,7 +502,6 @@ class PhotoForm(forms.ModelForm):
         helper.form_id = "id_photo_form"
         helper.form_method = "POST"
         helper.form_tag = False
-        helper.form_class = "track-unsaved form-class"
         helper.label_class = (
             "col-auto col-form-label text-end align-self-center py-0 pe-2 label-class"
         )

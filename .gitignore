@@ -7,13 +7,11 @@ test.py
 site_test*
 *~
 *#
-db.sqlite*
 /notes.org
 /inventory/inventory_code.org
 /wip.org
 /django_logs.log
 /Live_data/
-/old-working.sqlite3
 /logs/
 /media/
 /eslint.config.mjs
@@ -23,4 +21,5 @@ packa*json
 static/js/tinymce/*
 /Assets/*.png
 /EcoFlux/settings/test_env.py
+*sqlite3
 /Project_resources/grandwazoo.env
