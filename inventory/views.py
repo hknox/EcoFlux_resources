@@ -804,10 +804,22 @@ class SortedListMixin(ListView):
 
         field_list = [field["name"] for field in self.table_fields]
         if sort.lstrip("-") in field_list:
-            if sort.startswith("-"):
-                queryset = queryset.order_by(Lower(sort[1:]).desc())
+            sort_field = sort.lstrip("-")
+            is_descending = sort.startswith("-")
+
+        # Check if this is an annotation
+        if sort_field in queryset.query.annotations:
+            # For annotations like Count, don't use Lower() — sort by numeric value
+            if is_descending:
+                queryset = queryset.order_by(F(sort_field).desc())
             else:
-                queryset = queryset.order_by(Lower(sort))
+                queryset = queryset.order_by(sort_field)
+        else:
+            # For regular fields, use Lower() for case-insensitive sorting
+            if is_descending:
+                queryset = queryset.order_by(Lower(sort_field).desc())
+            else:
+                queryset = queryset.order_by(Lower(sort_field))
 
         return queryset
 
@@ -874,16 +886,16 @@ class SiteListView(LoginRequiredMixin, SortedListMixin):
             "max_chars": DEFAULT_MAX_CHARS,
             "sortable": "yes",
         },
-        # {"name": "photo_count", "label": "Photos", "sortable": ""},
+        {"name": "photo_count", "label": "Photos", "sortable": ""},
     ]
 
     def get_queryset(self):
-        # See https://docs.djangoproject.com/en/5.2/topics/db/aggregation/,
+        # See https://docs.djangoproject.com/en/6.0/topics/db/aggregation/,
         # "Combining multiple aggregations" for caveats re annotate().
         qs = Site.objects.annotate(
             fieldnotes_count=Count("fieldnotes", distinct=True),
             equipment_count=Count("equipment", distinct=True),
-            # photo_count=Count("photos", distinct=True),
+            photo_count=Count("fieldnotes__photos", distinct=True),
             dates_active=Concat(
                 F("date_activated"),
                 Value(" - "),
@@ -1120,6 +1132,7 @@ class DocumentListView(LoginRequiredMixin, SortedListMixin):
         },
         {
             "name": "object_description",
+            "href": "context_object_url",
             "label": "Related to",
             "max_chars": 80,
             "sortable": "yes",
@@ -1127,7 +1140,7 @@ class DocumentListView(LoginRequiredMixin, SortedListMixin):
     ]
 
     def get_queryset(self):
-        qs = Document.objects.select_related("content_type")
+        qs = Document.objects.prefetch_related("content_type")
         qs = self.apply_filters(qs)
         qs = self.apply_sort_parameters(qs)
 
@@ -1142,6 +1155,8 @@ class DocumentListView(LoginRequiredMixin, SortedListMixin):
         context["reset_url"] = reverse("view_documents")
         context["heading"] = "Document Library"
         context["edit_url"] = "document_edit"
+        # TODO: FIX this unDRY line!
+        context["success_param"] = SUCCESS_URL
 
         return context
 
