@@ -87,7 +87,6 @@ class Equipment(models.Model, GetDocumentMixin):
     serial_number = models.CharField(max_length=50, blank=True)
     date_purchased = models.DateField()
     notes = models.TextField(blank=True)
-    document = GenericRelation("Document")
     site = models.ForeignKey(
         Site, on_delete=models.SET_NULL, null=True, blank=True, related_name="equipment"
     )
@@ -183,14 +182,16 @@ class Document(ThumbnailMixin, models.Model):
             self.thumbnail.save(unique_name, thumb, save=False)
 
     def context_object_display(self):
+        """Only needed by
+        inventory/management/commands/0012_generate_object_description.py"""
         obj = self.content_object
         if not obj:
-            return "—"
+            return "-"
         return str(obj)
 
+    @property
     def context_object_url(self):
         obj = self.content_object
         if not obj:
             return None
-        return None
-        return reverse(f"{obj._meta.model_name}_detail", args=[obj.pk])
+        return reverse(f"{obj._meta.model_name}_edit", args=[obj.pk])
