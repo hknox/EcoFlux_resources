@@ -2,12 +2,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Handle Remove row
   function handleRemoveRow(row) {
+    console.log("remove row")
     const deleteInput = row.querySelector('input[type="hidden"][name$="-DELETE"]');
     if (deleteInput) deleteInput.value = 'on';
     row.style.display = 'none';
+
+    // Refresh the Bootstrap5 accordion (same as Add button)
+    const accordion = formsetDiv.closest('.accordion-collapse');
+    if (accordion) {
+      const bootstrapCollapse = bootstrap.Collapse.getInstance(accordion);
+      if (bootstrapCollapse && bootstrapCollapse._isShown) {
+        accordion.addEventListener('hidden.bs.collapse', function() {
+          bootstrapCollapse.show();
+        }, { once: true });
+        bootstrapCollapse.hide();
+      }
+    }
   }
 
-  // Attach Remove listener for existing rows
+  // Attach Remove listener for EXISTING rows (rendered from server)
   document.querySelectorAll('.formset-row .remove-form-row').forEach(function(btn) {
     const row = btn.closest('.formset-row');
     btn.addEventListener('click', function() {
@@ -15,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // Add new row
+  // Handle Add row
   document.querySelectorAll('.add-form-row').forEach(function(addBtn) {
     addBtn.addEventListener('click', function() {
       const prefix = addBtn.dataset.formsetPrefix;
@@ -50,6 +63,31 @@ document.addEventListener('DOMContentLoaded', function() {
       formsetDiv.insertBefore(newRow, emptyForm);
       totalFormsInput.value = currentCount + 1;
 
+      // Refresh the Bootstrap5 accordion - open it if closed
+      const sectionId = addBtn.dataset.sectionId;
+      const accordionId = sectionId + 'Collapse';
+      const accordion = document.getElementById(accordionId);
+
+      if (accordion) {
+        let bootstrapCollapse = bootstrap.Collapse.getInstance(accordion);
+
+        if (!bootstrapCollapse) {
+          bootstrapCollapse = new bootstrap.Collapse(accordion, { toggle: false });
+        }
+
+        // Check if accordion has the 'show' class (means it's visually open)
+        const isActuallyShown = accordion.classList.contains('show');
+
+        if (isActuallyShown) {
+          accordion.addEventListener('hidden.bs.collapse', function() {
+            bootstrapCollapse.show();
+          }, { once: true });
+          bootstrapCollapse.hide();
+        } else {
+          bootstrapCollapse.show();
+        }
+      }
+
       // Initialize flatpickr on date fields
       if (typeof flatpickr !== 'undefined') {
         newRow.querySelectorAll('.datepicker').forEach(function(input) {
@@ -57,7 +95,7 @@ document.addEventListener('DOMContentLoaded', function() {
           flatpickr(input, { dateFormat: "Y-m-d" });
         });
       }
-    });
-  });
+    }); // ← Closes the addEventListener click handler
+  }); // ← Closes the forEach for add-form-row
 
 });

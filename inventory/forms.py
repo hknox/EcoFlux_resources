@@ -344,50 +344,6 @@ class DocumentForm(forms.ModelForm):
         self.fields["date_received"].widget.attrs["class"] = "datepicker"
 
 
-# DOI links
-class DOIForm(forms.ModelForm):
-    class Meta:
-        model = DOI
-        fields = ["label", "doi_link"]
-        labels = {
-            "doi_link": "DOI link",
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_tag = (
-            False  # the <form> and Submit buttons are in the parent template
-        )
-
-        # Adjust label class for better alignment with inputs
-        self.helper.label_class = (
-            "col-auto col-form-label me-2 d-inline-flex align-items-center mt-2"
-        )
-        self.helper.field_class = "col"
-        self.helper.form_class = "form-horizontal"
-
-        self.helper.layout = Layout(
-            Row(
-                Column(Field("label", wrapper_class="mb-0"), css_class="col-3"),
-                Column(Field("doi_link", wrapper_class="mb-0"), css_class="col-7"),
-                Column(
-                    Field("DELETE", type="hidden"),  # Hidden delete field
-                    HTML("""
-                      <button type="button"
-                              class="btn btn-danger btn-sm remove-form-row"
-                              title=" Remove"
-                              data-confirm="Are you sure you want to remove this DOI record?">
-                        <i class="bi bi-trash"></i> Remove
-                      </button>
-                    """),
-                    css_class="col-auto d-flex mt-0 pt-0 align-items-center",
-                ),
-                css_class="g-1 align-items-center",
-            )
-        )
-
-
 # photos
 class MultiFileInput(forms.ClearableFileInput):
     """Widget that allows selecting multiple files."""
@@ -551,16 +507,16 @@ class DOIForm(forms.ModelForm):
                 Column(
                     Field("DELETE", type="hidden"),  # Hidden delete field
                     HTML("""
-                      <button type="button"
-                              class="btn btn-danger btn-sm remove-form-row"
-                              title=" Remove"
-                              data-confirm="Are you sure you want to remove this DOI record?">
-                        <i class="bi bi-trash"></i> Remove
-                      </button>
+                    <button type="button"
+                    class="btn btn-danger btn-sm remove-form-row"
+                    title=" Remove"
+                    data-confirm="Are you sure you want to remove this DOI record?">
+                    <i class="bi bi-trash"></i> Remove
+                    </button>
                     """),
-                    css_class="col-auto d-flex mt-0 pt-0 align-items-center",
+                    css_class="col-auto d-flex mt-2 align-items-baseline",
                 ),
-                css_class="g-1 align-items-center",
+                css_class="align-items-baseline mt-2",
             )
         )
 
@@ -603,9 +559,9 @@ class HistoryForm(forms.ModelForm):
                           <i class="bi bi-trash"></i> Remove
                         </button>
                         """),
-                    css_class="col-auto d-flex align-items-start mt-n1 pt-0",
+                    css_class="col-auto d-flex mt-2 align-items-baseline",
                 ),
-                css_class=" align-items-center g-2",
+                css_class="align-items-baseline mt-2",
             )
         )
 
