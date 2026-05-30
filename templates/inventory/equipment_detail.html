@@ -40,6 +40,8 @@
           </div>
         </div>
 
+      {% if action == "Edit" %}
+
       <!-- Documents -->
       <div class="accordion-item mb-1">
         {% include "inventory/include/accordion_header.html" with section_id="documents" section_title="Documents" button_text="Add a document" button_url=document_create_url mt_3=True %}

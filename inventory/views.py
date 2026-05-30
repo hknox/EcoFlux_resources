@@ -340,7 +340,7 @@ class FieldNoteCreateView(LoginRequiredMixin, FieldNoteViewsMixin, CreateView):
         # Store message before redirect
         messages.success(
             self.request,
-            "Fieldnote created successfully. You can now add photos.",
+            "Fieldnote created successfully. You can now add photos and documents.",
         )
         response = super().form_valid(form)
         logger.info(
@@ -434,7 +434,7 @@ class SiteCreateView(LoginRequiredMixin, SiteViewsMixin, CreateView):
         # Store message before redirect
         messages.success(
             self.request,
-            "Site created successfully. You can now add equipment and fieldnotes.",
+            "Site created successfully. You can now add equipment, fieldnotes and documents.",
         )
         logger.info(
             f"User {self.request.user} successfully created site, {self.object}."
