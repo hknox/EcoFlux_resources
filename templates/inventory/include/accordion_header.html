@@ -15,10 +15,10 @@
   </a>
   {% endif %}
 
-  {% if formset_prefix %}
+  {% if ajax_add_id %}
   <button type="button"
-          class="btn btn-info d-flex align-items-center rounded-0 text-nowrap add-form-row"
-          data-formset-prefix="{{ formset_prefix }}"
+          id="{{ ajax_add_id }}"
+          class="btn btn-info d-flex align-items-center rounded-0 text-nowrap"
           data-section-id="{{ section_id }}">
     <i class="bi bi-plus-circle me-1"></i>{{ button_text }}
   </button>

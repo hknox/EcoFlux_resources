@@ -20,22 +20,78 @@
 
     <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}">
 
+
+
     <!-- accordion sections - outermost wrapper -->
     <div class="accordion" id="mainAccordion">
+
+      {% if action == "Edit" %}
+
       <!-- DOI Records -->
       <div class="accordion-item mb-1">
-        {% include "inventory/include/accordion_header.html" with section_id="doi" section_title="DOI Records" button_text="Add DOI Records" formset_prefix=doi_formset.prefix %}
+        {% include "inventory/include/accordion_header.html" with section_id="doi" section_title="DOI Records" button_text="Add DOI record" ajax_add_id="doi-add-btn" %}
         <div id="doiCollapse" class="accordion-collapse collapse" data-bs-parent="#mainAccordion">
           <div class="accordion-body m-0 p-0">
-            {% if not doi_formset.forms %}
-            <div class="mt-2">No DOI records for this site yet.</div>
-            {% endif %}
-            {% include "inventory/include/formset_block.html" with formset=doi_formset %}
+
+            <div id="doi-list" class="mt-2 ms-2">
+              {% if not doi_records %}
+              <p class="text-muted" id="doi-empty-msg">No DOI records for this site yet.</p>
+              {% else %}
+              <div class="row mb-1 text-muted small fw-semibold doi-header">
+                <div class="col-3">Label</div>
+                <div class="col-7">DOI link</div>
+              </div>
+              {% endif %}
+              {% for doi in doi_records %}
+              <div class="row align-items-center mb-2 doi-row" data-doi-id="{{ doi.pk }}">
+                <div class="col-3">
+                  <input type="text" class="form-control form-control-sm" value="{{ doi.label }}" disabled>
+                </div>
+                <div class="col-7">
+                  <input type="url" class="form-control form-control-sm" value="{{ doi.doi_link }}" disabled>
+                </div>
+                <div class="col-auto">
+                  <button type="button" class="btn btn-danger btn-sm doi-remove-btn"
+                          data-doi-id="{{ doi.pk }}"
+                          data-remove-url="{% url 'doi_remove' doi.pk %}">
+                    <i class="bi bi-trash"></i> Remove
+                  </button>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+
+            <!-- Add form: hidden until header button is clicked -->
+            <div class="ms-2 mt-2 mb-2" id="doi-add-form" style="display: none;">
+              <div class="row mb-1 text-muted small fw-semibold">
+                <div class="col-3">Label</div>
+                <div class="col-7">DOI link</div>
+              </div>
+              <div class="row align-items-center g-2">
+                <div class="col-3">
+                  <input type="text" class="form-control form-control-sm" id="doi-label-input"
+                         placeholder="e.g. Smith et al. 2023">
+                </div>
+                <div class="col-7">
+                  <input type="url" class="form-control form-control-sm" id="doi-link-input"
+                         placeholder="https://doi.org/...">
+                </div>
+                <div class="col-auto">
+                  <button type="button" class="btn btn-info btn-sm" id="doi-save-btn"
+                          data-add-url="{{ doi_add_url }}">
+                    <i class="bi bi-plus-circle"></i> Save DOI
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm ms-1" id="doi-cancel-btn">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+              <div id="doi-errors" class="mt-1"></div>
+            </div>
+
           </div>
         </div>
       </div>
-
-      {% if action == "Edit" %}
 
       <!-- Fieldnotes -->
       <div class="accordion-item mb-1">
@@ -127,10 +183,8 @@
   {% block extra_js %}
 
   {% include "inventory/include/flatpickr.html" %}
-  {# NB important: formset_add.js must load AFTER form_protect.js #}
-  <script src="{% static 'js/formset_add.js' %}"></script>
-  <script src="{% static 'js/delete_button.js' %}"></script>
-
+  {# NB Important: doi_ajax.js must load AFTER form_protect.js #}
+  <script src="{% static 'js/doi_ajax.js' %}"></script>
   {% endblock extra_js %}
 
 </body>

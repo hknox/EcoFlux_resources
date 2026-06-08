@@ -1,4 +1,4 @@
-import datetime
+from datetime import date as date_type
 import logging
 import os
 from pprint import pprint
@@ -19,15 +19,13 @@ from django.views.decorators.http import require_http_methods
 from django.views.generic.edit import CreateView, DeleteView, FormView, UpdateView
 from django.views.generic.list import ListView
 
-from inventory.models import Document, Equipment, FieldNote, Photo, Site
+from inventory.models import Document, DOI, Equipment, FieldNote, History, Photo, Site
 
 from .forms import (
     DocumentUploadForm,
     DocumentForm,
-    DOIFormSet,
     EquipmentForm,
     FieldNoteForm,
-    HistoryFormSet,
     PhotoForm,
     PhotoUploadForm,
     SiteForm,
@@ -169,93 +167,76 @@ class SiteAssignmentMixin:
         return self.can_edit_site
 
 
-class FormsetMixin:
-    """Mixin to manage issues around formsets.
-
-    The form_valid() method is part of Django’s generic class-based
-    view workflow. If you override post() and handle all form and
-    formset logic there (including saving and redirecting), Django
-    will not call form_valid. Your logic in post() takes precedence.
-
-    When would you need form_valid? If you rely on the default CBV
-    flow (don’t override post()), you would only need to override
-    form_valid to add formset-handling logic after the parent form is
-    saved.
-
-    """
-
-    def get_formset_context_data(self):
-        """Return a dict of formset context data."""
-
-        context = {}
-
-        # Use cached versions if present (from POST)
-        context["form"] = getattr(self, "_form", self.get_form())
-        # Handle formset safely across Create and Update
-        if hasattr(self, "_formset"):
-            context[self.formset_key] = self._formset
-        elif hasattr(self, "object") and self.object is not None:
-            context[self.formset_key] = self.formset_class(instance=self.object)
-        else:
-            context[self.formset_key] = self.formset_class()
-
-        return context
-
-    def post(self, request, *args, **kwargs):
-        if isinstance(self, CreateView):
-            self.object = None  # required for CreateView
-        else:
-            self.object = self.get_object()
-        # Construct form and formset here
-        form = self.get_form()
-        formset = (
-            self.formset_class(request.POST)
-            if self.object is None
-            else self.formset_class(request.POST, instance=self.object)
-        )
-        # Store for use in get_context_data()
-        self._form = form
-        self._formset = formset
-
-        if form.is_valid() and formset.is_valid():
-            return self.form_and_formset_valid(form, formset)
-        else:
-            return self.render_to_response(self.get_context_data())
-
-    def form_and_formset_valid(self, form, formset):
-        model_instance = form.save()
-        formset.instance = model_instance
-        formset.save()
-        self.object = model_instance
-
-        return redirect(self.get_success_url())
-
-
 # ====== Equipment views ======
 
 
-class EquipmentViewsMixin(URLsMixin, ContextMixin, FormsetMixin, SiteAssignmentMixin):
+@login_required
+@require_http_methods(["POST"])
+def history_add(request, equipment_pk):
+    equipment = get_object_or_404(Equipment, pk=equipment_pk)
+    date_str = request.POST.get("date", "").strip()
+    note = request.POST.get("note", "").strip()
+    errors = {}
+    if not date_str:
+        errors["date"] = "Date is required."
+    if not note:
+        errors["note"] = "Note is required."
+    if errors:
+        return JsonResponse({"ok": False, "errors": errors}, status=400)
+
+    try:
+        parsed_date = date_type.fromisoformat(date_str)
+    except ValueError:
+        return JsonResponse(
+            {"ok": False, "errors": {"date": "Enter a valid date."}}, status=400
+        )
+
+    history = History.objects.create(item=equipment, date=parsed_date, note=note)
+    logger.info(
+        f"User {request.user} added history {history.pk} to equipment {history.item}."
+    )
+    return JsonResponse(
+        {
+            "ok": True,
+            "id": history.pk,
+            "date": str(history.date),
+            "note": history.note,
+            "remove_url": reverse("history_remove", kwargs={"history_pk": history.pk}),
+        }
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def history_remove(request, history_pk):
+
+    history = get_object_or_404(History, pk=history_pk)
+    equipment = history.equipment
+    history.delete()
+    logger.info(
+        f"User {request.user} removed history {history_pk} from equipment {equipment}."
+    )
+    return JsonResponse({"ok": True})
+
+
+class EquipmentViewsMixin(URLsMixin, ContextMixin, SiteAssignmentMixin):
     model = Equipment
     form_class = EquipmentForm
-    formset_class = HistoryFormSet
-    formset_key = "history_formset"
     default_success_url = reverse_lazy("view_equipment")
     template_name = "inventory/equipment_detail.html"
     can_edit_site = True
 
     def get_context_data(self, **kwargs):
         context = self.get_base_context_data(**kwargs)
-        context.update(self.get_formset_context_data())
         return context
 
 
 class EquipmentCreateView(LoginRequiredMixin, EquipmentViewsMixin, CreateView):
-
     action_text = "New"
 
-    def form_and_formset_valid(self, form, formset):
+    def form_valid(self, form):
         # Store message before redirect
-        response = super().form_and_formset_valid(form, formset)
+        response = super().form_valid(form)
         logger.info(
             f"User {self.request.user} successfully created equipment, {self.object.instrument}."
         )
@@ -263,13 +244,17 @@ class EquipmentCreateView(LoginRequiredMixin, EquipmentViewsMixin, CreateView):
 
 
 class EquipmentUpdateView(LoginRequiredMixin, EquipmentViewsMixin, UpdateView):
-
     action_text = "Edit"
     delete_url = "equipment_delete"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         equipment = context["object"]
+
+        context["history_records"] = equipment.history.order_by("date")
+        context["history_add_url"] = reverse(
+            "history_add", kwargs={"equipment_pk": equipment.pk}
+        )
 
         context["return_url"] = f"?{SUCCESS_URL}={self.request.get_full_path()}"
         context["document_create_url"] = (
@@ -279,12 +264,10 @@ class EquipmentUpdateView(LoginRequiredMixin, EquipmentViewsMixin, UpdateView):
         )
         context["documents"] = equipment.documents
         context["content_type"] = "piece of equipment"
-
         return context
 
-    def form_and_formset_valid(self, form, formset):
-        # Store message before redirect
-        response = super().form_and_formset_valid(form, formset)
+    def form_valid(self, form):
+        response = super().form_valid(form)
         logger.info(
             f"User {self.request.user} successfully updated equipment, {self.object.instrument}."
         )
@@ -408,13 +391,48 @@ class FieldNoteDeleteView(
 # ====== Site Views ======
 
 
-class SiteViewsMixin(URLsMixin, ContextMixin, FormsetMixin):
+@login_required
+@require_http_methods(["POST"])
+def doi_add(request, site_pk):
+    site = get_object_or_404(Site, pk=site_pk)
+    label = request.POST.get("label", "").strip()
+    doi_link = request.POST.get("doi_link", "").strip()
+    errors = {}
+    if not label:
+        errors["label"] = "Label is required."
+    if not doi_link:
+        errors["doi_link"] = "DOI link is required."
+    if errors:
+        return JsonResponse({"ok": False, "errors": errors}, status=400)
+
+    doi = DOI.objects.create(site=site, label=label, doi_link=doi_link)
+    logger.info(f"User {request.user} added DOI {doi.pk} to site {site}.")
+    return JsonResponse(
+        {
+            "ok": True,
+            "id": doi.pk,
+            "label": doi.label,
+            "doi_link": doi.doi_link,
+            "remove_url": reverse("doi_remove", kwargs={"doi_pk": doi.pk}),
+        }
+    )
+
+
+@login_required
+@require_http_methods(["POST"])
+def doi_remove(request, doi_pk):
+    doi = get_object_or_404(DOI, pk=doi_pk)
+    site = doi.site
+    doi.delete()
+    logger.info(f"User {request.user} removed DOI {doi_pk} from site {site}.")
+    return JsonResponse({"ok": True})
+
+
+class SiteViewsMixin(URLsMixin, ContextMixin):
     """Base model for SiteViewCreate, SiteViewUpdate"""
 
     model = Site
     form_class = SiteForm
-    formset_class = DOIFormSet
-    formset_key = "doi_formset"
     template_name = "inventory/site_detail.html"
     default_success_url = reverse_lazy("view_sites")
     update_url_name = "site_edit"
@@ -422,19 +440,22 @@ class SiteViewsMixin(URLsMixin, ContextMixin, FormsetMixin):
 
     def get_context_data(self, **kwargs):
         context = self.get_base_context_data(**kwargs)
-        context.update(self.get_formset_context_data())
         return context
 
 
 class SiteCreateView(LoginRequiredMixin, SiteViewsMixin, CreateView):
     action_text = "New"
 
-    def form_and_formset_valid(self, form, formset):
-        response = super().form_and_formset_valid(form, formset)
-        # Store message before redirect
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["existing_site"] = False
+        return kwargs
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
         messages.success(
             self.request,
-            "Site created successfully. You can now add equipment, fieldnotes and documents.",
+            "Site created successfully. You can now add DOI records, equipment, fieldnotes and documents.",
         )
         logger.info(
             f"User {self.request.user} successfully created site, {self.object}."
@@ -444,24 +465,24 @@ class SiteCreateView(LoginRequiredMixin, SiteViewsMixin, CreateView):
     def get_success_url(self):
         return reverse(self.update_url_name, kwargs={"pk": self.object.pk})
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["existing_site"] = False
-        return kwargs
-
 
 class SiteUpdateView(LoginRequiredMixin, SiteViewsMixin, UpdateView):
-
     action_text = "Edit"
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["existing_site"] = True
+        return kwargs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         site = context["object"]
 
+        context["doi_records"] = site.doi_records.all()
+        context["doi_add_url"] = reverse("doi_add", kwargs={"site_pk": site.pk})
+
         context["fieldnotes"] = self.object.fieldnotes.order_by("date_visited")
         context["equipment"] = self.object.equipment.all()
-        # Add context for accordions in templates
-        # SUCCESS_URL serves to set page to return to after editing/deleting
         context["success_url"] = (
             f"?{SUCCESS_URL}={self.request.get_full_path()}&site_pk={self.object.id}"
         )
@@ -480,13 +501,8 @@ class SiteUpdateView(LoginRequiredMixin, SiteViewsMixin, UpdateView):
 
         return context
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs["existing_site"] = True
-        return kwargs
-
-    def form_and_formset_valid(self, form, formset):
-        response = super().form_and_formset_valid(form, formset)
+    def form_valid(self, form):
+        response = super().form_valid(form)
         logger.info(
             f"User {self.request.user} successfully updated site, {self.object}."
         )
@@ -655,7 +671,7 @@ class DocumentUploadView(LoginRequiredMixin, URLsMixin, FormView):
         kwargs = super().get_form_kwargs()
         # initial from super.get_form_arguments() will be empty.
         initial = {}
-        initial["date_uploaded"] = f"{datetime.date.today()}"
+        initial["date_uploaded"] = f"{date_type.today()}"
         user = self.request.user
         name = f"{user.first_name} {user.last_name}"
         username = name if name.strip() else user.username.capitalize()

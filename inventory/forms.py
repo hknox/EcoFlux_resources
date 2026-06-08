@@ -1,7 +1,4 @@
 from django import forms
-from django.forms import inlineformset_factory
-from django.forms.models import BaseInlineFormSet
-from django.core.exceptions import ValidationError
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import (
@@ -14,7 +11,7 @@ from crispy_forms.layout import (
     Div,
 )
 
-from .models import Equipment, Site, DOI, FieldNote, History, Photo, Document
+from .models import Equipment, Site, FieldNote, Photo, Document
 
 
 class SiteForm(forms.ModelForm):
@@ -475,145 +472,3 @@ class PhotoForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.helper = self.__init_FormHelper()
         self.fields["date_taken"].widget.attrs["class"] = "datepicker"
-
-
-# DOI links
-class DOIForm(forms.ModelForm):
-    class Meta:
-        model = DOI
-        fields = ["label", "doi_link"]
-        labels = {
-            "doi_link": "DOI link",
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_tag = (
-            False  # the <form> and Submit buttons are in the parent template
-        )
-
-        # Adjust label class for better alignment with inputs
-        self.helper.label_class = (
-            "col-auto col-form-label me-2 d-inline-flex align-items-center mt-2"
-        )
-        self.helper.field_class = "col"
-        self.helper.form_class = "form-horizontal"
-
-        self.helper.layout = Layout(
-            Row(
-                Column(Field("label", wrapper_class="mb-0"), css_class="col-3"),
-                Column(Field("doi_link", wrapper_class="mb-0"), css_class="col-7"),
-                Column(
-                    Field("DELETE", type="hidden"),  # Hidden delete field
-                    HTML("""
-                    <button type="button"
-                    class="btn btn-danger btn-sm remove-form-row"
-                    title=" Remove"
-                    data-confirm="Are you sure you want to remove this DOI record?">
-                    <i class="bi bi-trash"></i> Remove
-                    </button>
-                    """),
-                    css_class="col-auto d-flex mt-2 align-items-baseline",
-                ),
-                css_class="align-items-baseline mt-2",
-            )
-        )
-
-
-# History
-class HistoryForm(forms.ModelForm):
-    class Meta:
-        model = History
-        fields = ["date", "note"]
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_tag = False
-
-        # Adjust label class for better alignment with inputs
-        self.helper.label_class = (
-            "col-auto col-form-label me-2 d-inline-flex align-items-center mt-2"
-        )
-        self.helper.field_class = "col"
-        self.helper.form_class = "form-horizontal"
-
-        self.helper.layout = Layout(
-            Row(
-                Div(
-                    Field("date", wrapper_class="row g-0 align-items-center"),
-                    css_class="col-3",
-                ),
-                Div(
-                    Field("note", wrapper_class="row g-0 align-items-center"),
-                    css_class="col",
-                ),
-                Column(
-                    Field("DELETE", type="hidden"),
-                    HTML("""
-                        <button type="button"
-                                class="btn btn-danger btn-sm remove-form-row"
-                                title="Remove"
-                                data-confirm="Are you sure you want to remove this record?">
-                          <i class="bi bi-trash"></i> Remove
-                        </button>
-                        """),
-                    css_class="col-auto d-flex mt-2 align-items-baseline",
-                ),
-                css_class="align-items-baseline mt-2",
-            )
-        )
-
-        self.fields["date"].widget.attrs["class"] = "datepicker"
-        self.fields["note"].widget.attrs["rows"] = 1
-
-
-# Formsets
-class BaseStrictFormSet(BaseInlineFormSet):
-    def clean(self):
-        super().clean()
-        for form in self.forms:
-            if form.cleaned_data.get("DELETE", False):
-                continue
-            if form.has_changed():
-                # Force validation even if not already done
-                form.full_clean()
-                if not form.is_valid():
-                    raise ValidationError("Incomplete or invalid record.")
-
-
-class StrictDOIFormSet(BaseStrictFormSet):
-    pass
-
-
-class StrictHistoryFormSet(BaseStrictFormSet):
-    pass
-
-
-HistoryFormSet = inlineformset_factory(
-    Equipment,
-    History,
-    form=HistoryForm,
-    formset=StrictHistoryFormSet,
-    fields=["date", "note"],
-    extra=0,
-    can_delete=True,
-    min_num=0,
-    validate_min=True,
-)
-
-DOIFormSet = inlineformset_factory(
-    Site,
-    DOI,
-    form=DOIForm,
-    formset=StrictDOIFormSet,
-    fields=[
-        "label",
-        "doi_link",
-    ],  # List all editable DOI fields here
-    extra=0,
-    can_delete=True,
-    min_num=0,
-    validate_min=True,
-)

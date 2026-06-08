@@ -1,7 +1,11 @@
 document.addEventListener('DOMContentLoaded', function () {
     let isFormDirty = false;
+    let isMainFormDirty = false;
+    let mainFormName = null;
     let pendingNavigationUrl = null;
     let activeFormName = null;
+    let activeFormMessage = null;
+    let isAjaxDirtyFn = null;
 
     // All forms with data-form-name
     const forms = document.querySelectorAll('form[data-form-name]');
@@ -11,57 +15,83 @@ document.addEventListener('DOMContentLoaded', function () {
     const saveBtn = modal.querySelector('#saveAndContinueBtn');
     const modalMessage = modal.querySelector('#unsavedChangesMessage');
 
+    // Shared state so other scripts (doi_ajax.js etc.) can set dirty flag
+    window.formProtect = {
+        setDirty(formName, message) {
+            isFormDirty = true;
+            activeFormName = formName;
+            activeFormMessage = message || null;
+        },
+        clearDirty() {
+            // Only clears AJAX dirty state — main form dirt is tracked separately.
+            // If the main form was also dirty, restore that state.
+            if (isMainFormDirty) {
+                isFormDirty = true;
+                activeFormName = mainFormName;
+                activeFormMessage = null;
+            } else {
+                isFormDirty = false;
+                activeFormName = null;
+                activeFormMessage = null;
+            }
+        },
+        registerAjaxDirtyCheck(fn) {
+            // fn should return true if an AJAX widget has unsaved content
+            isAjaxDirtyFn = fn;
+        },
+    };
+
     // Track changes on all forms
     forms.forEach(form => {
         const formName = form.getAttribute('data-form-name');
 
         form.addEventListener('input', () => {
             isFormDirty = true;
+            isMainFormDirty = true;
             activeFormName = formName;
+            mainFormName = formName;
+            activeFormMessage = null;
         });
 
         form.addEventListener('submit', () => {
             isFormDirty = false;
+            isMainFormDirty = false;
         });
     });
 
-  // Track changes in TinyMCE editors
-  // console.log('form_protect.js loaded');
-  // console.log('Checking for tinymce:', window.tinymce);
+    // Track changes in TinyMCE editors
+    if (window.tinymce) {
+        tinymce.get().forEach(function(editor) {
+            editor.on('change', function() {
+                isFormDirty = true;
+                isMainFormDirty = true;
+                activeFormMessage = null;
+                const textarea = editor.getElement();
+                const form = textarea.closest('form[data-form-name]');
+                if (form) {
+                    activeFormName = form.getAttribute('data-form-name');
+                    mainFormName = activeFormName;
+                }
+            });
+        });
 
-  if (window.tinymce) {
-    // console.log('TinyMCE found');
+        tinymce.on('addeditor', function(e) {
+            const editor = e.editor;
+            editor.on('change', function() {
+                isFormDirty = true;
+                isMainFormDirty = true;
+                activeFormMessage = null;
+                const textarea = editor.getElement();
+                const form = textarea.closest('form[data-form-name]');
+                if (form) {
+                    activeFormName = form.getAttribute('data-form-name');
+                    mainFormName = activeFormName;
+                }
+            });
+        });
+    }
 
-    // Handle editors that are already initialized
-    tinymce.get().forEach(function(editor) {
-      // console.log('Found existing editor:', editor.id);
-      editor.on('change', function() {
-        // console.log('TinyMCE content changed:', editor.id);
-        isFormDirty = true;
-        const textarea = editor.getElement();
-        const form = textarea.closest('form[data-form-name]');
-        if (form) {
-          activeFormName = form.getAttribute('data-form-name');
-        }
-      });
-    });
-
-    // Also handle editors that get added later
-    tinymce.on('addeditor', function(e) {
-      // console.log('TinyMCE editor added:', e.editor.id);
-      const editor = e.editor;
-      editor.on('change', function() {
-        // console.log('TinyMCE content changed:', editor.id);
-        isFormDirty = true;
-        const textarea = editor.getElement();
-        const form = textarea.closest('form[data-form-name]');
-        if (form) {
-          activeFormName = form.getAttribute('data-form-name');
-        }
-      });
-    });
-  }
-  // Intercept clicks on links and buttons that navigate away
+    // Intercept clicks on links and buttons that navigate away
     document.querySelectorAll('a, button').forEach(link => {
         link.addEventListener('click', function (e) {
             const href = link.getAttribute('href');
@@ -71,7 +101,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (isFormDirty && !link.hasAttribute('data-bypass-protect')) {
                 e.preventDefault();
                 pendingNavigationUrl = href;
-                modalMessage.textContent = `You have unsaved changes in the ${activeFormName}.`;
+                // Prevent beforeunload from also firing a browser dialogue
+                isFormDirty = false;
                 showModal();
             }
         });
@@ -79,38 +110,43 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Stay on page
     stayBtn.addEventListener('click', function () {
+        // Restore dirty state — user chose to stay
+        isFormDirty = isMainFormDirty || (isAjaxDirtyFn ? isAjaxDirtyFn() : false);
         hideModal();
     });
 
     // Leave without saving
     leaveBtn.addEventListener('click', function () {
         isFormDirty = false;
+        isMainFormDirty = false;
         hideModal();
         if (pendingNavigationUrl) {
             window.location.href = pendingNavigationUrl;
         }
     });
 
-    // Save and continue
+    // Save and continue (only shown when dirty source is an HTML form)
     saveBtn.addEventListener('click', function () {
         if (!activeFormName) return;
         const formToSave = [...forms].find(f => f.getAttribute('data-form-name') === activeFormName);
         if (!formToSave) return;
 
-        // Update the hidden 'next' input so the view redirects correctly
         const nextInput = formToSave.querySelector('input[name="next"]');
         nextInput.value = pendingNavigationUrl;
-        // if (nextInput && pendingNavigationUrl) {
-        //     nextInput.value = pendingNavigationUrl;
-        // }
 
         isFormDirty = false;
+        isMainFormDirty = false;
         hideModal();
         formToSave.submit();
     });
 
-    // Modal show/hide helpers
+    // Show modal — check AJAX dirty state fresh at open time
     function showModal() {
+        const isAjax = isAjaxDirtyFn ? isAjaxDirtyFn() : false;
+        saveBtn.toggleAttribute('hidden', isAjax);
+        modalMessage.textContent = isAjax
+            ? isAjaxDirtyFn.message
+            : (activeFormMessage || `You have unsaved changes in the ${activeFormName}.`);
         const bsModal = new bootstrap.Modal(modal);
         bsModal.show();
     }
@@ -127,30 +163,35 @@ document.addEventListener('DOMContentLoaded', function () {
             e.returnValue = '';
         }
     });
+
     // Protect file input widgets too (for photo uploading)
     forms.forEach(form => {
         const formName = form.getAttribute('data-form-name');
 
-        // Mark dirty when text inputs change
         form.addEventListener('input', () => {
             isFormDirty = true;
+            isMainFormDirty = true;
             activeFormName = formName;
+            mainFormName = formName;
+            activeFormMessage = null;
         });
 
-        // Mark dirty when files are selected
         const fileInputs = form.querySelectorAll('input[type="file"]');
         fileInputs.forEach(fInput => {
             fInput.addEventListener('change', () => {
                 if (fInput.files.length > 0) {
                     isFormDirty = true;
+                    isMainFormDirty = true;
                     activeFormName = formName;
+                    mainFormName = formName;
+                    activeFormMessage = null;
                 }
             });
         });
 
-        // Reset dirty flag on submit
         form.addEventListener('submit', () => {
             isFormDirty = false;
+            isMainFormDirty = false;
         });
     });
 });

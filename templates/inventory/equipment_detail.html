@@ -21,34 +21,86 @@
       <input type="hidden" name="next" value="{{ request.GET.next|default:'' }}">
       {% crispy form %}
 
+      {% if action == "Edit" %}
+
       <!-- accordion sections - outermost wrapper -->
       <div class="accordion" id="mainAccordion">
 
-        <!-- History formset -->
+        <!-- History -->
         <div class="accordion-item mb-1">
-          {% include "inventory/include/accordion_header.html" with section_id="history" section_title="History" button_text="Add a History record" formset_prefix=history_formset.prefix %}
-          <div id="historyCollapse"
-               class="accordion-collapse collapse"
-               data-bs-parent="#mainAccordion"
-               aria-labelledby="historyHeading">
+          {% include "inventory/include/accordion_header.html" with section_id="history" section_title="History" button_text="Add a history record" ajax_add_id="history-add-btn" %}
+          <div id="historyCollapse" class="accordion-collapse collapse" data-bs-parent="#mainAccordion">
             <div class="accordion-body m-0 p-0">
-              {% if not history_formset.forms %}
-              <div class="mt-2">No history records for this piece of equipment yet.</div>
-              {% endif %}
-              {% include "inventory/include/formset_block.html" with formset=history_formset %}
+
+              <div id="history-list" class="mt-2 ms-2">
+                {% if not history_records %}
+                <p class="text-muted" id="history-empty-msg">No history records for this piece of equipment yet.</p>
+                {% else %}
+                <div class="row mb-1 text-muted small fw-semibold history-header">
+                  <div class="col-3">Date</div>
+                  <div class="col">Note</div>
+                </div>
+                {% endif %}
+                {% for record in history_records %}
+                <div class="row align-items-center mb-2 history-row" data-history-id="{{ record.pk }}">
+                  <div class="col-3">
+                    <input type="text" class="form-control form-control-sm"
+                           value="{{ record.date|date:'Y-m-d' }}" disabled>
+                  </div>
+                  <div class="col">
+                    <textarea class="form-control form-control-sm" rows="2" disabled>{{ record.note }}</textarea>
+                  </div>
+                  <div class="col-auto">
+                    <button type="button" class="btn btn-danger btn-sm history-remove-btn"
+                            data-history-id="{{ record.pk }}"
+                            data-remove-url="{% url 'history_remove' record.pk %}">
+                      <i class="bi bi-trash"></i> Remove
+                    </button>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+
+              <!-- Add form: hidden until header button is clicked -->
+              <div class="ms-2 mt-2 mb-2" id="history-add-form" style="display: none;">
+                <div class="row mb-1 text-muted small fw-semibold">
+                  <div class="col-3">Date</div>
+                  <div class="col">Note</div>
+                </div>
+                <div class="row align-items-start g-2">
+                  <div class="col-3">
+                    <input type="text" class="form-control form-control-sm datepicker"
+                           id="history-date-input" placeholder="YYYY-MM-DD">
+                  </div>
+                  <div class="col">
+                    <textarea class="form-control form-control-sm" id="history-note-input"
+                              rows="2" placeholder="Describe what happened..."></textarea>
+                  </div>
+                  <div class="col-auto">
+                    <button type="button" class="btn btn-info btn-sm" id="history-save-btn"
+                            data-add-url="{{ history_add_url }}">
+                      <i class="bi bi-plus-circle"></i> Save record
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm ms-1 mt-1"
+                            id="history-cancel-btn">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+                <div id="history-errors" class="mt-1"></div>
+              </div>
+
             </div>
           </div>
         </div>
 
-      {% if action == "Edit" %}
-
-      <!-- Documents -->
-      <div class="accordion-item mb-1">
-        {% include "inventory/include/accordion_header.html" with section_id="documents" section_title="Documents" button_text="Add a document" button_url=document_create_url mt_3=True %}
-        <div id="documentsCollapse" class="accordion-collapse collapse" data-bs-parent="#mainAccordion">
+        <!-- Documents -->
+        <div class="accordion-item mb-1">
+          {% include "inventory/include/accordion_header.html" with section_id="documents" section_title="Documents" button_text="Add a document" button_url=document_create_url mt_3=True %}
+          <div id="documentsCollapse" class="accordion-collapse collapse" data-bs-parent="#mainAccordion">
             {% include "inventory/include/documents_accordion_body.html" with documents=documents document_edit_url="document_edit" return_url=return_url %}
+          </div>
         </div>
-      </div>
 
       <!-- End of accordion sections -->
       </div>
@@ -66,8 +118,7 @@
 
   {% block extra_js %}
     {% include "inventory/include/flatpickr.html" %}
-    {# NB important: formset_add.js must load AFTER form_protect.js #}
-    <script src="{% static 'js/formset_add.js' %}"></script>
-    <script src="{% static 'js/delete_button.js' %}"></script>
+    {# NB Important: js/history_ajax.js must load AFTER form_protect.js #}
+    <script src="{% static 'js/history_ajax.js' %}"></script>
   {% endblock extra_js %}
 </body>

@@ -37,9 +37,9 @@
     />
     <!-- Turn off crispy-forms asterisks for required fields -->
     <style>
-      .asteriskField {
-        display: none;
-      }
+    .asteriskField {
+      display: none;
+    }
     </style>
 
     {% block extra_css %}
@@ -102,8 +102,8 @@
 
     <!-- Main Content -->
     <main class="container-fluid flex-grow-1">
-        {% block content %}
-        {% endblock %}
+      {% block content %}
+      {% endblock %}
     </main>
 
     <!-- <\!-- Footer -\-> -->
@@ -168,26 +168,27 @@
     {% bootstrap_javascript %}
     <!-- For Bootstrap tooltips -->
     <script>
-      // for older browsers (pre-2015):
-      // const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggl
-      const tooltipTriggerList = Array.from(
-        document.querySelectorAll('[data-bs-toggle="tooltip"]'),
-      );
-      /*
-      Each HTML element, tooltipTriggerEl, should have a 'title'
-      attribute that will be used as the tooltip. If you don't need to
-      manipulate the tooltips after creation, you can safely omit the
-      assignment of the mapped tooltopTriggerList to the tooltipList
-      array. */
-      const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-      });
+    // for older browsers (pre-2015):
+    // const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggl
+    const tooltipTriggerList = Array.from(
+      document.querySelectorAll('[data-bs-toggle="tooltip"]'),
+    );
+    /*
+       Each HTML element, tooltipTriggerEl, should have a 'title'
+       attribute that will be used as the tooltip. If you don't need to
+       manipulate the tooltips after creation, you can safely omit the
+       assignment of the mapped tooltopTriggerList to the tooltipList
+       array. */
+    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
     </script>
     <!-- Flatpickr JS -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
     <!-- Inventory app form exit protection
-         NB important: formset_add.js must load AFTER form_protect.js,
+         NB important: js/doi_ajax.js and js/history_ajax.js must
+         load AFTER form_protect.js,
          e.g. in extra_js block-->
     <script src="{% static 'js/form_protect.js' %}"></script>
 

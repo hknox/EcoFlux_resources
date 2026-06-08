@@ -85,4 +85,26 @@ urlpatterns = [
         name="document_delete",
     ),
     path("documents/", views.DocumentListView.as_view(), name="view_documents"),
+    # DOI AJAX endpoints
+    path(
+        "sites/<int:site_pk>/doi/add/",
+        views.doi_add,
+        name="doi_add",
+    ),
+    path(
+        "doi/<int:doi_pk>/remove/",
+        views.doi_remove,
+        name="doi_remove",
+    ),
+    # History AJAX endpoints
+    path(
+        "equipment/<int:equipment_pk>/history/add/",
+        views.history_add,
+        name="history_add",
+    ),
+    path(
+        "history/<int:history_pk>/remove/",
+        views.history_remove,
+        name="history_remove",
+    ),
 ]
