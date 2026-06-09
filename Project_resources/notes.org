@@ -29,7 +29,27 @@ scp all of /srv/ecoflux/media to local /media/ dir.
 [[https://ecoflux-lab.github.io/Data.html][EcoFlux main site]]
 
 
+* Bootstrap accordion notes
+reorganize _detail pages to have ONE master accordion header then
+individual accordions for each object underneath so only one is open
+at a time.
+
+Accordion class Core Structure
+
+An accordion in Bootstrap 5 uses a specific HTML structure with these key elements:
+Element	        Class	                Purpose
+Container	.accordion	        Wraps all accordion items
+Item	        .accordion-item	        Container for a single panel
+Header	        .accordion-header	Contains the clickable button
+Button	        .accordion-button	The clickable trigger (can be inside or be the header)
+Body	        .accordion-body	        Contains the collapsible content
+
+
 * [[https://chatgpt.com/c/687295f7-4304-8001-b080-4f2e315195eb][ChatGPT discussions]]
+
+* Favicon editing
+rebuild it using the present logo without the white border:
+https://gist.github.com/jfrobbins/7a579fe888b08612f892db759db2ed13
 
 
 * .gitignore/git includes
@@ -60,6 +80,58 @@ scp all of /srv/ecoflux/media to local /media/ dir.
 | `migrations/*.py` (not `__pycache__`) | ✅ Yes                                |
 
 Let me know if you’d like a `.gitignore` template or a typical migration folder structure explanation.
+
+
+* Rich text editor
+For adding formatting attributes to text fields.
+*** Primary options seem to be TinyMCE and CKEditor
+
+Duck.ai: Bottom Line,
+For internal, trusted users, just use TinyMCE without additional
+sanitization. It's designed to prevent accidental HTML mistakes, and
+that's all you need. You're overthinking it for your use case!
+Focus your energy on the image upload validation (file type, size
+limits) instead — that's where real issues can occur.
+
+GitHub CoPilot: If you're dealing with ecological/scientific content
+with potential tables, images, and complex formatting, CKEditor would
+be the better choice. If it's simpler content (blog posts,
+descriptions), TinyMCE would be more efficient. Both have solid Django
+integration, built-in sanitization, and active maintenance—so you
+won't have the deprecation issues that Summernote has with bleach.
+Given your simple requirements, TinyMCE is the clear winner for your
+use case.
+*** TinyMCE
+The PyPi package seems outdated. I ended up doing a self-hosted
+install of the most recent version as of [2026-03-15 Sun].
+
+[[https://github.com/jazzband/django-tinymce][PyPi package django-tinymce]]
+
+For Tiny Cloud installation:
+<!-- Place the first <script> tag in your HTML's <head> -->
+<script src="https://cdn.tiny.cloud/1/9c0gbyf3bxmxaijs000y7riwfaeh6bm3ezxvfrs6yd84j0hn/tinymce/8/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
+
+API Key (for Tiny Cloud install)
+9c0gbyf3bxmxaijs000y7riwfaeh6bm3ezxvfrs6yd84j0hn
+
+
+
+[[https://www.tiny.cloud/docs/tinymce/latest/][TinyMCE official documentation]]
+[[https://django-tinymce.readthedocs.io/en/latest/][django-tinymce documentation]]
+
+[[https://unwiredlearning.com/blog/django-rich-text-editor][Overview 1 of integration]]
+[[https://www.iditect.com/programming/python-example/how-to-integrate-custom-rich-text-editor-in-your-django-website.html][Overview 2 of integration]]
+
+*** CKEditor
+[[https://ckeditor.com/][Home]]
+[[https://django-ckeditor.readthedocs.io/en/latest][CKEDitor online docs]]
+
+*** Other options:
+[[https://github.com/Pascal-ai-dev/django-textedit][Django Textedit]]
+[[https://github.com/agusmakmun/django-markdown-editor?tab=readme-ov-file][Martor]]
+[[https://github.com/neutronX/django-markdownx][MarkdownX]]
+[[https://github.com/timmyomahony/django-pagedown][Django Pagedown]] (Stack Overflow's PageDown editor)
+[[https://github.com/lqez/django-summernote?tab=readme-ov-file][Summernote]] (older, needs sanitization)
 
 
 * GenericForeignKeys
