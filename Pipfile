@@ -15,6 +15,7 @@ python-decouple = "*"
 python-dotenv = "*"
 django-maintenance-mode = "*"
 pdf2image = "*"
+django-cors-headers = "*"
 
 [dev-packages]
 pylsp-rope = "*"

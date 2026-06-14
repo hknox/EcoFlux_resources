@@ -30,6 +30,8 @@ DEBUG = config("DEBUG", False, cast=bool)
 ADMINS = config("ADMINS", default="", cast=Csv())
 
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default=[], cast=Csv())
+CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS", default=[], cast=Csv())
+CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS", default=[], cast=Csv())
 
 # Application definition
 
@@ -44,6 +46,7 @@ INSTALLED_APPS = [
     "django_bootstrap5",
     "maintenance_mode",
     "inventory",
+    "corsheaders",
     "crispy_forms",
     "crispy_bootstrap5",
 ]
@@ -51,6 +54,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
