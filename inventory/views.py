@@ -166,6 +166,26 @@ class SiteAssignmentMixin:
 
 @login_required
 @require_http_methods(["POST"])
+def history_update(request, history_pk):
+    record = get_object_or_404(History, pk=history_pk)
+    date = request.POST.get("date", "").strip()
+    note = request.POST.get("note", "").strip()
+    errors = {}
+    if not date:
+        errors["date"] = "Date is required."
+    if not note:
+        errors["note"] = "Note is required."
+    if errors:
+        return JsonResponse({"ok": False, "errors": errors}, status=400)
+    record.date = date
+    record.note = note
+    record.save()
+    logger.info(f"User {request.user} updated history record {history_pk}.")
+    return JsonResponse({"ok": True, "id": record.pk})
+
+
+@login_required
+@require_http_methods(["POST"])
 def history_add(request, equipment_pk):
     equipment = get_object_or_404(Equipment, pk=equipment_pk)
     date_str = request.POST.get("date", "").strip()

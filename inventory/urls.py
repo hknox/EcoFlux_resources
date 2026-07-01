@@ -96,7 +96,11 @@ urlpatterns = [
         views.doi_remove,
         name="doi_remove",
     ),
+    path("doi/<int:doi_pk>/update/", views.doi_update, name="doi_update"),
     # History AJAX endpoints
+    path(
+        "history/<int:history_pk>/update/", views.history_update, name="history_update"
+    ),
     path(
         "equipment/<int:equipment_pk>/history/add/",
         views.history_add,

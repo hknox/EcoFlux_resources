@@ -44,13 +44,17 @@
                 {% for record in history_records %}
                 <div class="row align-items-center mb-2 history-row" data-history-id="{{ record.pk }}">
                   <div class="col-3">
-                    <input type="text" class="form-control form-control-sm"
-                           value="{{ record.date|date:'Y-m-d' }}" disabled>
+                    <input type="text" class="form-control form-control-sm history-date"
+                           value="{{ record.date|date:'Y-m-d' }}">
                   </div>
                   <div class="col">
-                    <textarea class="form-control form-control-sm" rows="2" disabled>{{ record.note }}</textarea>
+                    <textarea class="form-control form-control-sm history-note" rows="2">{{ record.note }}</textarea>
                   </div>
                   <div class="col-auto">
+                    <button type="button" class="btn btn-primary btn-sm history-update-btn me-1"
+                            data-update-url="{% url 'history_update' record.pk %}">
+                      <i class="bi bi-save"></i> Save
+                    </button>
                     <button type="button" class="btn btn-danger btn-sm history-remove-btn"
                             data-history-id="{{ record.pk }}"
                             data-remove-url="{% url 'history_remove' record.pk %}">

@@ -136,22 +136,27 @@ document.addEventListener('DOMContentLoaded', function () {
         const row = document.createElement('div');
         row.className = 'row align-items-center mb-2 history-row';
         row.dataset.historyId = data.id;
+
         row.innerHTML = `
           <div class="col-3">
-            <input type="text" class="form-control form-control-sm"
-                   value="${escapeHtml(data.date)}" disabled>
+            <input type="text" class="form-control form-control-sm history-date"
+                   value="${escapeHtml(data.date)}">
           </div>
           <div class="col">
-            <textarea class="form-control form-control-sm" rows="2"
-                      disabled>${escapeHtml(data.note)}</textarea>
+            <textarea class="form-control form-control-sm history-note" rows="2">${escapeHtml(data.note)}</textarea>
           </div>
           <div class="col-auto">
+            <button type="button" class="btn btn-primary btn-sm history-update-btn me-1"
+                    data-update-url="${escapeHtml(data.update_url)}">
+              <i class="bi bi-save"></i> Save
+            </button>
             <button type="button" class="btn btn-danger btn-sm history-remove-btn"
                     data-history-id="${data.id}"
                     data-remove-url="${escapeHtml(data.remove_url)}">
               <i class="bi bi-trash"></i> Remove
             </button>
           </div>`;
+
         list.appendChild(row);
 
         addForm.style.display = 'none';
@@ -166,6 +171,26 @@ document.addEventListener('DOMContentLoaded', function () {
     }).catch(() => {
       errorsDiv.innerHTML = '<div class="text-danger small">Network error. Please try again.</div>';
     });
+  });
+
+  // ── Update (delegated to list) ────────────────────────────────────────────
+  list?.addEventListener('click', function (e) {
+    const btn = e.target.closest('.history-update-btn');
+    if (!btn) return;
+
+    const row = btn.closest('.history-row');
+    const date = row.querySelector('.history-date').value.trim();
+    const note = row.querySelector('.history-note').value.trim();
+
+    postJson(btn.dataset.updateUrl, {
+      date: date,
+      note: note,
+    }).then(data => {
+      if (!data.ok) {
+        const msgs = Object.values(data.errors).join(' ');
+        alert(msgs);
+      }
+    }).catch(() => alert('Network error. Please try again.'));
   });
 
   // ── Remove (delegated to list) ────────────────────────────────────────────

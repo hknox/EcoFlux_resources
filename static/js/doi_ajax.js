@@ -135,14 +135,18 @@ document.addEventListener('DOMContentLoaded', function () {
         row.dataset.doiId = data.id;
         row.innerHTML = `
           <div class="col-3">
-            <input type="text" class="form-control form-control-sm"
-                   value="${escapeHtml(data.label)}" disabled>
+            <input type="text" class="form-control form-control-sm doi-label"
+                   value="${escapeHtml(data.label)}">
           </div>
           <div class="col-7">
-            <input type="url" class="form-control form-control-sm"
-                   value="${escapeHtml(data.doi_link)}" disabled>
+            <input type="url" class="form-control form-control-sm doi-link"
+                   value="${escapeHtml(data.doi_link)}">
           </div>
           <div class="col-auto">
+            <button type="button" class="btn btn-primary btn-sm doi-update-btn me-1"
+                    data-update-url="${escapeHtml(data.update_url)}">
+              <i class="bi bi-save"></i> Save
+            </bubtton>
             <button type="button" class="btn btn-danger btn-sm doi-remove-btn"
                     data-doi-id="${data.id}"
                     data-remove-url="${escapeHtml(data.remove_url)}">
@@ -164,6 +168,26 @@ document.addEventListener('DOMContentLoaded', function () {
       // Stay dirty on network error
       errorsDiv.innerHTML = '<div class="text-danger small">Network error. Please try again.</div>';
     });
+  });
+
+  // ── Update (delegated to list) ────────────────────────────────────────────
+  list?.addEventListener('click', function (e) {
+    const btn = e.target.closest('.doi-update-btn');
+    if (!btn) return;
+
+    const row = btn.closest('.doi-row');
+    const label = row.querySelector('.doi-label').value.trim();
+    const doiLink = row.querySelector('.doi-link').value.trim();
+
+    postJson(btn.dataset.updateUrl, {
+      label: label,
+      doi_link: doiLink,
+    }).then(data => {
+      if (!data.ok) {
+        const msgs = Object.values(data.errors).join(' ');
+        alert(msgs);  // or a more elegant inline error if you prefer
+      }
+    }).catch(() => alert('Network error. Please try again.'));
   });
 
   // ── Remove (delegated to list) ────────────────────────────────────────────
