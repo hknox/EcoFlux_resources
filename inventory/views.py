@@ -1,7 +1,7 @@
 from datetime import date as date_type
 import logging
+import json
 import os
-from pprint import pprint
 
 from django.contrib import messages
 from django.contrib.auth import logout
@@ -12,7 +12,7 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Case, CharField, Count, F, Value, When
 from django.db.models.functions import Concat, Lower
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse, reverse_lazy
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.http import require_http_methods
@@ -90,7 +90,8 @@ class BaseContextMixin:
                 ],
             )
             context["default_success_url"] = self.default_success_url
-            context["success_param"] = SUCCESS_URL
+        # Set this for all views, override in SiteUnpdateView if needed.
+        context["blocked"] = False
 
         return context
 
@@ -271,10 +272,25 @@ class EquipmentUpdateView(LoginRequiredMixin, EquipmentViewsMixin, UpdateView):
             "history_add", kwargs={"equipment_pk": equipment.pk}
         )
         context["documents"] = equipment.documents
+        doc_count = equipment.documents.count()
         context["document_create_url"] = (
             reverse("document_add") + f"?equipment_pk={equipment.pk}"
         )
+        context["record_type"] = "Equipment"
         context["content_type"] = "piece of equipment"
+        context["cascade_json"] = (
+            json.dumps(
+                [
+                    {
+                        "count": doc_count,
+                        "label": "Document" if doc_count == 1 else "Documents",
+                    }
+                ]
+            )
+            if doc_count
+            else "[]"
+        )
+
         return context
 
     def form_valid(self, form):
@@ -294,12 +310,14 @@ class EquipmentDeleteView(
     default_success_url = reverse_lazy("view_equipment")
 
     def form_valid(self, form):
+        # document.delete deletes all associated files.
+        for document in self.object.documents.all():
+            document.delete()
         # Store message before redirect
-        response = super().form_valid(form)
         logger.info(
             f"User {self.request.user} successfully deleted equipment, {self.object.instrument}."
         )
-        return response
+        return super().form_valid(form)
 
     def get_success_message(self, cleaned_data):
         return self.success_message % dict(
@@ -336,20 +354,21 @@ class FieldNoteCreateView(LoginRequiredMixin, FieldNoteViewsMixin, CreateView):
         """
         return reverse(self.base_edit_url, kwargs={"pk": self.object.pk})
 
-        # Store message before redirect
-        messages.success(
-            self.request,
-            "Fieldnote created successfully. You can now add photos and documents.",
-        )
-        response = super().form_valid(form)
-        logger.info(
-            f"User {self.request.user} successfully created fieldnote for site, {self.object.site}."
-        )
-        return response
     def get_cancel_url(self):
         return get_return_url(self.request, fallback_viewname=self.default_success_url)
 
 
+def form_valid(self, form):
+    # Store message before redirect
+    messages.success(
+        self.request,
+        "Fieldnote created successfully. You can now add photos and documents.",
+    )
+    response = super().form_valid(form)
+    logger.info(
+        f"User {self.request.user} successfully created fieldnote for site, {self.object.site}."
+    )
+    return response
 
 
 class FieldNoteUpdateView(LoginRequiredMixin, FieldNoteViewsMixin, UpdateView):
@@ -375,8 +394,24 @@ class FieldNoteUpdateView(LoginRequiredMixin, FieldNoteViewsMixin, UpdateView):
         context["document_create_url"] = (
             reverse("document_add") + f"?fieldnote_pk={fieldnote.pk}"
         )
-        context["documents"] = fieldnote.documents
+        context["record_type"] = "Fiednote"
         context["content_type"] = "fieldnote"
+        context["cascade_json"] = (
+            json.dumps(
+                [
+                    {
+                        "count": photo_count,
+                        "label": "Photo" if photo_count == 1 else "Photos",
+                    },
+                    {
+                        "count": doc_count,
+                        "label": "Document" if doc_count == 1 else "Documents",
+                    },
+                ]
+            )
+            if doc_count
+            else "[]"
+        )
 
         return context
 
@@ -391,7 +426,14 @@ class FieldNoteDeleteView(
     )
 
     def form_valid(self, form):
+        # document.delete deletes all associated files.
+        for document in self.object.documents.all():
+            document.delete()
+        # photos.delete deletes all associated files.
+        for photo in self.object.photos.all():
+            photo.delete()
         response = super().form_valid(form)
+        # Store message before redirect
         logger.info(
             f"User {self.request.user} successfully deleted fieldnote of {self.object.date_visited} for site {self.object.site}."
         )
@@ -524,32 +566,87 @@ class SiteUpdateView(LoginRequiredMixin, SiteViewsMixin, UpdateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         site = context["object"]
+        context["record_type"] = "Site"
 
+        # DOI
         context["doi_records"] = site.doi_records.all()
         context["doi_add_url"] = reverse("doi_add", kwargs={"site_pk": site.pk})
-
-        context["fieldnotes"] = self.object.fieldnotes.order_by("date_visited")
-        context["equipment"] = self.object.equipment.all()
-        context["success_url"] = (
-            f"?{SUCCESS_URL}={self.request.get_full_path()}&site_pk={self.object.id}"
+        # Fieldnotes
+        fieldnotes = self.object.fieldnotes.order_by("date_visited").prefetch_related(
+            "documents", "photos"
+        )
+        fieldnote_count = fieldnotes.count()
+        fieldnote_doc_count = sum(len(fn.documents.all()) for fn in fieldnotes)
+        fieldnote_photo_count = sum(len(fn.photos.all()) for fn in fieldnotes)
+        context["fieldnotes"] = (
+            fieldnotes  # self.object.fieldnotes.order_by("date_visited")
         )
         context["fieldnote_create_url"] = (
-            reverse("fieldnote_add") + context["success_url"]
+            reverse("fieldnote_add") + f"?site_pk={site.pk}"
         )
+        # Equipment
+        context["equipment"] = self.object.equipment.all()
         context["equipment_create_url"] = (
-            reverse("equipment_add") + context["success_url"]
+            reverse("equipment_add") + f"?site_pk={site.pk}"
         )
-        context["return_url"] = f"?{SUCCESS_URL}={self.request.get_full_path()}"
-        context["document_create_url"] = (
-            reverse("document_add") + context["return_url"] + f"&site_pk={site.id}"
-        )
-        context["documents"] = site.documents
+        equipment_count = site.equipment.count()
+        # Documents
+        context["document_create_url"] = reverse("document_add") + f"?site_pk={site.pk}"
+        context["documents"] = site.documents.all()
+        doc_count = len(context["documents"])
+        # Deletion confirmation data
         context["content_type"] = "site"
+        context["delete_type"] = "blocked" if equipment_count > 0 else "cascade"
+        context["blocked_reason"] = (
+            (
+                f"Remove or delete {equipment_count} Equipment record{'' if equipment_count == 1 else 's'} "
+                f"from this Site before deleting it."
+            )
+            if equipment_count
+            else ""
+        )
+        if equipment_count == 0:
+            cascade = []
+            if fieldnote_count:
+                extras = []
+                if fieldnote_doc_count:
+                    extras.append(
+                        f"{fieldnote_doc_count} Document{'s' if fieldnote_doc_count != 1 else ''}"
+                    )
+                if fieldnote_photo_count:
+                    extras.append(
+                        f"{fieldnote_photo_count} Photo{'s' if fieldnote_photo_count != 1 else ''}"
+                    )
+                label = f"Fieldnote{'s' if fieldnote_count != 1 else ''}"
+                if extras:
+                    label += f" (including {' and '.join(extras)})"
+                cascade.append({"count": fieldnote_count, "label": label})
+            if doc_count:
+                cascade.append(
+                    {
+                        "count": doc_count,
+                        "label": "Document" if doc_count == 1 else "Documents",
+                    }
+                )
+            context["cascade_json"] = json.dumps(cascade) if cascade else "[]"
 
         return context
 
     def form_valid(self, form):
+        # NB equipment has already been deleted before we arrive here.
+        # document.delete deletes all associated files.
+        for document in self.object.documents.all():
+            document.delete()
+        # fieldnotes have nested objects to deletemodalblocked
+        for fieldnote in self.objects.fieldnote.all():
+            for photo in fieldnote.photos.all():
+                photo.delete()
+            for doc in fieldnote.documents.all():
+                doc.delete()
+            fieldnote.delete()
+
         response = super().form_valid(form)
+        # Store message before redirect
         logger.info(
             f"User {self.request.user} successfully updated site, {self.object}."
         )
@@ -569,6 +666,17 @@ class SiteDeleteView(LoginRequiredMixin, SuccessMessageMixin, URLsMixin, DeleteV
         )
 
     def form_valid(self, form):
+
+        # document.delete deletes all associated files.
+        for doc in self.object.documents.all():
+            doc.delete()
+        # photos and docs in a fieldnote delete their own files.
+        for fn in self.object.fieldnotes.all():
+            for photo in fn.photos.all():
+                photo.delete()
+            for doc in fn.documents.all():
+                doc.delete()
+            fn.delete()
         # Store message before redirect
         response = super().form_valid(form)
         logger.info(
@@ -751,6 +859,7 @@ class DocumentUpdateView(LoginRequiredMixin, URLsMixin, BaseContextMixin, Update
 
     def get_context_data(self, **kwargs):
         context = self.get_base_context_data(**kwargs)
+        context["record_type"] = "Document"
 
         return context
 
@@ -763,10 +872,8 @@ class DocumentDeleteView(
     success_message = "Document of %(date)s (%(summary)s) was deleted successfully!"
 
     def form_valid(self, form):
+        # Document.delete() deletes all associated files.
         response = super().form_valid(form)
-        # delete the associated file
-        self.object.file.delete(save=False)
-        self.object.thumbnail.delete(save=False)
         logger.info(
             f"User {self.request.user} successfully deleted a document received on {self.object.date_received}: {self.object.summary}."
         )

@@ -1,14 +1,12 @@
 # Can add 'help_text' to each field creation call, see
 # https://docs.djangoproject.com/en/5.2/topics/db/models/, look for
 # help_text
-import os
 
 from django.db import models
 from django.urls import reverse
 from django.utils.timezone import now
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
-from django.conf import settings
 
 from inventory.media_processing.media_paths import (
     site_photo_upload_path,
@@ -72,6 +70,114 @@ class Site(models.Model, GetDocumentMixin):
         return f"{self.code}: {self.name}"
 
 
+class Document(ThumbnailMixin, models.Model):
+    # Generic relation fields
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    # Important: GenericForeignKey is not a database field! Only
+    # content_type and object_id are actual database columns.
+    content_object = GenericForeignKey("content_type", "object_id")
+    object_description = models.CharField(
+        max_length=150,
+        blank=True,
+        null=True,
+    )
+    date_uploaded = models.DateField(default=now)
+    submitter = models.CharField(max_length=50, blank=True, null=True)
+    date_received = models.DateField()
+    summary = models.CharField(max_length=80)
+    thumbnail = models.ImageField(
+        verbose_name="thumbnail",
+        upload_to=document_thumbnail_upload_path,
+        blank=True,
+        null=True,
+    )
+    file = models.FileField(
+        verbose_name="document",
+        upload_to=document_upload_path,
+        blank=False,
+        null=False,
+    )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["content_type", "object_id"]),
+        ]
+
+    def save(self, *args, **kwargs):
+        self.object_description = f"{self.content_object}"
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        """Delete associated files along with the document."""
+
+        self.file.delete(save=False)
+        self.thumbnail.delete(save=False)
+        super().delete(*args, **kwargs)
+
+    def generate_thumbnail(self):
+        if self.file and not self.thumbnail:
+            thumb = generate_pdf_thumbnail(self.file)
+            unique_name = generate_thumbnail_name(self.file.name)
+            self.thumbnail.save(unique_name, thumb, save=False)
+
+    def context_object_display(self):
+        """Only needed by
+        inventory/management/commands/0012_generate_object_description.py"""
+        obj = self.content_object
+        if not obj:
+            return "-"
+        return str(obj)
+
+    @property
+    def context_object_url(self):
+        obj = self.content_object
+        if not obj:
+            return None
+        return reverse(f"{obj._meta.model_name}_edit", args=[obj.pk])
+
+
+class FieldNote(models.Model, GetDocumentMixin):
+    site = models.ForeignKey(Site, related_name="fieldnotes", on_delete=models.CASCADE)
+    documents = GenericRelation(Document)
+    note = models.TextField()
+    date_visited = models.DateField(default=now)
+    summary = models.CharField(max_length=80, blank=True)
+    submitter = models.CharField(max_length=50, blank=True)
+    site_visitors = models.CharField(max_length=250, blank=True, default="")
+
+    def __str__(self):
+        return f"Visit to {self.site} on {self.date_visited}"
+
+
+class Photo(ThumbnailMixin, models.Model):
+    photo = models.ImageField(upload_to=site_photo_upload_path, blank=False, null=False)
+    date_taken = models.DateField(blank=True, null=True)
+    taken_by = models.CharField(max_length=100, blank=True)
+    fieldnote = models.ForeignKey(
+        FieldNote, on_delete=models.CASCADE, related_name="photos"
+    )
+    thumbnail = models.ImageField(
+        verbose_name="thumbnail",
+        upload_to=image_thumbnail_upload_path,
+        blank=True,
+        null=True,
+    )
+
+    def delete(self, *args, **kwargs):
+        """Delete associated files along with the photo entry."""
+
+        self.photo.delete(save=False)
+        self.thumbnail.delete(save=False)
+        super().delete(*args, **kwargs)
+
+    def generate_thumbnail(self):
+        if self.photo and not self.thumbnail:
+            thumb = generate_image_thumbnail(self.photo)
+            unique_name = generate_thumbnail_name(self.photo.name)
+            self.thumbnail.save(unique_name, thumb, save=False)
+
+
 class DOI(models.Model):
     """Class for a Data Object Identifier to a Site"""
 
@@ -101,97 +207,3 @@ class History(models.Model):
     item = models.ForeignKey(
         Equipment, related_name="history", on_delete=models.CASCADE
     )
-
-
-class FieldNote(models.Model, GetDocumentMixin):
-    site = models.ForeignKey(Site, related_name="fieldnotes", on_delete=models.CASCADE)
-    note = models.TextField()
-    date_visited = models.DateField(default=now)
-    summary = models.CharField(max_length=80, blank=True)
-    submitter = models.CharField(max_length=50, blank=True)
-    site_visitors = models.CharField(max_length=250, blank=True, default="")
-
-    def __str__(self):
-        return f"Visit to {self.site} on {self.date_visited}"
-
-
-class Photo(ThumbnailMixin, models.Model):
-    photo = models.ImageField(upload_to=site_photo_upload_path, blank=False, null=False)
-    date_taken = models.DateField(blank=True, null=True)
-    taken_by = models.CharField(max_length=100, blank=True)
-    fieldnote = models.ForeignKey(
-        FieldNote, on_delete=models.CASCADE, related_name="photos"
-    )
-    thumbnail = models.ImageField(
-        verbose_name="thumbnail",
-        upload_to=image_thumbnail_upload_path,
-        blank=True,
-        null=True,
-    )
-
-    def generate_thumbnail(self):
-        if self.photo and not self.thumbnail:
-            thumb = generate_image_thumbnail(self.photo)
-            unique_name = generate_thumbnail_name(self.photo.name)
-            self.thumbnail.save(unique_name, thumb, save=False)
-
-
-class Document(ThumbnailMixin, models.Model):
-    # Generic relation fields
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    # Important: GenericForeignKey is not a database field! Only
-    # content_type and object_id are actual database columns.
-    content_object = GenericForeignKey("content_type", "object_id")
-    object_description = models.CharField(
-        max_length=150,
-        blank=True,
-        null=True,
-    )
-
-    date_uploaded = models.DateField(default=now)
-    submitter = models.CharField(max_length=50, blank=True, null=True)
-    date_received = models.DateField()
-    summary = models.CharField(max_length=80)
-    thumbnail = models.ImageField(
-        verbose_name="thumbnail",
-        upload_to=document_thumbnail_upload_path,
-        blank=True,
-        null=True,
-    )
-    file = models.FileField(
-        verbose_name="document",
-        upload_to=document_upload_path,
-        blank=False,
-        null=False,
-    )
-
-    class Meta:
-        indexes = [
-            models.Index(fields=["content_type", "object_id"]),
-        ]
-
-    def save(self, *args, **kwargs):
-        self.object_description = f"{self.content_object}"
-        super().save(*args, **kwargs)
-
-    def generate_thumbnail(self):
-        if self.file and not self.thumbnail:
-            thumb = generate_pdf_thumbnail(self.file)
-            unique_name = generate_thumbnail_name(self.file.name)
-            self.thumbnail.save(unique_name, thumb, save=False)
-
-    def context_object_display(self):
-        """Only needed by
-        inventory/management/commands/0012_generate_object_description.py"""
-        obj = self.content_object
-        if not obj:
-            return "-"
-        return str(obj)
-
-    @property
-    def context_object_url(self):
-        obj = self.content_object
-        if not obj:
-            return None
-        return reverse(f"{obj._meta.model_name}_edit", args=[obj.pk])
