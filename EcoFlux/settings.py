@@ -30,11 +30,18 @@ DEBUG = config("DEBUG", False, cast=bool)
 ADMINS = config("ADMINS", default="", cast=Csv())
 
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default=[], cast=Csv())
-CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS", default=[], cast=Csv())
-CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS", default=[], cast=Csv())
+# These are only appropriate when serving via proxy. If the server is
+# not behind a proxy, these variables might not be defined in .env.
+try:
+    CORS_ALLOWED_ORIGINS = config("CORS_ALLOWED_ORIGINS", default=[], cast=Csv())
+except AttributeError:
+    CORS_ALLOWED_ORIGINS = []
+try:
+    CSRF_TRUSTED_ORIGINS = config("CSRF_TRUSTED_ORIGINS", default=[], cast=Csv())
+except AttributeError:
+    CSRF_TRUSTED_ORIGINS = []
 
 # Application definition
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",

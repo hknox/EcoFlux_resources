@@ -504,7 +504,40 @@ STATIC_URL = '/myapp/static/'
 
 **** Gunicorn -for later
 reverse proxy to Apache or Nginx
+** Proxy setup
+I have set up SunVillage as the front end webserver for my network. It
+will handle the NextCloud site directly and pass ecoflux/ and
+testing_ecoflux/ to Phydeaux3. This backend server listens on port
+8080 and doesn't need SSL certificates because all the traffic is
+local.
 
+For the proxied sites, you need to set up CORS to allow
+cross-scripting to the proxied site. [[https://github.com/adamchainz/django-cors-headers][Docs are here.]]
+
+From Claude:
+
+"When you served /testing_ecoflux/ directly from the front-end server
+(without a proxy), the browser made requests to
+https://grandwazoo.ddns.net/testing_ecoflux/. The origin was
+https://grandwazoo.ddns.net, and the Django app was also running on
+https://grandwazoo.ddns.net—same origin. No CORS check happens for
+same-origin requests.
+
+Now that you're proxying through a reverse proxy to the backend, the
+browser still sees requests coming from https://grandwazoo.ddns.net
+(thanks to ProxyPreserveHost On), but the backend Django app is
+actually running on http://192.168.1.120:8080. When the browser makes
+a POST request, Django sees the Origin header as
+https://grandwazoo.ddns.net while the app is "listening" on a
+different host/port, so it triggers the CORS check.
+
+The proxy doesn't automatically pass through CORS headers—it passes
+through the request and response, but the CORS validation happens
+inside Django itself before any response is sent.
+
+So installing and configuring django-cors-headers is the right move.
+Once you add "https://grandwazoo.ddns.net" to CORS_ALLOWED_ORIGINS,
+the POST requests should work."
 
 * Forms
 ** Goals
