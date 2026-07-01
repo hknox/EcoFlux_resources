@@ -186,7 +186,7 @@ EMAIL_HOST_USER = config("EMAIL_HOST_USER", default="")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD", default="")
 EMAIL_USE_SSL = config("EMAIL_USE_SSL", default=False, cast=bool)
 
-SESSION_COOKIE_AGE = 259200
+SESSION_COOKIE_AGE = 259200  # 3 days
 
 # Media uploads
 MEDIA_URL = config("MEDIA_URL", default="/media/")

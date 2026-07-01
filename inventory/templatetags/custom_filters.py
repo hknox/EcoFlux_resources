@@ -31,7 +31,7 @@ def generate_summary(text, max_chars=200):
 
     Truncates the summary to length max_chars.
 
-    NB there is a built-in Django filter for this!"""
+    TODO NB there is a built-in Django filter for this!"""
     text = text.split("<br>")[0]
     i = text.find("<")
     while True:
