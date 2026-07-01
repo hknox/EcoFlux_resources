@@ -16,9 +16,10 @@
 <!-- </div> -->
 
 <div class="row">
-  <!-- <div class="col-md-11 mt-1"> -->
-    <div class="mt-0">
-      {% if table_items %}
+
+  <!-- <div class="col-md-11 mt-1"> uncomment this when reimplementing Filters-->
+  <div class="mt-0">
+    {% if table_items %}
       {% include "inventory/include/sortable_table.html" with table_fields=table_fields table_items=table_items edit_url=edit_url %}
     {% else %}
       No {{heading|lower}} entered yet.
@@ -34,6 +35,7 @@
     {% include "inventory/include/filters.html" with filter_fields=filter_fields reset_url=reset_url sort_param=True %}
   </div>
   {% endcomment %}
+
 </div>
 
 {% endblock content %}

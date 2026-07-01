@@ -40,8 +40,7 @@
               </a>
             {% else %}
               {% if "href" in field %}
-                <!-- TODO refine success_param strategy -->
-                <a href={{ item|get_field_display:field.href }}?{{ success_param }}={{ request.path }}>
+                <a href={{ item|get_field_display:field.href }}>
               {% endif %}
               {{ field_value }}
             {% endif %}

@@ -20,6 +20,7 @@ from django.views.generic.edit import CreateView, DeleteView, FormView, UpdateVi
 from django.views.generic.list import ListView
 
 from inventory.models import Document, DOI, Equipment, FieldNote, History, Photo, Site
+from navigation import get_return_url
 
 from .forms import (
     DocumentUploadForm,
@@ -31,9 +32,6 @@ from .forms import (
     SiteForm,
 )
 
-# This URL parameter tells us where to go after creating or editing an
-# inventory item.
-SUCCESS_URL = "home"
 DEFAULT_MAX_CHARS = 50
 
 logger = logging.getLogger("inventory")
@@ -74,7 +72,7 @@ def image_picker_dialogue(request):
 # ====== View mixins ======
 
 
-class ContextMixin:
+class BaseContextMixin:
     """This class sets up the base context dict for Create, Update and
     Delete views."""
 
@@ -98,30 +96,26 @@ class ContextMixin:
 
 
 class URLsMixin:
-    """This class provide several ways to get the URL of the next
-    page, either from a URL parameter if provided or from
-    detault_success_url set by subclasses.
-
+    """This class gets the URL of the next page from the session store
+    if available or from detault_success_url set by subclasses.
     """
 
     def get_success_url(self):
-        return self.request.GET.get(SUCCESS_URL, self.default_success_url)
+        # Filter out current URL so delete's don't cause issues
+        history = self.request.session.get("nav_history", [])
+        current = self.request.get_full_path()
+        # For deletes, also remove the associated edit URL
+        edit_url = current.replace("/delete/", "/edit/")
+        history = [url for url in history if url not in (current, edit_url)]
+        self.request.session["nav_history"] = history
 
-    # CreateViews override get_success_url() which get_context_data()
-    # uses to get the URL for the cancel button during item creation.
-    # CreateVew.get_success_url() will fail during item creation
-    # because the created object doesn't yet exist in the database.
-    get_cancel_url = get_success_url
+        return get_return_url(self.request, fallback_viewname=self.default_success_url)
 
-    def get_create_success_url(self, edit_url):
-        """FieldnoteCreateView uses this after a fieldnote has been
-        created to enable adding photos without returning to the
-        referrer page."""
-        edit_url = reverse(edit_url, kwargs={"pk": self.object.pk})
-        # Save return urls until we've finished editing the new fieldnote.
-        next_url = self.request.GET.get(SUCCESS_URL, "")
-        next_url = f"?{SUCCESS_URL}={next_url}" if next_url else ""
-        return edit_url + next_url
+    # def get_success_url(self):
+    #     return get_return_url(self.request, fallback_viewname=self.default_success_url)
+
+    def get_cancel_url(self):
+        return self.get_success_url()
 
 
 class SiteAssignmentMixin:
@@ -202,6 +196,7 @@ def history_add(request, equipment_pk):
             "date": str(history.date),
             "note": history.note,
             "remove_url": reverse("history_remove", kwargs={"history_pk": history.pk}),
+            "update_url": reverse("history_update", kwargs={"history_pk": history.pk}),
         }
     )
 
@@ -219,7 +214,7 @@ def history_remove(request, history_pk):
     return JsonResponse({"ok": True})
 
 
-class EquipmentViewsMixin(URLsMixin, ContextMixin, SiteAssignmentMixin):
+class EquipmentViewsMixin(URLsMixin, BaseContextMixin, SiteAssignmentMixin):
     model = Equipment
     form_class = EquipmentForm
     default_success_url = reverse_lazy("view_equipment")
@@ -255,14 +250,10 @@ class EquipmentUpdateView(LoginRequiredMixin, EquipmentViewsMixin, UpdateView):
         context["history_add_url"] = reverse(
             "history_add", kwargs={"equipment_pk": equipment.pk}
         )
-
-        context["return_url"] = f"?{SUCCESS_URL}={self.request.get_full_path()}"
-        context["document_create_url"] = (
-            reverse("document_add")
-            + context["return_url"]
-            + f"&equipment_pk={equipment.id}"
-        )
         context["documents"] = equipment.documents
+        context["document_create_url"] = (
+            reverse("document_add") + f"?equipment_pk={equipment.pk}"
+        )
         context["content_type"] = "piece of equipment"
         return context
 
@@ -271,6 +262,7 @@ class EquipmentUpdateView(LoginRequiredMixin, EquipmentViewsMixin, UpdateView):
         logger.info(
             f"User {self.request.user} successfully updated equipment, {self.object.instrument}."
         )
+
         return response
 
 
@@ -299,7 +291,7 @@ class EquipmentDeleteView(
 # ====== Fieldnote Views ======
 
 
-class FieldNoteViewsMixin(URLsMixin, ContextMixin, SiteAssignmentMixin):
+class FieldNoteViewsMixin(URLsMixin, BaseContextMixin, SiteAssignmentMixin):
     model = FieldNote
     form_class = FieldNoteForm
     default_success_url = reverse_lazy("view_fieldnotes")
@@ -315,11 +307,15 @@ class FieldNoteViewsMixin(URLsMixin, ContextMixin, SiteAssignmentMixin):
 class FieldNoteCreateView(LoginRequiredMixin, FieldNoteViewsMixin, CreateView):
 
     action_text = "New"
+    base_edit_url = "fieldnote_edit"
 
     def get_success_url(self):
-        return self.get_create_success_url("fieldnote_edit")
+        """Return the URL to go to after successfully creating a
+        fieldnote. This enables adding photos without returning to the
+        referrer page.
+        """
+        return reverse(self.base_edit_url, kwargs={"pk": self.object.pk})
 
-    def form_valid(self, form):
         # Store message before redirect
         messages.success(
             self.request,
@@ -330,6 +326,10 @@ class FieldNoteCreateView(LoginRequiredMixin, FieldNoteViewsMixin, CreateView):
             f"User {self.request.user} successfully created fieldnote for site, {self.object.site}."
         )
         return response
+    def get_cancel_url(self):
+        return get_return_url(self.request, fallback_viewname=self.default_success_url)
+
+
 
 
 class FieldNoteUpdateView(LoginRequiredMixin, FieldNoteViewsMixin, UpdateView):
@@ -347,16 +347,13 @@ class FieldNoteUpdateView(LoginRequiredMixin, FieldNoteViewsMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         fieldnote = context["object"]
 
-        context["photos"] = self.object.photos.all()
-        context["success_url"] = f"?{SUCCESS_URL}={self.request.get_full_path()}"
-        context["photo_add_url"] = (
-            reverse("photo_add", args=[context["object"].id]) + context["success_url"]
-        )
-        context["return_url"] = f"?{SUCCESS_URL}={self.request.get_full_path()}"
+        context["photos"] = fieldnote.photos.all()
+        context["photo_add_url"] = reverse("photo_add", args=[context["object"].id])
+        photo_count = fieldnote.photos.count()
+        context["documents"] = fieldnote.documents.all()
+        doc_count = fieldnote.documents.count()
         context["document_create_url"] = (
-            reverse("document_add")
-            + context["return_url"]
-            + f"&fieldnote_pk={fieldnote.id}"
+            reverse("document_add") + f"?fieldnote_pk={fieldnote.pk}"
         )
         context["documents"] = fieldnote.documents
         context["content_type"] = "fieldnote"
@@ -428,14 +425,34 @@ def doi_remove(request, doi_pk):
     return JsonResponse({"ok": True})
 
 
-class SiteViewsMixin(URLsMixin, ContextMixin):
+@login_required
+@require_http_methods(["POST"])
+def doi_update(request, doi_pk):
+    doi = get_object_or_404(DOI, pk=doi_pk)
+    label = request.POST.get("label", "").strip()
+    doi_link = request.POST.get("doi_link", "").strip()
+    errors = {}
+    if not label:
+        errors["label"] = "Label is required."
+    if not doi_link:
+        errors["doi_link"] = "DOI link is required."
+    if errors:
+        return JsonResponse({"ok": False, "errors": errors}, status=400)
+    doi.label = label
+    doi.doi_link = doi_link
+    doi.save()
+    logger.info(f"User {request.user} updated DOI {doi.pk} on site {doi.site}.")
+    return JsonResponse({"ok": True, "id": doi.pk})
+
+
+class SiteViewsMixin(URLsMixin, BaseContextMixin):
     """Base model for SiteViewCreate, SiteViewUpdate"""
 
     model = Site
     form_class = SiteForm
     template_name = "inventory/site_detail.html"
     default_success_url = reverse_lazy("view_sites")
-    update_url_name = "site_edit"
+    update_url = "site_edit"
     delete_url = "site_delete"
 
     def get_context_data(self, **kwargs):
@@ -462,8 +479,18 @@ class SiteCreateView(LoginRequiredMixin, SiteViewsMixin, CreateView):
         )
         return response
 
+    def get_cancel_url(self):
+        """Before the site is created, send the user to the main site
+        list if they cancel the new site."""
+
+        return reverse("view_sites")
+
     def get_success_url(self):
-        return reverse(self.update_url_name, kwargs={"pk": self.object.pk})
+        """If the site is successfully created, send the user to the
+        Site edit page so they can attach items like fieldnotes,
+        documents and photos."""
+
+        return reverse(self.update_url, kwargs={"pk": self.object.pk})
 
 
 class SiteUpdateView(LoginRequiredMixin, SiteViewsMixin, UpdateView):
@@ -529,20 +556,6 @@ class SiteDeleteView(LoginRequiredMixin, SuccessMessageMixin, URLsMixin, DeleteV
         )
         return response
 
-    # Can eventually use this to protect agains deleting a location
-    # holding inventory items:
-    #
-    # def post(self, request, *args, **kwargs):
-    #     location = self.get_object()
-    #     if location.inventory.exists():
-    #         messages.error(
-    #             request, "Cannot delete this location — it still has inventory items."
-    #         )
-    #         return HttpResponseRedirect(
-    #             location.get_absolute_url()
-    #         )  # Or wherever your edit page is
-    #     return super().post(request, *args, **kwargs)
-
 
 # ====== Photo Views ======
 
@@ -550,7 +563,7 @@ class SiteDeleteView(LoginRequiredMixin, SuccessMessageMixin, URLsMixin, DeleteV
 class PhotoUploadView(LoginRequiredMixin, URLsMixin, FormView):
     template_name = "inventory/photo_upload.html"
     form_class = PhotoUploadForm
-    default_success_url = reverse_lazy("view_fieldnotes")
+    default_success_url = reverse_lazy("view_photos")
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -590,15 +603,8 @@ class PhotoUploadView(LoginRequiredMixin, URLsMixin, FormView):
 
         return super().form_valid(form)
 
-    def form_invalid(self, form):
-        print("Form invalid called")
-        print("FILES:", self.request.FILES)
-        print("POST:", self.request.POST)
-        print("Form errors:", form.errors)
-        return super().form_invalid(form)
 
-
-class PhotoUpdateView(LoginRequiredMixin, URLsMixin, ContextMixin, UpdateView):
+class PhotoUpdateView(LoginRequiredMixin, URLsMixin, BaseContextMixin, UpdateView):
 
     action_text = "Edit"
     model = Photo
@@ -612,21 +618,13 @@ class PhotoUpdateView(LoginRequiredMixin, URLsMixin, ContextMixin, UpdateView):
         logger.info(
             f"User {self.request.user} successfully updated a photo taken at {self.object.fieldnote.site} on {self.object.date_taken} by {self.object.taken_by}."
         )
+
         return response
 
     def get_context_data(self, **kwargs):
         context = self.get_base_context_data(**kwargs)
-        # # Add context for accordions in templates
-        # # SUCCESS_URL serves to set page to return to after editing/deleting
-        # context["success_url"] = (
-        #     f"?{SUCCESS_URL}={self.request.get_full_path()}&site_pk={self.object.id}"
-        # )
-        # context["fieldnote_create_url"] = (
-        #     reverse("fieldnote_add") + context["success_url"]
-        # )
-        # context["equipment_create_url"] = (
-        #     reverse("equipment_add") + context["success_url"]
-        # )
+        context["record_type"] = "Photo"
+
         return context
 
 
@@ -663,7 +661,7 @@ class PhotoDeleteView(LoginRequiredMixin, SuccessMessageMixin, URLsMixin, Delete
 class DocumentUploadView(LoginRequiredMixin, URLsMixin, FormView):
     template_name = "inventory/document_upload.html"
     form_class = DocumentUploadForm
-    default_success_url = reverse_lazy("view_equipment")
+    default_success_url = reverse_lazy("view_documents")
 
     content_type_map = {"equipment": Equipment, "fieldnote": FieldNote, "site": Site}
 
@@ -714,23 +712,14 @@ class DocumentUploadView(LoginRequiredMixin, URLsMixin, FormView):
 
         return super().form_valid(form)
 
-    def form_invalid(self, form):
-        print("Form invalid called")
-        print("FILES:", self.request.FILES)
-        print("POST:", self.request.POST)
-        print("Form errors:", form.errors)
-        return super().form_invalid(form)
 
-
-class DocumentUpdateView(LoginRequiredMixin, URLsMixin, ContextMixin, UpdateView):
+class DocumentUpdateView(LoginRequiredMixin, URLsMixin, BaseContextMixin, UpdateView):
 
     action_text = "Edit"
     model = Document
     form_class = DocumentForm
     template_name = "inventory/document_detail.html"
-    # TODO: what should this be??
-    default_success_url = reverse_lazy("view_photos")
-    # TODO:
+    default_success_url = reverse_lazy("view_documents")
     delete_url = "document_delete"
 
     def form_valid(self, form):
@@ -750,8 +739,7 @@ class DocumentDeleteView(
     LoginRequiredMixin, SuccessMessageMixin, URLsMixin, DeleteView
 ):
     model = Document
-    # TODO sort this out:
-    default_success_url = reverse_lazy("view_photos")
+    default_success_url = reverse_lazy("view_documents")
     success_message = "Document of %(date)s (%(summary)s) was deleted successfully!"
 
     def form_valid(self, form):
@@ -931,16 +919,15 @@ class SiteListView(LoginRequiredMixin, SortedListMixin):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        context["heading"] = "Sites"
         context["sort"] = self._sort_key
         context["filter_fields"] = self.filter_fields
         context["table_fields"] = self.table_fields
-        context["reset_url"] = reverse("view_sites")
-        context["add_url"] = (
-            reverse("site_add") + f"?{SUCCESS_URL}={reverse('view_sites')}"
-        )
-        context["heading"] = "Sites"
         context["add_button"] = "Add New Site"
+        context["add_url"] = reverse("site_add")
         context["edit_url"] = "site_edit"
+        # This will only be used when filtering is re-implemented.
+        context["reset_url"] = reverse("view_sites")
 
         return context
 
@@ -1171,8 +1158,6 @@ class DocumentListView(LoginRequiredMixin, SortedListMixin):
         context["reset_url"] = reverse("view_documents")
         context["heading"] = "Document Library"
         context["edit_url"] = "document_edit"
-        # TODO: FIX this unDRY line!
-        context["success_param"] = SUCCESS_URL
 
         return context
 

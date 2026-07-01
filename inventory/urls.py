@@ -31,7 +31,7 @@ urlpatterns = [
         name="equipment_add",
     ),
     path(
-        "equipment/edit/<int:pk>",
+        "equipment/edit/<int:pk>/",
         views.EquipmentUpdateView.as_view(),
         name="equipment_edit",
     ),
@@ -48,7 +48,7 @@ urlpatterns = [
         name="fieldnote_add",
     ),
     path(
-        "fieldnotes/edit/<int:pk>",
+        "fieldnotes/edit/<int:pk>/",
         views.FieldNoteUpdateView.as_view(),
         name="fieldnote_edit",
     ),
@@ -60,27 +60,27 @@ urlpatterns = [
     # Photos
     path("photos/", views.PhotoListView.as_view(), name="view_photos"),
     path(
-        "photos/add/<int:fieldnote>", views.PhotoUploadView.as_view(), name="photo_add"
+        "photos/add/<int:fieldnote>/", views.PhotoUploadView.as_view(), name="photo_add"
     ),
     path(
-        "photos/edit/<int:pk>",
+        "photos/edit/<int:pk>/",
         views.PhotoUpdateView.as_view(),
         name="photo_edit",
     ),
     path(
-        "photos/delete/<int:pk>",
+        "photos/delete/<int:pk>/",
         views.PhotoDeleteView.as_view(),
         name="photo_delete",
     ),
     # Documents
     path("documents/add/", views.DocumentUploadView.as_view(), name="document_add"),
     path(
-        "documents/edit/<int:pk>",
+        "documents/edit/<int:pk>/",
         views.DocumentUpdateView.as_view(),
         name="document_edit",
     ),
     path(
-        "documents/delete/<int:pk>",
+        "documents/delete/<int:pk>/",
         views.DocumentDeleteView.as_view(),
         name="document_delete",
     ),

@@ -1,4 +1,3 @@
-<script>console.log(`documents`)</script>
 <div class="accordion-body m-0 p-0">
   {% if documents %}
   <table class="table table-striped table-hover table-bordered m-0">
@@ -10,7 +9,7 @@
       {% for doc in documents %}
       <tr>
         <td>
-          <a href="{% url 'document_edit' doc.pk %}{{return_url}}">
+          <a href="{% url 'document_edit' doc.pk %}">
             {{ doc.date_received }}
           </a>
         </td>

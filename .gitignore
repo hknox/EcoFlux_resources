@@ -23,3 +23,5 @@ static/js/tinymce/*
 /EcoFlux/settings/test_env.py
 *sqlite3
 /Project_resources/grandwazoo.env
+tinymce*zip
+/Pipfile.lock

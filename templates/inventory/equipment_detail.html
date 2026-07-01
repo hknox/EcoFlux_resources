@@ -98,7 +98,7 @@
         <div class="accordion-item mb-1">
           {% include "inventory/include/accordion_header.html" with section_id="documents" section_title="Documents" button_text="Add a document" button_url=document_create_url mt_3=True %}
           <div id="documentsCollapse" class="accordion-collapse collapse" data-bs-parent="#mainAccordion">
-            {% include "inventory/include/documents_accordion_body.html" with documents=documents document_edit_url="document_edit" return_url=return_url %}
+            {% include "inventory/include/documents_accordion_body.html" with documents=documents document_edit_url="document_edit"  %}
           </div>
         </div>
 

@@ -14,12 +14,12 @@
   <div class="col-md-2 mb-1">
     <div class="card shadow h-100"> <!--  h-100 makes all cards the same height -->
       <div class="card-header">
-          <a href={% url "photo_edit"  photo.id %}{{ success_url }}>
+          <a href={% url "photo_edit"  photo.id %}>
             Taken {% if photo.date_taken %}{{ photo.date_taken }}{% else %}[unknown!]{% endif %}
           </a>
       </div>
       <div class="card-body">
-      <a href={% url "photo_edit"  photo.id %}{{ success_url }}>
+      <a href={% url "photo_edit"  photo.id %}>
           <img src="{{ photo.thumbnail.url }}" class="card-img img-fluid" alt="{{ fieldnote.date_visited }}">
         </a>
       </div>
