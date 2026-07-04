@@ -638,7 +638,7 @@ class SiteUpdateView(LoginRequiredMixin, SiteViewsMixin, UpdateView):
         for document in self.object.documents.all():
             document.delete()
         # fieldnotes have nested objects to deletemodalblocked
-        for fieldnote in self.objects.fieldnote.all():
+        for fieldnote in self.object.fieldnotes.all():
             for photo in fieldnote.photos.all():
                 photo.delete()
             for doc in fieldnote.documents.all():
