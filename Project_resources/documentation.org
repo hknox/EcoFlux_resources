@@ -16,6 +16,9 @@ Useful links to documentation.
 [[https://github.com/arnm/ob-mermaid][Org-Mode Mermaid integration]]
 [[https://emacstil.com/til/2021/09/19/org-mermaid/][Org Mode + Mermaid]]
 
+* MariaDB
+[[https://learning.oreilly.com/library/view/getting-started-with/9781785284120/][Getting Started with MariaDB]] good overview
+[[https://learning.oreilly.com/library/view/mariadb-crash-course/9780132842341/][MariaDB Crash Course]] useful, a bit limited
 * Django
 ** [[https://docs.djangoproject.com/][Django documentation]]
 Download the HTML documentation [[https://media.djangoproject.com/docs/django-docs-5.1-en.zip][here]]

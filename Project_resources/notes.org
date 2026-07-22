@@ -434,6 +434,11 @@ Create EcoFlux user and grant privileges
   GRANT ALL PRIVILEGES ON ecoflux.* to 'ecoflux''%' (any host!)
   FLUSH PRIVILEGES
   Test by logging on as ecoflux: OK
+
+To use ed25519 authentication, you need to do:
+INSTALL SONAME 'auth_ed25519';
+every time you reinstall MariaDB or restore from a backup prior to
+when I ran it today ([2026-07-18 Sat])
 ** Webserver
 *** Apache
 **** Installation
