@@ -48,6 +48,7 @@ Download the HTML documentation [[https://media.djangoproject.com/docs/django-do
   [[https://www.w3schools.com/bootstrap5/index.php][w3School intro, very helpful]]
   [[https://getbootstrap.com/][Bootstrap styling]]
   [[https://ngangasn.com/how-to-use-bootstrap-5-with-django-the-right-way/][Intro examples for Django+Bootstrap]]
+  [[https://www.vincentschmalbach.com/bootstrap-5-for-beginners-first-project/][Bootstrap 5 for Beginners (great intro)]]
 * [[https://flatpickr.js.org/][Flatpickr datepicker docs]]
 * [[https://django-crispy-forms.readthedocs.io/en/latest/][Crispy forms docs]]
 
