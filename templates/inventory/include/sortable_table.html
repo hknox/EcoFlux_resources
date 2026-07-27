@@ -1,8 +1,10 @@
+<!-- NB class fa and fa-sort-xxx are for FontAwesome -->
+
 <!-- provide sortable links at top of table columns -->
 {% load querystring custom_filters %}
 
 <!-- See https://getbootstrap.com/docs/5.3/content/tables/#overview -->
-<table class="table table-striped table-hover m-0">
+<table class="table table-striped table-hover table-sm table-responsive-md m-0">
   <thead class="table-light">
     <tr>
       {% for field in table_fields %}
