@@ -18,6 +18,8 @@ use scp to copy to JoesGarage:
 scp hank@grandwazoo.ddns.net:/srv/ecoflux/[filename] .
 [[https://github.com/francescozanoni/tutorials/blob/master/mysql_to_sqlite.md][Convert Mysql to sqlite]]
 Then load into sqlite db:
+rm db.sqlite2
+sqlite db.sqlite2 < XXXX.sql
 
 Get media/ files:
 scp all of /srv/ecoflux/media to local /media/ dir.
@@ -32,6 +34,7 @@ Every time we arrive on a page, push the link onto the navigation
 stack. When it's time to get_success_url, use
 navigation.py/get_return_url() to get the previous page to return to.
 Very simple and elegant solution.
+
 
 * Sara's sites
 [[https://carbonique.ca/en/data.html][Carbonique]]
