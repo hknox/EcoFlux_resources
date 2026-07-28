@@ -408,11 +408,6 @@ class PhotoUploadForm(forms.Form):
         self.helper.form_method = "post"
         self.helper.attrs = {"enctype": "multipart/form-data"}
         self.helper.layout = Layout(
-            Row(
-                Column("taken_by", css_class="col-md-6"),
-                Column("date_taken", css_class="col-md-6"),
-                css_class="mb-3",
-            ),
             Div(
                 HTML("""
                     <div id="drop-zone" class="border border-secondary rounded p-5 text-center bg-light" style="cursor:pointer;">
@@ -422,14 +417,18 @@ class PhotoUploadForm(forms.Form):
                 """),
                 # hidden input triggered by JS:
                 "photos",  # simpler than Field("photos");
-                css_class="mb-3",
+                css_class="mt-3",
+            ),
+            Row(
+                Column("taken_by", css_class="col-md-6"),
+                Column("date_taken", css_class="col-md-6"),
+                css_class="mb-2",
             ),
             Div(
                 Submit("submit", "Upload Photos", css_class="btn btn-primary"),
                 HTML(
                     '<a href="{{ cancel_url }}" class="btn btn-secondary ms-2 btn-cancel">Cancel</a>'
                 ),
-                css_class="mt-3",
             ),
         )
 

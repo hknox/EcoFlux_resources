@@ -5,8 +5,8 @@
 {% block page_heading %} - Fieldnote photos{% endblock %}
 
 {% block content %}
-<h2>
-  Upload a batch of photos for the visit to {{ fieldnote.site.name }} on {{ fieldnote.date_visited }}
+<h2 class="mt-3">
+  Upload a batch of photos for the visit to {{ fieldnote.site.name }} on {{ fieldnote.date_visited }}:
 </h2>
 
 <form method="post" enctype="multipart/form-data" data-form-name="Photo Upload">
@@ -15,7 +15,8 @@
 
   {% if form.non_field_errors %}
   <div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>
-  {% endif %} {% crispy form %}
+  {% endif %}
+  {% crispy form %}
 </form>
 
 {% endblock content %}
