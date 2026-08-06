@@ -92,12 +92,16 @@
             <div class="accordion-body m-0 p-0">
               <div class="row mt-2">
                 {% for photo in photos %}
-                <div class="col-md-3 mb-3">
+                <div class="col-md-2 p-1">
+                  <!-- h-100 makes the cards equal in height -->
                   <div class="card h-100 shadow-sm">
-                    <img src="{{ photo.thumbnail.url }}" class="card-img-top img-fluid" alt="{{ fieldnote.date_visited }}">
                     <div class="card-body">
+                      <a href={% url "photo_edit"  photo.id %}{{ success_url }}>
+                        <img src="{{ photo.thumbnail.url }}" class="card-img-top img-fluid" alt="{{ fieldnote.date_visited }}">
+                    </div>
+                    <div class="card-footer">
                       <p class="card-text text-muted small">
-                        <a href={% url "photo_edit"  photo.id %}{{ success_url }}>Taken {% if photo.date_taken %}{{ photo.date_taken }}{% else %}[unknown!]{% endif %} {% if photo.taken_by %}by {{photo.taken_by}}{% endif %}
+                        <a href={% url "photo_edit"  photo.id %}{{ success_url }}>Taken by {% if photo.taken_by %}{{ photo.taken_by }}{% else %}[<i>unspecified</i>]{% endif %} {% if photo.taken_by %}by {{photo.taken_by}}{% endif %}
                         </a>
                       </p>
                     </div>
