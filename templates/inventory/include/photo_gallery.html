@@ -6,29 +6,25 @@
 <div class="row row-cols-2 row-cols-md-6 g-2"> -->
 
 <!-- row: Creates a flex container for grid layout
-     mt-2: Adds a top margin of 0.5 rem (8 pixels) -->
-<div class="row mt-2">
+     mt-2: Adds a top margin of 0.5 rem (8 pixels)
+     gx-1: Adds a gutter of 0.25 rem between cards in the row-->
+<div class="row mt-2 gx-1">
   {% for photo in photos %}
   <!-- col-md-2: Child takes 2/12 columns (16.67% width) on medium screens and up
        mb-2: Adds a bottom margin of 0.5 rem to the child -->
-  <div class="col-md-2 mb-1">
-    <div class="card shadow h-100"> <!--  h-100 makes all cards the same height -->
-      <div class="card-header">
-          <a href={% url "photo_edit"  photo.id %}>
-            Taken {% if photo.date_taken %}{{ photo.date_taken }}{% else %}[unknown!]{% endif %}
-          </a>
-      </div>
-      <div class="card-body">
-      <a href={% url "photo_edit"  photo.id %}>
+  <div class="col-md-2 mb-2">
+    <a href={% url "photo_edit"  photo.id %}>
+      <div class="card shadow h-100 mt-2 rounded-0"> <!--  h-100 makes all cards the same height -->
+        <div class="card-body">
           <img src="{{ photo.thumbnail.url }}" class="card-img img-fluid" alt="{{ fieldnote.date_visited }}">
-        </a>
+        </div>
+        <div class="card-footer">
+          <small class="text-muted">
+            Taken by {% if photo.taken_by %}{{ photo.taken_by }}{% else %}<i>unspecified</i>{% endif %}.
+          </small>
+        </div>
       </div>
-      <div class="card-footer">
-        <small class="text-muted">
-          Taken by {% if photo.taken_by %}{{ photo.taken_by }}{% else %}<i>unspecified</i>{% endif %}.
-        </small>
-      </div>
-    </div>
+    </a>
   </div>
   {% empty %}
   <div type="row" class="mt-2">No photos uploaded with this note yet.</div>
