@@ -431,17 +431,24 @@ Use MariaDB only from localhost - install EcoFlux app on sunvillage.
 
 No need to modify bind-address.
 Create EcoFlux db (ecoflux)
-  CREATE ECOFLUX
+  CREATE Database ECOFLUX;
 Create EcoFlux user and grant privileges
-  CREATE USER 'ecoflux'@'' IDENTIFIED BY [password]
-  GRANT ALL PRIVILEGES ON ecoflux.* to 'ecoflux''%' (any host!)
-  FLUSH PRIVILEGES
+  CREATE USER 'ecoflux'@localhost'' IDENTIFIED BY [password];
+  GRANT ALL PRIVILEGES ON ecoflux.* to 'ecoflux'%'localhost';
+  FLUSH PRIVILEGES;
   Test by logging on as ecoflux: OK
 
 To use ed25519 authentication, you need to do:
 INSTALL SONAME 'auth_ed25519';
 every time you reinstall MariaDB or restore from a backup prior to
 when I ran it today ([2026-07-18 Sat])
+*** Root access to MariaDB
+Simplest: sudo mariadb
+will log straight into mariadb as root.
+
+[[https://www.simplified.guide/mysql-mariadb/root-reset-password][Reset MariaDB root password]]
+
+
 ** Webserver
 *** Apache
 **** Installation
