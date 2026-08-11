@@ -29,7 +29,7 @@
 
       <!-- DOI Records -->
       <div class="accordion-item mb-1">
-        {% include "inventory/include/accordion_header.html" with section_id="doi" section_title="DOI Records" button_text="Add DOI record" ajax_add_id="doi-add-btn" %}
+        {% include "inventory/include/accordion_header.html" with section_id="doi" section_title="DOI Records" button_text="Add DOI record" ajax_add_id="doi-add-btn" count=doi_records|length %}
         <div id="doiCollapse" class="accordion-collapse collapse" data-bs-parent="#mainAccordion">
           <div class="accordion-body m-0 p-0">
 
@@ -100,7 +100,7 @@
 
       <!-- Fieldnotes -->
       <div class="accordion-item mb-1">
-        {% include "inventory/include/accordion_header.html" with section_id="fieldnotes" section_title="Field Notes" button_text="Add a field note" button_url=fieldnote_create_url mt_3=True %}
+        {% include "inventory/include/accordion_header.html" with section_id="fieldnotes" section_title="Field Notes" button_text="Add a field note" button_url=fieldnote_create_url mt_3=True count=fieldnotes|length %}
         <div id="fieldnotesCollapse" class="accordion-collapse collapse" data-bs-parent="#mainAccordion">
           <div class="accordion-body m-0 p-0">
             {% if fieldnotes %}
@@ -136,7 +136,7 @@
 
       <!-- Equipment -->
       <div class="accordion-item mb-1">
-        {% include "inventory/include/accordion_header.html" with section_id="equipment" section_title="Equipment" button_text="Add new equipment" button_url=equipment_create_url mt_3=True %}
+        {% include "inventory/include/accordion_header.html" with section_id="equipment" section_title="Equipment" button_text="Add new equipment" button_url=equipment_create_url mt_3=True count=equipment|length %}
         <div id="equipmentCollapse" class="accordion-collapse collapse" data-bs-parent="#mainAccordion">
           <div class="accordion-body m-0 p-0">
             {% if equipment %}
@@ -166,7 +166,7 @@
       </div>
       <!-- Documents -->
       <div class="accordion-item mb-1">
-        {% include "inventory/include/accordion_header.html" with section_id="documents" section_title="Documents" button_text="Add a document" button_url=document_create_url mt_3=True %}
+        {% include "inventory/include/accordion_header.html" with section_id="documents" section_title="Documents" button_text="Add a document" button_url=document_create_url mt_3=True count=documents|length %}
         <div id="documentsCollapse" class="accordion-collapse collapse" data-bs-parent="#mainAccordion">
             {% include "inventory/include/documents_accordion_body.html" with documents=documents document_edit_url="document_edit" %}
         </div>

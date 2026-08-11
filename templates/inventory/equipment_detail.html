@@ -28,7 +28,7 @@
 
         <!-- History -->
         <div class="accordion-item mb-1">
-          {% include "inventory/include/accordion_header.html" with section_id="history" section_title="History" button_text="Add a history record" ajax_add_id="history-add-btn" %}
+          {% include "inventory/include/accordion_header.html" with section_id="history" section_title="History" button_text="Add a history record" ajax_add_id="history-add-btn" count=history_records|length%}
           <div id="historyCollapse" class="accordion-collapse collapse" data-bs-parent="#mainAccordion">
             <div class="accordion-body m-0 p-0">
 
@@ -100,7 +100,7 @@
 
         <!-- Documents -->
         <div class="accordion-item mb-1">
-          {% include "inventory/include/accordion_header.html" with section_id="documents" section_title="Documents" button_text="Add a document" button_url=document_create_url mt_3=True %}
+          {% include "inventory/include/accordion_header.html" with section_id="documents" section_title="Documents" button_text="Add a document" button_url=document_create_url mt_3=True count=documents|length%}
           <div id="documentsCollapse" class="accordion-collapse collapse" data-bs-parent="#mainAccordion">
             {% include "inventory/include/documents_accordion_body.html" with documents=documents document_edit_url="document_edit"  %}
           </div>

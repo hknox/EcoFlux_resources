@@ -1228,8 +1228,10 @@ class PhotoListView(LoginRequiredMixin, ListView):
         return context
 
     def get_queryset(self):
-        return Site.objects.prefetch_related("fieldnotes__photos").order_by(
-            "name"
+        return (
+            Site.objects.prefetch_related("fieldnotes__photos")
+            .annotate(photo_count=Count("fieldnotes__photos", distinct=True))
+            .order_by("name")
         )  # optional, for consistency
 
 

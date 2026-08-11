@@ -81,7 +81,7 @@
         {% if action == "Edit" %}
 
         <!-- Photos -->
-        {% include "inventory/include/accordion_header.html" with section_id="photos" section_title="Site photos" button_text="Add photo(s)" button_url=photo_add_url mt_3=True %}
+        {% include "inventory/include/accordion_header.html" with section_id="photos" section_title="Site photos" button_text="Add photo(s)" button_url=photo_add_url mt_3=True count=photos|length %}
 
         <!-- Collapsible photo gallery -->
         <div class="accordion-item mb-1">
@@ -116,7 +116,7 @@
         </div>
         <!-- Documents -->
         <div class="accordion-item mb-1">
-          {% include "inventory/include/accordion_header.html" with section_id="documents" section_title="Documents" button_text="Add a document" button_url=document_create_url mt_3=True %}
+          {% include "inventory/include/accordion_header.html" with section_id="documents" section_title="Documents" button_text="Add a document" button_url=document_create_url mt_3=True count=document|length %}
           <div id="documentsCollapse" class="accordion-collapse collapse" data-bs-parent="#mainAccordion">
             {% include "inventory/include/documents_accordion_body.html" with documents=documents document_edit_url="document_edit" %}
           </div>
