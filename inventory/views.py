@@ -3,6 +3,7 @@ import logging
 import json
 import os
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
@@ -92,6 +93,7 @@ class BaseContextMixin:
             context["default_success_url"] = self.default_success_url
         # Set this for all views, override in SiteUnpdateView if needed.
         context["blocked"] = False
+        context["git_version"] = settings.GIT_VERSION
 
         return context
 
@@ -1055,6 +1057,7 @@ class SiteListView(LoginRequiredMixin, SortedListMixin):
         context["edit_url"] = "site_edit"
         # This will only be used when filtering is re-implemented.
         context["reset_url"] = reverse("view_sites")
+        context["git_version"] = settings.GIT_VERSION
 
         return context
 
@@ -1141,6 +1144,7 @@ class EquipmentListView(LoginRequiredMixin, SortedListMixin):
         context["add_url"] = reverse("equipment_add")
         context["edit_url"] = "equipment_edit"
         context["reset_url"] = reverse("view_equipment")
+        context["git_version"] = settings.GIT_VERSION
 
         return context
 
@@ -1213,6 +1217,7 @@ class FieldNoteListView(LoginRequiredMixin, SortedListMixin):
         context["heading"] = "Field notes"
         context["add_button"] = "Add Field note"
         context["edit_url"] = "fieldnote_edit"
+        context["git_version"] = settings.GIT_VERSION
 
         return context
 
@@ -1224,6 +1229,7 @@ class PhotoListView(LoginRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["git_version"] = settings.GIT_VERSION
 
         return context
 
@@ -1287,6 +1293,7 @@ class DocumentListView(LoginRequiredMixin, SortedListMixin):
         context["reset_url"] = reverse("view_documents")
         context["heading"] = "Document Library"
         context["edit_url"] = "document_edit"
+        context["git_version"] = settings.GIT_VERSION
 
         return context
 

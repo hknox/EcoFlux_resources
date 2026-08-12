@@ -16,8 +16,12 @@ See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 from pathlib import Path
 from decouple import config, Csv
 import os.path
+from subprocess import run
 
 IN_PRODUCTION = config("IN_PRODUCTION", False, cast=bool)
+GIT_VERSION = run(
+    "git describe --tag --always", capture_output=True, text=True, shell=True
+).stdout
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
