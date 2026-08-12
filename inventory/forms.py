@@ -373,7 +373,7 @@ class MultiFileField(forms.FileField):
 
 class PhotoUploadForm(forms.Form):
     taken_by = forms.CharField(
-        required=False,
+        required=True,
         label="Batch taken by",
         max_length=100,
     )
