@@ -16,15 +16,28 @@ See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 from pathlib import Path
 from decouple import config, Csv
 import os.path
-from subprocess import run
-
-IN_PRODUCTION = config("IN_PRODUCTION", False, cast=bool)
-GIT_VERSION = run(
-    "git describe --tag --always", capture_output=True, text=True, shell=True
-).stdout
+import subprocess
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+IN_PRODUCTION = config("IN_PRODUCTION", False, cast=bool)
+VERSION_FILE = os.path.join(BASE_DIR, "VERSION")
+if IN_PRODUCTION:
+    try:
+        with open(VERSION_FILE) as f:
+            GIT_VERSION = f.read().strip()
+    except FileNotFoundError:
+        GIT_VERSION = "unknown"
+else:
+    result = subprocess.run(
+        ["git", "describe", "--tags", "--always", "--dirty"],
+        cwd=BASE_DIR,
+        capture_output=True,
+        text=True,
+    )
+    GIT_VERSION = result.stdout.strip() or "unknown"
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config("SECRET_KEY")
 
