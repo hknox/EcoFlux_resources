@@ -1,0 +1,1 @@
+git describe --tags --always > "$(git rev-parse --show-toplevel)"/EcoFlux/VERSION
