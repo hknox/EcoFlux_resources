@@ -1237,7 +1237,7 @@ class PhotoListView(LoginRequiredMixin, ListView):
         return (
             Site.objects.prefetch_related("fieldnotes__photos")
             .annotate(photo_count=Count("fieldnotes__photos", distinct=True))
-            .order_by("name")
+            .order_by("code")
         )  # optional, for consistency
 
 
