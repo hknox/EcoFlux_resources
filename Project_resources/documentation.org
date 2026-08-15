@@ -1,8 +1,15 @@
 Useful links to documentation.
 
-* Web design
-** [[https://mcgill.on.worldcat.org/oclc/1480269487][Learning Web Design]]
+* Monitoring projects
+About the EcoFlux project
+** [[https://carbonique.ca/en/][Carbonique]]
+** [[https://canflux.github.io/][CanFlux]]
+** [[https://ameriflux.lbl.gov/about/about-ameriflux/][AmeriFlux]]
+*** [[https://ameriflux.lbl.gov/data/badm/][BADM Data]]
 
+
+* Web design
+** [[https://learning.oreilly.com/library/view/learning-web-design/9781098137670/?sso_link=yes&sso_link_from=mcgill-university][Learning Web Design]]
 ** [[https://learning.oreilly.com/library/view/the-principles-of/9781098124717/][The Principles of Beatiful Web Design]]
 ** [[https://www.codementor.io/@chirilovadrian360/managing-the-ui-in-django-29fbj6oglf][Approaches to managing the UI]]
 ** [[https://www.geeksforgeeks.org/websites-apps/principles-of-web-design/][Principles of web design]]
@@ -33,7 +40,8 @@ Download the HTML documentation [[https://media.djangoproject.com/docs/django-do
 ** [[file://~hank/Documents/Programming/Explore_Django/DjangoTutorial][Django Tutorial]]
 ** [[file://~hank/Documents/Programming/Explore_Django/RiffMates][RiffMates Tutorial]]
 
-* [[https://learning.oreilly.com/library/view/django-in-action/9781633438163/?sso_link=yes&sso_link_from=mcgill-university][Django in Action (McGill)]]
+** [[https://learning.oreilly.com/library/view/django-in-action/9781633438163/?sso_link=yes&sso_link_from=mcgill-university][Django in Action (McGill)]]
+
 * [[https://codezup.com/mastering-file-uploads-media-management-django-applications/][File uploads & media management including photos]]
 * [[https://pillow.readthedocs.io/][Pillow docs]]
 * [[https://docs.djangoproject.com/en/5.1/topics/install/#database-installation][Database selection and config]]

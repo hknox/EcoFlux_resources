@@ -23,7 +23,7 @@ sqlite db.sqlite2 < XXXX.sql
 
 Get media/ files:
 scp all of /srv/ecoflux/media to local /media/ dir.
-(or use rsync?)
+(or use rsync)
 
 
 * navigataion
@@ -263,10 +263,10 @@ When you have stable changes in development, merge them into production.
 * Testing deployment
 ** Get current data to a test db:
 [create testing_ecoflux, grant privileges to user ecoflux]
-mysqldump -u username -p source_db | mariadb -u username -p testing_ecoflux
+mysqldump -u username -p --add-drop-database source_db | mariadb -u username -p testing_ecoflux
 
 Maybe better to dump to a file then load from the file:
-mysqldump -u username -p source_db > datadump.sql
+mysqldump -u username -p source_db --add-drop-database > datadump.sql
 mariadb -u username -p testing_ecoflux < datadump.sql
 ** uninstall django-tinymce
 ** get current git branch
@@ -404,7 +404,6 @@ But raw `os.environ.get()` is totally fine and understandable.
 
 Let me know if you want a starter `settings` layout scaffold or a `.envrc` template — I can build one around your current structure.
 
-
 ** Database
 *** Using MariaD on grandwazoo as a test case.
 [[https://www.digitalocean.com/community/tutorials/how-to-use-mysql-or-mariadb-with-your-django-application-on-ubuntu-14-04][
@@ -447,7 +446,6 @@ Simplest: sudo mariadb
 will log straight into mariadb as root.
 
 [[https://www.simplified.guide/mysql-mariadb/root-reset-password][Reset MariaDB root password]]
-
 
 ** Webserver
 *** Apache
@@ -553,6 +551,7 @@ inside Django itself before any response is sent.
 So installing and configuring django-cors-headers is the right move.
 Once you add "https://grandwazoo.ddns.net" to CORS_ALLOWED_ORIGINS,
 the POST requests should work."
+
 
 * Forms
 ** Goals
